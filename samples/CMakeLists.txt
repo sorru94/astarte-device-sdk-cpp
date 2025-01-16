@@ -1,0 +1,21 @@
+# (C) Copyright 2025, SECO Mind Srl
+#
+# SPDX-License-Identifier: Apache-2.0
+
+cmake_minimum_required(VERSION 3.15)
+
+# Minimum C++ version is 20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Ensure the main project is found
+project(SampleExecutable)
+
+# Add the root directory to make the library definition available
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
+
+# Add the executable
+add_executable(astarte_device_sdk main.cpp)
+
+# Link the library created in the root directory
+target_link_libraries(astarte_device_sdk PRIVATE astarte_device_sdk_lib)

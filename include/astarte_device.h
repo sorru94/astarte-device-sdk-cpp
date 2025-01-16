@@ -1,0 +1,88 @@
+// (C) Copyright 2025, SECO Mind Srl
+//
+// SPDX-License-Identifier: Apache-2.0
+
+#ifndef ASTARTE_DEVICE_H
+#define ASTARTE_DEVICE_H
+
+/**
+ * @file astarte_device.h
+ * @brief Astarte device object and its related methods.
+ */
+
+#include <grpcpp/grpcpp.h>
+
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include "astarte_individual.h"
+#include "astarteplatform/msghub/astarte_message.pb.h"
+#include "astarteplatform/msghub/message_hub_service.grpc.pb.h"
+
+/** @brief Umbrella namespace for the Astarte device SDK */
+namespace AstarteDeviceSdk {
+
+using grpc::ClientContext;
+using grpc::ClientReader;
+
+using astarteplatform::msghub::MessageHub;
+using astarteplatform::msghub::MessageHubEvent;
+
+/**
+ * @brief Class for the Astarte device objects.
+ * @details This class should be instantiated once and then used to communicate with Astarte.
+ */
+class AstarteDevice {
+ public:
+  /**
+   * @brief Constructor for the Astarte device class.
+   * @param server_addr The gRPC server address of the Astarte message hub.
+   * @param node_uuid The UUID identifier for this device with the Astarte message hub.
+   */
+  AstarteDevice(std::string server_addr, std::string node_uuid);
+  /**
+   * @brief Add an interface for the device from a json file.
+   * @param json_file The path to the .json interface file.
+   */
+  void add_interface_from_json(const std::filesystem::path &json_file);
+  /** @brief Connect to Astarte. */
+  void connect();
+  /** @brief Disconnect from Astarte. */
+  void disconnect();
+  /**
+   * @brief Stream data to Astarte.
+   * @param interface_name The name of the interface on which to stream the data.
+   * @param path The path to the interface endpoint to use for streaming.
+   * @param data The data to stream.
+   */
+  void stream_data(const std::string &interface_name, const std::string &path,
+                   AstarteIndividual &data);
+
+ private:
+  /** @brief Handle the Astarte message hub events stream. */
+  static void handle_events(std::unique_ptr<ClientReader<MessageHubEvent>> reader);
+
+  /** @brief gRPC server address for the Astarte message hub. */
+  std::string server_addr_;
+  /** @brief Unique identifier for the device connection with the Astarte message hub. */
+  std::string node_uuid_;
+  /** @brief Stub for the gRPC message hub service. */
+  std::unique_ptr<MessageHub::Stub> stub_;
+  /** @brief List of json interfaces. Stored as binaries. */
+  std::vector<std::string> interfaces_bins_;
+  /** @brief Thread that handles the message hub events stream. */
+  std::thread event_handler_;
+  /**
+   * @brief gRPC context for the client, unused.
+   * @details It could be used to convey extra information to the server and/or tweak certain RPC
+   * behaviors.
+   */
+  ClientContext client_context_;
+};
+
+}  // namespace AstarteDeviceSdk
+
+#endif  // ASTARTE_DEVICE_H
