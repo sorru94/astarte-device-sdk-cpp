@@ -4,10 +4,6 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-# Minimum C++ version is 20
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Ensure the main project is found
 project(SampleExecutable)
 
