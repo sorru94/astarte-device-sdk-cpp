@@ -1,0 +1,27 @@
+# (C) Copyright 2025, SECO Mind Srl
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Static analysis of the C++ sources.
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  clang-format-check:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: clang-format-check-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+    - name: Install clang-format
+      run: pip install clang-format==19.1.6
+    - name: Check formatting library
+      run: clang-format --style=file --dry-run -Werror src/*.cpp include/*.h private/*.h
+    - name: Check formatting examples
+      run: clang-format --style=file --dry-run -Werror samples/*.cpp
