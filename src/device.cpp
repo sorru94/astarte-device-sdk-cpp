@@ -2,14 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device.h"
+#include "astarte_device_sdk/device.h"
 
+#include <astarteplatform/msghub/astarte_message.pb.h>
+#include <astarteplatform/msghub/astarte_type.pb.h>
+#include <astarteplatform/msghub/node.pb.h>
 #include <google/protobuf/empty.pb.h>
+#include <google/protobuf/timestamp.pb.h>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <grpcpp/support/client_interceptor.h>
 #include <grpcpp/support/status.h>
+#include <spdlog/spdlog.h>
 
 #include <ctime>
 #include <filesystem>
@@ -23,14 +28,10 @@
 #include <variant>
 #include <vector>
 
-#include "astarte_exceptions.h"
-#include "astarte_individual.h"
-#include "astarte_individual_priv.h"
-#include "astarteplatform/msghub/astarte_message.pb.h"
-#include "astarteplatform/msghub/astarte_type.pb.h"
-#include "astarteplatform/msghub/node.pb.h"
-#include "google/protobuf/timestamp.pb.h"
+#include "astarte_device_sdk/exceptions.h"
+#include "astarte_device_sdk/individual.h"
 #include "grpc_interceptors.h"
+#include "individual_private.h"
 
 namespace AstarteDeviceSdk {
 
@@ -55,18 +56,19 @@ AstarteDevice::AstarteDevice(std::string server_addr, std::string node_uuid)
 void AstarteDevice::add_interface_from_json(const std::filesystem::path &json_file) {
   std::ifstream interface_file(json_file, std::ios::in);
   if (!interface_file.is_open()) {
-    std::cerr << "Could not open the interface file: " << json_file << "\n";
+    spdlog::error("Could not open the interface file: {}", json_file.string());
     throw AstarteFileOpenException(json_file.string());
   }
   // Read the entire JSON file content into a string
   const std::string interface_json((std::istreambuf_iterator<char>(interface_file)),
                                    std::istreambuf_iterator<char>());
   interfaces_bins_.push_back(interface_json);
+  spdlog::debug("Adding interface to list of interfaces: \n{}", interface_json);
   interface_file.close();
 }
 
 void AstarteDevice::connect() {
-  std::cout << "Connecting to the message hub\n";
+  spdlog::info("Connecting to the message hub");
 
   // Create a new channel and initialize the gRPC stub
   const grpc::ChannelArguments args;
@@ -92,7 +94,7 @@ void AstarteDevice::connect() {
 }
 
 void AstarteDevice::disconnect() {
-  std::cout << "Disonnecting from the message hub\n";
+  spdlog::info("Disonnecting from the message hub");
 
   // Call the dettach RPC.
   ClientContext context;
@@ -127,20 +129,20 @@ void AstarteDevice::stream_data(const std::string &interface_name, const std::st
 }
 
 void AstarteDevice::handle_events(std::unique_ptr<ClientReader<MessageHubEvent>> reader) {
-  std::cout << "Event handler thread has been started\n";
+  spdlog::debug("Event handler thread has been started");
 
   // Read the message stream.
   MessageHubEvent msghub_event;
   while (reader->Read(&msghub_event)) {
-    std::cout << "Received an event!\n";
-    std::cout << msghub_event.DebugString() << "\n";
+    spdlog::debug("Event from the message hub received.");
+    spdlog::debug(msghub_event.DebugString());
   }
-  std::cout << "Message hub stream has been interrupted\n";
+  spdlog::info("Message hub stream has been interrupted.");
 
   // Log an error if it the stream has been stopped due to a failure.
   const Status status = reader->Finish();
   if (!status.ok()) {
-    std::cerr << status.error_code() << ": " << status.error_message() << "\n";
+    spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
   }
 }
 

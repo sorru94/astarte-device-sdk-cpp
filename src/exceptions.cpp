@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_exceptions.h"
+#include "astarte_device_sdk/exceptions.h"
 
 #include <string>
 #include <utility>

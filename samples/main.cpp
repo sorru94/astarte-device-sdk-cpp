@@ -2,15 +2,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <spdlog/spdlog.h>
+
 #include <iostream>
 
-#include "astarte_device.h"
-#include "astarte_individual.h"
+#include "astarte_device_sdk/device.h"
+#include "astarte_device_sdk/individual.h"
 
 using AstarteDeviceSdk::AstarteDevice;
 using AstarteDeviceSdk::AstarteIndividual;
 
 int main(int argc, char **argv) {
+  spdlog::set_level(spdlog::level::debug);
   std::string server_addr = "localhost:50051";
   std::string node_id("aa04dade-9401-4c37-8c6a-d8da15b083ae");
   AstarteDevice msghub_client(server_addr, node_id);
