@@ -55,6 +55,18 @@ class AstarteFileOpenException : public AstarteException {
   std::string filename_;
 };
 
+/**
+ * @brief Specific exception for when an operation failed due to incompatible user input.
+ */
+class AstarteInvalidInputException : public AstarteException {
+ public:
+  /**
+   * @brief Constructor for the Astarte incompatible input exception.
+   * @param err_message The error message with the specific of the incompatible input.
+   */
+  explicit AstarteInvalidInputException(const std::string& err_message);
+};
+
 }  // namespace AstarteDeviceSdk
 
 #endif  // ASTARTE_DEVICE_SDK_EXCEPTIONS_H
