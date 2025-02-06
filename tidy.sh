@@ -58,7 +58,7 @@ if [[ ! -d "samples/build" ]]; then
     mkdir -p samples/build
 fi
 pushd samples/build
-cmake --fresh -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=${CXX_STANDARD} -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+cmake --fresh -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=${CXX_STANDARD} -DCMAKE_CXX_STANDARD_REQUIRED=ON -DMAKE_DEPENDENCIES_PUBLIC=ON ..
 popd
 
 # Run clang-tidy
