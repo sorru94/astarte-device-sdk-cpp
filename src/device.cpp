@@ -113,11 +113,8 @@ void AstarteDevice::stream_individual(const std::string &interface_name, const s
                                       AstarteIndividual &individual,
                                       std::chrono::system_clock::time_point *timestamp) {
   auto *grpc_data = new AstarteDataType();
-  AstarteDataTypeIndividual *grpc_individual = std::visit(
-      [](auto &&arg) -> AstarteDataTypeIndividual * {
-        return astarte_individual_to_astarte_data_type_individual(arg);
-      },
-      individual);
+  AstarteDataTypeIndividual *grpc_individual =
+      std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual);
 
   grpc_data->set_allocated_astarte_individual(grpc_individual);
 
@@ -146,7 +143,7 @@ void AstarteDevice::stream_individual(const std::string &interface_name, const s
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    throw AstarteIncompatibleInputException(status.error_message());
+    throw AstarteInvalidInputException(status.error_message());
   }
 }
 
@@ -155,7 +152,8 @@ void AstarteDevice::stream_aggregated(
     std::unordered_map<std::string, AstarteIndividual> &aggregated,
     std::chrono::system_clock::time_point *timestamp) {
   auto *grpc_data = new AstarteDataType();
-  AstarteDataTypeObject *grpc_object = astarte_aggregate_to_astarte_data_type_object(aggregated);
+  AstarteAggregateToAstarteDataTypeObject converter;
+  AstarteDataTypeObject *grpc_object = converter(aggregated);
   grpc_data->set_allocated_astarte_object(grpc_object);
 
   google::protobuf::Timestamp *grpc_timestamp = nullptr;
@@ -184,7 +182,7 @@ void AstarteDevice::stream_aggregated(
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    throw AstarteIncompatibleInputException(status.error_message());
+    throw AstarteInvalidInputException(status.error_message());
   }
   // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
@@ -206,7 +204,7 @@ void AstarteDevice::unset_property(const std::string &interface_name, const std:
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    throw AstarteIncompatibleInputException(status.error_message());
+    throw AstarteInvalidInputException(status.error_message());
   }
 }
 

@@ -16,8 +16,11 @@ namespace AstarteDeviceSdk {
 
 using astarteplatform::msghub::AstarteDataTypeObject;
 
-auto astarte_aggregate_to_astarte_data_type_object(
-    std::unordered_map<std::string, AstarteIndividual> &value) -> AstarteDataTypeObject *;
+class AstarteAggregateToAstarteDataTypeObject {
+ public:
+  auto operator()(std::unordered_map<std::string, AstarteIndividual>& value)
+      -> AstarteDataTypeObject*;
+};
 
 }  // namespace AstarteDeviceSdk
 

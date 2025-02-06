@@ -27,41 +27,42 @@ using astarteplatform::msghub::AstarteIntegerArray;
 using astarteplatform::msghub::AstarteLongIntegerArray;
 using astarteplatform::msghub::AstarteStringArray;
 
-auto astarte_individual_to_astarte_data_type_individual(int32_t value)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(int32_t value)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   individual->set_astarte_integer(value);
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(int64_t value)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(int64_t value)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   individual->set_astarte_long_integer(value);
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(double value)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(double value)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   individual->set_astarte_double(value);
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(bool value) -> AstarteDataTypeIndividual * {
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(bool value)
+    -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   individual->set_astarte_boolean(value);
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(std::string value)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(const std::string &value)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   individual->set_astarte_string(value);
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(std::vector<uint8_t> value)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(const std::vector<uint8_t> &value)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   std::string str_vector(value.begin(), value.end());
@@ -69,8 +70,8 @@ auto astarte_individual_to_astarte_data_type_individual(std::vector<uint8_t> val
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(std::chrono::system_clock::time_point value)
-    -> AstarteDataTypeIndividual * {
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(
+    std::chrono::system_clock::time_point value) -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   const std::chrono::system_clock::duration t_duration = value.time_since_epoch();
   const seconds sec = duration_cast<seconds>(t_duration);
@@ -82,7 +83,7 @@ auto astarte_individual_to_astarte_data_type_individual(std::chrono::system_cloc
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(const std::vector<int32_t> &values)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(const std::vector<int32_t> &values)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   auto *data_array = new AstarteIntegerArray();
@@ -93,7 +94,7 @@ auto astarte_individual_to_astarte_data_type_individual(const std::vector<int32_
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(const std::vector<int64_t> &values)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(const std::vector<int64_t> &values)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   auto *data_array = new AstarteLongIntegerArray();
@@ -104,7 +105,7 @@ auto astarte_individual_to_astarte_data_type_individual(const std::vector<int64_
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(const std::vector<double> &values)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(const std::vector<double> &values)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   auto *data_array = new AstarteDoubleArray();
@@ -115,7 +116,7 @@ auto astarte_individual_to_astarte_data_type_individual(const std::vector<double
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(const std::vector<bool> &values)
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(const std::vector<bool> &values)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   auto *data_array = new AstarteBooleanArray();
@@ -126,8 +127,8 @@ auto astarte_individual_to_astarte_data_type_individual(const std::vector<bool> 
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(const std::vector<std::string> &values)
-    -> AstarteDataTypeIndividual * {
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(
+    const std::vector<std::string> &values) -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   auto *data_array = new AstarteStringArray();
   for (const std::string &value : values) {
@@ -137,7 +138,7 @@ auto astarte_individual_to_astarte_data_type_individual(const std::vector<std::s
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(
     const std::vector<std::vector<uint8_t>> &values) -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();
   auto *data_array = new AstarteBinaryBlobArray();
@@ -149,7 +150,7 @@ auto astarte_individual_to_astarte_data_type_individual(
   spdlog::trace("AstarteIndividual converted to gRPC: {}", individual->DebugString());
   return individual;
 }
-auto astarte_individual_to_astarte_data_type_individual(
+auto AstarteIndividualToAstarteDataTypeIndividual::operator()(
     const std::vector<std::chrono::system_clock::time_point> &values)
     -> AstarteDataTypeIndividual * {
   auto *individual = new AstarteDataTypeIndividual();

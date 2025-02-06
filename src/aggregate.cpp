@@ -16,7 +16,7 @@ namespace AstarteDeviceSdk {
 
 using astarteplatform::msghub::AstarteDataTypeIndividual;
 
-auto astarte_aggregate_to_astarte_data_type_object(
+auto AstarteAggregateToAstarteDataTypeObject::operator()(
     std::unordered_map<std::string, AstarteIndividual>& value) -> AstarteDataTypeObject* {
   auto* grpc_object = new AstarteDataTypeObject();
   google::protobuf::Map<std::string, AstarteDataTypeIndividual>* grpc_map =
@@ -24,11 +24,8 @@ auto astarte_aggregate_to_astarte_data_type_object(
   for (const auto& pair : value) {
     const std::string& path = pair.first;
     const AstarteIndividual& individual = pair.second;
-    AstarteDataTypeIndividual* grpc_individual = std::visit(
-        [](auto&& arg) -> AstarteDataTypeIndividual* {
-          return astarte_individual_to_astarte_data_type_individual(arg);
-        },
-        individual);
+    AstarteDataTypeIndividual* grpc_individual =
+        std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual);
     // TODO(simone): This could be a memory leak. It should be investigated.
     (*grpc_map)[path] = *grpc_individual;
   }
