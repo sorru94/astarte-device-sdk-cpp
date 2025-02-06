@@ -88,7 +88,7 @@ jobs:
       run: |
         mkdir ./samples/build
         cd ./samples/build
-        cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+        cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DMAKE_DEPENDENCIES_PUBLIC=ON ..
     - name: Check library
       working-directory: ./astarte-device-sdk-cpp
       run: clang-tidy -warnings-as-errors=* -header-filter='.*(?<!pb)\.h$' -p=samples/build include/astarte_device_sdk/*.h private/*.h src/*.cpp
@@ -98,7 +98,7 @@ jobs:
         rm -r ./samples/build
         mkdir ./samples/build
         cd ./samples/build
-        cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+        cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DMAKE_DEPENDENCIES_PUBLIC=ON ..
     - name: Check library
       working-directory: ./astarte-device-sdk-cpp
       run: clang-tidy -warnings-as-errors=* -header-filter='.*(?<!pb)\.h$' -p=samples/build include/astarte_device_sdk/*.h private/*.h src/*.cpp

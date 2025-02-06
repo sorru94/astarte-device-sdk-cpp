@@ -67,7 +67,7 @@ jobs:
       run: |
         mkdir ./samples/build
         cd ./samples/build
-        cmake -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+        cmake -DUSE_SYSTEM_GRPC=ON -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
         make
     - name: Build library for C++ 17
       working-directory: ./astarte-device-sdk-cpp
@@ -75,5 +75,5 @@ jobs:
         rm -r ./samples/build
         mkdir ./samples/build
         cd ./samples/build
-        cmake -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
+        cmake -DUSE_SYSTEM_GRPC=ON -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
         make
