@@ -6,10 +6,12 @@
 
 #include <astarteplatform/msghub/astarte_message.pb.h>
 #include <astarteplatform/msghub/astarte_type.pb.h>
+#include <astarteplatform/msghub/message_hub_service.grpc.pb.h>
 #include <astarteplatform/msghub/node.pb.h>
 #include <google/protobuf/empty.pb.h>
 #include <google/protobuf/timestamp.pb.h>
 #include <grpcpp/create_channel.h>
+#include <grpcpp/grpcpp.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <grpcpp/support/client_interceptor.h>
@@ -26,6 +28,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -43,6 +46,8 @@ using std::make_unique;
 using std::shared_ptr;
 
 using grpc::Channel;
+using grpc::ClientContext;
+using grpc::ClientReader;
 using grpc::Status;
 
 using grpc::experimental::ClientInterceptorFactoryInterface;
@@ -52,10 +57,59 @@ using astarteplatform::msghub::AstarteDataTypeIndividual;
 using astarteplatform::msghub::AstarteMessage;
 using astarteplatform::msghub::AstarteUnset;
 using astarteplatform::msghub::MessageHub;
+using astarteplatform::msghub::MessageHubEvent;
 using astarteplatform::msghub::Node;
 
-AstarteDevice::AstarteDevice(std::string server_addr, std::string node_uuid)
-    : server_addr_(std::move(server_addr)), node_uuid_(std::move(node_uuid)) {}
+// This class is only used for the PImpl of the class AstarteDeviceAstarteDevice, as such member
+// variables are not required to be private.
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes)
+struct AstarteDevice::AstarteDeviceImpl {
+ public:
+  AstarteDeviceImpl(std::string server_addr, std::string node_uuid)
+      : server_addr_(std::move(server_addr)), node_uuid_(std::move(node_uuid)) {}
+
+  /** @brief Handle the Astarte message hub events stream. */
+  static void handle_events(std::unique_ptr<ClientReader<MessageHubEvent>> reader) {
+    spdlog::debug("Event handler thread has been started");
+
+    // Read the message stream.
+    MessageHubEvent msghub_event;
+    while (reader->Read(&msghub_event)) {
+      spdlog::debug("Event from the message hub received.");
+      spdlog::debug(msghub_event.DebugString());
+    }
+    spdlog::info("Message hub stream has been interrupted.");
+
+    // Log an error if it the stream has been stopped due to a failure.
+    const Status status = reader->Finish();
+    if (!status.ok()) {
+      spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+    }
+  }
+  /** @brief gRPC server address for the Astarte message hub. */
+  std::string server_addr_;
+  /** @brief Unique identifier for the device connection with the Astarte message hub. */
+  std::string node_uuid_;
+  /** @brief Stub for the gRPC message hub service. */
+  std::unique_ptr<MessageHub::Stub> stub_;
+  /** @brief List of json interfaces. Stored as binaries. */
+  std::vector<std::string> interfaces_bins_;
+  /** @brief Thread that handles the message hub events stream. */
+  std::thread event_handler_;
+  /**
+   * @brief gRPC context for the client, unused.
+   * @details It could be used to convey extra information to the server and/or tweak certain
+   RPC
+   * behaviors.
+   */
+  ClientContext client_context_;
+};
+// NOLINTEND(misc-non-private-member-variables-in-classes)
+
+AstarteDevice::AstarteDevice(const std::string &server_addr, const std::string &node_uuid)
+    : astarte_device_impl_{std::make_unique<AstarteDeviceImpl>(server_addr, node_uuid)} {}
+
+AstarteDevice::~AstarteDevice() = default;
 
 void AstarteDevice::add_interface_from_json(const std::filesystem::path &json_file) {
   std::ifstream interface_file(json_file, std::ios::in);
@@ -66,7 +120,7 @@ void AstarteDevice::add_interface_from_json(const std::filesystem::path &json_fi
   // Read the entire JSON file content into a string
   const std::string interface_json((std::istreambuf_iterator<char>(interface_file)),
                                    std::istreambuf_iterator<char>());
-  interfaces_bins_.push_back(interface_json);
+  astarte_device_impl_->interfaces_bins_.push_back(interface_json);
   spdlog::debug("Adding interface to list of interfaces: \n{}", interface_json);
   interface_file.close();
 }
@@ -77,24 +131,28 @@ void AstarteDevice::connect() {
   // Create a new channel and initialize the gRPC stub
   const grpc::ChannelArguments args;
   std::vector<std::unique_ptr<ClientInterceptorFactoryInterface>> interceptor_creators;
-  interceptor_creators.push_back(make_unique<NodeIdInterceptorFactory>(node_uuid_));
+  interceptor_creators.push_back(
+      make_unique<NodeIdInterceptorFactory>(astarte_device_impl_->node_uuid_));
 
   const shared_ptr<Channel> channel = CreateCustomChannelWithInterceptors(
-      server_addr_, grpc::InsecureChannelCredentials(), args, std::move(interceptor_creators));
+      astarte_device_impl_->server_addr_, grpc::InsecureChannelCredentials(), args,
+      std::move(interceptor_creators));
 
-  stub_ = MessageHub::NewStub(channel);
+  astarte_device_impl_->stub_ = MessageHub::NewStub(channel);
 
   // Create the node message for the attach RPC.
   Node node;
-  for (const std::string &interface_json : interfaces_bins_) {
+  for (const std::string &interface_json : astarte_device_impl_->interfaces_bins_) {
     node.add_interfaces_json(interface_json);
   }
 
   // Call the attach RPC.
-  std::unique_ptr<ClientReader<MessageHubEvent>> reader = stub_->Attach(&client_context_, node);
+  std::unique_ptr<ClientReader<MessageHubEvent>> reader =
+      astarte_device_impl_->stub_->Attach(&astarte_device_impl_->client_context_, node);
 
-  // Starte a thread for the event stream
-  event_handler_ = std::thread(AstarteDevice::handle_events, std::move(reader));
+  // Start a thread for the event stream
+  astarte_device_impl_->event_handler_ =
+      std::thread(AstarteDevice::AstarteDeviceImpl::handle_events, std::move(reader));
 }
 
 void AstarteDevice::disconnect() {
@@ -103,7 +161,8 @@ void AstarteDevice::disconnect() {
   // Call the dettach RPC.
   ClientContext context;
   google::protobuf::Empty response;
-  const Status status = stub_->Detach(&context, google::protobuf::Empty(), &response);
+  const Status status =
+      astarte_device_impl_->stub_->Detach(&context, google::protobuf::Empty(), &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
   }
@@ -140,7 +199,7 @@ void AstarteDevice::stream_individual(const std::string &interface_name, const s
   ClientContext context;
   google::protobuf::Empty response;
   spdlog::debug("Streaming individual data: {} {} {}", interface_name, path, message.DebugString());
-  const Status status = stub_->Send(&context, message, &response);
+  const Status status = astarte_device_impl_->stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
     throw AstarteInvalidInputException(status.error_message());
@@ -179,7 +238,7 @@ void AstarteDevice::stream_aggregated(
 
   ClientContext context;
   google::protobuf::Empty response;
-  const Status status = stub_->Send(&context, message, &response);
+  const Status status = astarte_device_impl_->stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
     throw AstarteInvalidInputException(status.error_message());
@@ -201,28 +260,10 @@ void AstarteDevice::unset_property(const std::string &interface_name, const std:
 
   ClientContext context;
   google::protobuf::Empty response;
-  const Status status = stub_->Send(&context, message, &response);
+  const Status status = astarte_device_impl_->stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
     throw AstarteInvalidInputException(status.error_message());
-  }
-}
-
-void AstarteDevice::handle_events(std::unique_ptr<ClientReader<MessageHubEvent>> reader) {
-  spdlog::debug("Event handler thread has been started");
-
-  // Read the message stream.
-  MessageHubEvent msghub_event;
-  while (reader->Read(&msghub_event)) {
-    spdlog::debug("Event from the message hub received.");
-    spdlog::debug(msghub_event.DebugString());
-  }
-  spdlog::info("Message hub stream has been interrupted.");
-
-  // Log an error if it the stream has been stopped due to a failure.
-  const Status status = reader->Finish();
-  if (!status.ok()) {
-    spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
   }
 }
 

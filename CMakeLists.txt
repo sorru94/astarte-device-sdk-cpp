@@ -65,7 +65,7 @@ target_include_directories(astarte_device_sdk_lib PUBLIC "${astarte_msghub_proto
 target_sources(astarte_device_sdk_lib PRIVATE ${astarte_msghub_proto_src})
 target_link_libraries(astarte_device_sdk_lib
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
-  PUBLIC absl::check
-  PUBLIC ${_REFLECTION}
-  PUBLIC ${_GRPC_GRPCPP}
-  PUBLIC ${_PROTOBUF_LIBPROTOBUF})
+  PRIVATE absl::check
+  PRIVATE ${_REFLECTION}
+  PRIVATE ${_GRPC_GRPCPP}
+  PRIVATE ${_PROTOBUF_LIBPROTOBUF})
