@@ -34,11 +34,11 @@
 #include <variant>
 #include <vector>
 
-#include "aggregate_private.h"
 #include "astarte_device_sdk/exceptions.h"
 #include "astarte_device_sdk/individual.h"
 #include "grpc_interceptors.h"
 #include "individual_private.h"
+#include "object_private.h"
 
 namespace AstarteDeviceSdk {
 
@@ -168,9 +168,9 @@ void AstarteDevice::disconnect() {
   }
 }
 
-void AstarteDevice::stream_individual(const std::string &interface_name, const std::string &path,
-                                      AstarteIndividual &individual,
-                                      std::chrono::system_clock::time_point *timestamp) {
+void AstarteDevice::send_individual(const std::string &interface_name, const std::string &path,
+                                    AstarteIndividual &individual,
+                                    std::chrono::system_clock::time_point *timestamp) {
   auto *grpc_data = new AstarteDataType();
   AstarteDataTypeIndividual *grpc_individual =
       std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual);
@@ -198,7 +198,7 @@ void AstarteDevice::stream_individual(const std::string &interface_name, const s
 
   ClientContext context;
   google::protobuf::Empty response;
-  spdlog::debug("Streaming individual data: {} {} {}", interface_name, path, message.DebugString());
+  spdlog::debug("Sending individual data: {} {} {}", interface_name, path, message.DebugString());
   const Status status = astarte_device_impl_->stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
@@ -206,13 +206,12 @@ void AstarteDevice::stream_individual(const std::string &interface_name, const s
   }
 }
 
-void AstarteDevice::stream_aggregated(
-    const std::string &interface_name, const std::string &path,
-    std::unordered_map<std::string, AstarteIndividual> &aggregated,
-    std::chrono::system_clock::time_point *timestamp) {
+void AstarteDevice::send_object(const std::string &interface_name, const std::string &path,
+                                std::unordered_map<std::string, AstarteIndividual> &object,
+                                std::chrono::system_clock::time_point *timestamp) {
   auto *grpc_data = new AstarteDataType();
-  AstarteAggregateToAstarteDataTypeObject converter;
-  AstarteDataTypeObject *grpc_object = converter(aggregated);
+  AstarteObjectToAstarteDataTypeObject converter;
+  AstarteDataTypeObject *grpc_object = converter(object);
   grpc_data->set_allocated_astarte_object(grpc_object);
 
   google::protobuf::Timestamp *grpc_timestamp = nullptr;
@@ -248,7 +247,7 @@ void AstarteDevice::stream_aggregated(
 
 void AstarteDevice::set_property(const std::string &interface_name, const std::string &path,
                                  AstarteIndividual &data) {
-  this->stream_individual(interface_name, path, data, nullptr);
+  this->send_individual(interface_name, path, data, nullptr);
 }
 
 void AstarteDevice::unset_property(const std::string &interface_name, const std::string &path) {

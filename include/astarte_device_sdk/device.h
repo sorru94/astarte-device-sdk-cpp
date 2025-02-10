@@ -54,25 +54,25 @@ class AstarteDevice {
   /** @brief Disconnect from Astarte. */
   void disconnect();
   /**
-   * @brief Stream individual data to Astarte.
-   * @param interface_name The name of the interface on which to stream the data.
-   * @param path The path to the interface endpoint to use for streaming.
-   * @param individual The data to stream.
+   * @brief Send individual data to Astarte.
+   * @param interface_name The name of the interface on which to send the data.
+   * @param path The path to the interface endpoint to use for sending.
+   * @param individual The data to send.
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
-  void stream_individual(const std::string &interface_name, const std::string &path,
-                         AstarteIndividual &individual,
-                         std::chrono::system_clock::time_point *timestamp);
+  void send_individual(const std::string &interface_name, const std::string &path,
+                       AstarteIndividual &individual,
+                       std::chrono::system_clock::time_point *timestamp);
   /**
-   * @brief Stream aggregated data to Astarte.
-   * @param interface_name The name of the interface on which to stream the data.
-   * @param path The common path to the interface endpoint to use for streaming.
-   * @param aggregated The data to stream.
+   * @brief Send object data to Astarte.
+   * @param interface_name The name of the interface on which to send the data.
+   * @param path The common path to the interface endpoint to use for sending.
+   * @param object The data to send.
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
-  void stream_aggregated(const std::string &interface_name, const std::string &path,
-                         std::unordered_map<std::string, AstarteIndividual> &aggregated,
-                         std::chrono::system_clock::time_point *timestamp);
+  void send_object(const std::string &interface_name, const std::string &path,
+                   std::unordered_map<std::string, AstarteIndividual> &object,
+                   std::chrono::system_clock::time_point *timestamp);
   /**
    * @brief Set a device property.
    * @param interface_name The name of the interface for the property.

@@ -48,74 +48,74 @@ int main(int argc, char **argv) {
 
     std::string integer_path("/integer_endpoint");
     AstarteIndividual integer_value = AstarteDeviceSdk::to_astarte_individual(43);
-    msghub_client.stream_individual(interface_name, integer_path, integer_value, &now);
+    msghub_client.send_individual(interface_name, integer_path, integer_value, &now);
 
     std::string longinteger_path("/longinteger_endpoint");
     AstarteIndividual longinteger_value = AstarteDeviceSdk::to_astarte_individual(8589934592);
-    msghub_client.stream_individual(interface_name, longinteger_path, longinteger_value, &now);
+    msghub_client.send_individual(interface_name, longinteger_path, longinteger_value, &now);
 
     std::string double_path("/double_endpoint");
     AstarteIndividual double_value = AstarteDeviceSdk::to_astarte_individual(43.5);
-    msghub_client.stream_individual(interface_name, double_path, double_value, &now);
+    msghub_client.send_individual(interface_name, double_path, double_value, &now);
 
     std::string boolean_path("/boolean_endpoint");
     AstarteIndividual boolean_value = AstarteDeviceSdk::to_astarte_individual(true);
-    msghub_client.stream_individual(interface_name, boolean_path, boolean_value, &now);
+    msghub_client.send_individual(interface_name, boolean_path, boolean_value, &now);
 
     std::string string_path("/string_endpoint");
     std::string hello_string("Hello from cpp!");
     AstarteIndividual string_value = AstarteDeviceSdk::to_astarte_individual(hello_string);
-    msghub_client.stream_individual(interface_name, string_path, string_value, &now);
+    msghub_client.send_individual(interface_name, string_path, string_value, &now);
 
     std::string binaryblob_path("/binaryblob_endpoint");
     std::vector<uint8_t> binaryblob = {10, 20, 30, 40, 50};
     AstarteIndividual binaryblob_value = AstarteDeviceSdk::to_astarte_individual(binaryblob);
-    msghub_client.stream_individual(interface_name, binaryblob_path, binaryblob_value, &now);
+    msghub_client.send_individual(interface_name, binaryblob_path, binaryblob_value, &now);
 
     std::string datetime_path("/datetime_endpoint");
     AstarteIndividual datetime_value =
         AstarteDeviceSdk::to_astarte_individual(std::chrono::system_clock::now());
-    msghub_client.stream_individual(interface_name, datetime_path, datetime_value, &now);
+    msghub_client.send_individual(interface_name, datetime_path, datetime_value, &now);
 
     std::string integerarray_path("/integerarray_endpoint");
     std::vector<int32_t> integerarray = {10, 20, 30, 40, 50};
     AstarteIndividual integerarray_value = AstarteDeviceSdk::to_astarte_individual(integerarray);
-    msghub_client.stream_individual(interface_name, integerarray_path, integerarray_value, &now);
+    msghub_client.send_individual(interface_name, integerarray_path, integerarray_value, &now);
 
     std::string longintegerarray_path("/longintegerarray_endpoint");
     std::vector<int64_t> longintegerarray = {8589934592, 8589934593, 8589939592};
     AstarteIndividual longintegerarray_value =
         AstarteDeviceSdk::to_astarte_individual(longintegerarray);
-    msghub_client.stream_individual(interface_name, longintegerarray_path, longintegerarray_value,
-                                    &now);
+    msghub_client.send_individual(interface_name, longintegerarray_path, longintegerarray_value,
+                                  &now);
 
     std::string doubleararray_path("/doublearray_endpoint");
     std::vector<double> doublearray = {0.0};
     AstarteIndividual doublearray_value = AstarteDeviceSdk::to_astarte_individual(doublearray);
-    msghub_client.stream_individual(interface_name, doubleararray_path, doublearray_value, &now);
+    msghub_client.send_individual(interface_name, doubleararray_path, doublearray_value, &now);
 
     std::string booleanarray_path("/booleanarray_endpoint");
     std::vector<bool> booleanarray = {true, false, true};
     AstarteIndividual booleanarray_value = AstarteDeviceSdk::to_astarte_individual(booleanarray);
-    msghub_client.stream_individual(interface_name, booleanarray_path, booleanarray_value, &now);
+    msghub_client.send_individual(interface_name, booleanarray_path, booleanarray_value, &now);
 
     std::string stringarray_path("/stringarray_endpoint");
     std::vector<std::string> stringarray = {"Hello ", "world ", "from ", "C++"};
     AstarteIndividual stringarray_value = AstarteDeviceSdk::to_astarte_individual(stringarray);
-    msghub_client.stream_individual(interface_name, stringarray_path, stringarray_value, &now);
+    msghub_client.send_individual(interface_name, stringarray_path, stringarray_value, &now);
 
     std::string binaryblobarray_path("/binaryblobarray_endpoint");
     std::vector<std::vector<uint8_t>> binaryblobarray = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     AstarteIndividual binaryblobarray_value =
         AstarteDeviceSdk::to_astarte_individual(binaryblobarray);
-    msghub_client.stream_individual(interface_name, binaryblobarray_path, binaryblobarray_value,
-                                    &now);
+    msghub_client.send_individual(interface_name, binaryblobarray_path, binaryblobarray_value,
+                                  &now);
 
     std::string datetimearray_path("/datetimearray_endpoint");
     std::vector<std::chrono::system_clock::time_point> datetimearray = {
         std::chrono::system_clock::now(), std::chrono::system_clock::now()};
     AstarteIndividual datetimearray_value = AstarteDeviceSdk::to_astarte_individual(datetimearray);
-    msghub_client.stream_individual(interface_name, datetimearray_path, datetimearray_value, &now);
+    msghub_client.send_individual(interface_name, datetimearray_path, datetimearray_value, &now);
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
   }
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
          AstarteDeviceSdk::to_astarte_individual(std::vector<std::chrono::system_clock::time_point>{
              std::chrono::system_clock::now(), std::chrono::system_clock::now()})}};
 
-    msghub_client.stream_aggregated(interface_name, common_path, data, NULL);
+    msghub_client.send_object(interface_name, common_path, data, NULL);
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
   }

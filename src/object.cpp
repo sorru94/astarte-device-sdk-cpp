@@ -8,15 +8,15 @@
 #include <unordered_map>
 #include <variant>
 
-#include "aggregate_private.h"
 #include "astarte_device_sdk/individual.h"
 #include "individual_private.h"
+#include "object_private.h"
 
 namespace AstarteDeviceSdk {
 
 using astarteplatform::msghub::AstarteDataTypeIndividual;
 
-auto AstarteAggregateToAstarteDataTypeObject::operator()(
+auto AstarteObjectToAstarteDataTypeObject::operator()(
     std::unordered_map<std::string, AstarteIndividual>& value) -> AstarteDataTypeObject* {
   auto* grpc_object = new AstarteDataTypeObject();
   google::protobuf::Map<std::string, AstarteDataTypeIndividual>* grpc_map =
