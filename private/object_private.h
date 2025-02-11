@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef AGGREGATE_PRIVATE_H
-#define AGGREGATE_PRIVATE_H
+#ifndef OBJECT_PRIVATE_H
+#define OBJECT_PRIVATE_H
 
 #include <astarteplatform/msghub/astarte_type.pb.h>
 
@@ -16,7 +16,7 @@ namespace AstarteDeviceSdk {
 
 using astarteplatform::msghub::AstarteDataTypeObject;
 
-class AstarteAggregateToAstarteDataTypeObject {
+class AstarteObjectToAstarteDataTypeObject {
  public:
   auto operator()(std::unordered_map<std::string, AstarteIndividual>& value)
       -> AstarteDataTypeObject*;
@@ -24,4 +24,4 @@ class AstarteAggregateToAstarteDataTypeObject {
 
 }  // namespace AstarteDeviceSdk
 
-#endif  // AGGREGATE_PRIVATE_H
+#endif  // OBJECT_PRIVATE_H
