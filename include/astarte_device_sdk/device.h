@@ -13,8 +13,11 @@
 #include <chrono>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
+#include <tuple>
 #include <unordered_map>
+#include <variant>
 
 #include "astarte_device_sdk/individual.h"
 
@@ -87,10 +90,18 @@ class AstarteDevice {
    * @param path The property full path.
    */
   void unset_property(const std::string &interface_name, const std::string &path);
+  /**
+   * @brief Poll incoming messages.
+   * @return The received message when present, std::nullopt otherwise.
+   */
+  auto poll_incoming() -> std::optional<
+      std::tuple<std::string, std::string,
+                 std::optional<std::variant<AstarteIndividual,
+                                            std::unordered_map<std::string, AstarteIndividual>>>>>;
 
  private:
   struct AstarteDeviceImpl;
-  std::unique_ptr<AstarteDeviceImpl> astarte_device_impl_;
+  std::shared_ptr<AstarteDeviceImpl> astarte_device_impl_;
 };
 
 }  // namespace AstarteDeviceSdk
