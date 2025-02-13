@@ -6,8 +6,8 @@
 #define ASTARTE_DEVICE_SDK_INDIVIDUAL_H
 
 /**
- * @file astarte_device_sdk/individual.h
- * @brief Astarte individual object and its related methods.
+ * @file astarte_device_sdk/individual.hpp
+ * @brief Astarte individual class and its related methods.
  */
 
 #include <chrono>
@@ -19,18 +19,12 @@
 #include <type_traits>
 #endif  // !(__cplusplus >= 202002L)
 
+#include "astarte_device_sdk/type.hpp"
+
 namespace AstarteDeviceSdk {
 
-/** @brief Astarte individual object, used for transmission of individual data streams. */
-using AstarteIndividual =
-    std::variant<int32_t, int64_t, double, bool, std::string, std::vector<uint8_t>,
-                 std::chrono::system_clock::time_point, std::vector<int32_t>, std::vector<int64_t>,
-                 std::vector<double>, std::vector<bool>, std::vector<std::string>,
-                 std::vector<std::vector<uint8_t>>,
-                 std::vector<std::chrono::system_clock::time_point>>;
-
 #if __cplusplus >= 202002L
-/** @brief Restricts the allowed types for the creation fo an Astarte individual object. */
+/** @brief Restricts the allowed types for the creation of an Astarte individual class. */
 template <typename T>
 concept AstarteIndividualAllowedType = requires {
   requires std::is_same_v<T, int32_t> || std::is_same_v<T, int64_t> || std::is_same_v<T, double> ||
@@ -43,16 +37,6 @@ concept AstarteIndividualAllowedType = requires {
                std::is_same_v<T, std::vector<std::vector<uint8_t>>> ||
                std::is_same_v<T, std::vector<std::chrono::system_clock::time_point>>;
 };
-
-/**
- * @brief Conversion function for any of the allowed types into an Astarte individual.
- * @param value Value to convert into an Astarte individual.
- * @return The converted Astarte individual.
- */
-template <AstarteIndividualAllowedType T>
-auto to_astarte_individual(T value) -> AstarteIndividual {
-  return value;
-}
 #else   // __cplusplus >= 202002L
 template <typename T>
 struct astarte_individual_is_allowed_type : std::false_type {};
@@ -86,18 +70,50 @@ struct astarte_individual_is_allowed_type<std::vector<std::vector<uint8_t>>> : s
 template <>
 struct astarte_individual_is_allowed_type<std::vector<std::chrono::system_clock::time_point>>
     : std::true_type {};
-
-/**
- * @brief Conversion function for any of the allowed types into an Astarte individual.
- * @param value Value to convert into an Astarte individual.
- * @return The converted Astarte individual.
- */
-template <typename T>
-auto to_astarte_individual(T value)
-    -> std::enable_if_t<astarte_individual_is_allowed_type<T>::value, AstarteIndividual> {
-  return value;
-}
 #endif  // __cplusplus >= 202002L
+
+/** @brief Astarte individual object, used for transmission of individual data streams. */
+class AstarteIndividual {
+ public:
+#if __cplusplus >= 202002L
+  template <AstarteIndividualAllowedType T>
+  explicit AstarteIndividual(T value) : data_(value) {}
+
+  template <AstarteIndividualAllowedType T>
+  auto into() const -> const T& {
+    return std::get<T>(data_);
+  }
+#else   // __cplusplus >= 202002L
+  template <typename T>
+  explicit AstarteIndividual(
+      T value,
+      std::enable_if_t<astarte_individual_is_allowed_type<T>::value, bool> /*unused*/ = true)
+      : data_(value) {}
+
+  template <typename T>
+  auto into(std::enable_if_t<astarte_individual_is_allowed_type<T>::value, bool> /*unused*/ =
+                true) const -> const T& {
+    return std::get<T>(data_);
+  }
+#endif  // __cplusplus >= 202002L
+
+  [[nodiscard]] auto format() const -> std::string;
+  [[nodiscard]] auto get_type() const -> AstarteType;
+  [[nodiscard]] auto get_data() const
+      -> const std::variant<int32_t, int64_t, double, bool, std::string, std::vector<uint8_t>,
+                            std::chrono::system_clock::time_point, std::vector<int32_t>,
+                            std::vector<int64_t>, std::vector<double>, std::vector<bool>,
+                            std::vector<std::string>, std::vector<std::vector<uint8_t>>,
+                            std::vector<std::chrono::system_clock::time_point>>&;
+
+ private:
+  std::variant<int32_t, int64_t, double, bool, std::string, std::vector<uint8_t>,
+               std::chrono::system_clock::time_point, std::vector<int32_t>, std::vector<int64_t>,
+               std::vector<double>, std::vector<bool>, std::vector<std::string>,
+               std::vector<std::vector<uint8_t>>,
+               std::vector<std::chrono::system_clock::time_point>>
+      data_;
+};
 
 }  // namespace AstarteDeviceSdk
 

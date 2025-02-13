@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device_sdk/device.h"
+#include "astarte_device_sdk/device.hpp"
 
 #include <astarteplatform/msghub/astarte_message.pb.h>
 #include <astarteplatform/msghub/astarte_type.pb.h>
@@ -21,36 +21,29 @@
 
 #include <chrono>
 #include <cstdint>
-#include <ctime>
 #include <filesystem>
 #include <fstream>
-#include <ios>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
 #include <thread>
-#include <tuple>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
-#include "astarte_device_sdk/exceptions.h"
-#include "astarte_device_sdk/individual.h"
-#include "grpc_interceptors.h"
-#include "individual_private.h"
-#include "object_private.h"
-#include "shared_queue.h"
+#include "astarte_device_sdk/exceptions.hpp"
+#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/msg.hpp"
+#include "astarte_device_sdk/object.hpp"
+#include "grpc_interceptors.hpp"
+#include "individual_private.hpp"
+#include "msg_private.hpp"
+#include "object_private.hpp"
+#include "shared_queue.hpp"
 
 namespace AstarteDeviceSdk {
-
-using ParsedAstarteDataType =
-    std::variant<AstarteIndividual, std::unordered_map<std::string, AstarteIndividual>>;
-using ParsedAstarteMessage =
-    std::tuple<std::string, std::string, std::optional<ParsedAstarteDataType>>;
-using ParsedAstarteMessageHubEvent = std::optional<ParsedAstarteMessage>;
 
 using std::make_unique;
 using std::shared_ptr;
@@ -62,14 +55,15 @@ using grpc::Status;
 
 using grpc::experimental::ClientInterceptorFactoryInterface;
 
-using astarteplatform::msghub::AstarteDataType;
-using astarteplatform::msghub::AstarteDataTypeIndividual;
-using astarteplatform::msghub::AstarteMessage;
-using astarteplatform::msghub::AstarteUnset;
-using astarteplatform::msghub::MessageHub;
-using astarteplatform::msghub::MessageHubError;
-using astarteplatform::msghub::MessageHubEvent;
-using astarteplatform::msghub::Node;
+using gRPCAstarteDataType = astarteplatform::msghub::AstarteDataType;
+using gRPCAstarteDataTypeIndividual = astarteplatform::msghub::AstarteDataTypeIndividual;
+using gRPCAstarteDataTypeObject = astarteplatform::msghub::AstarteDataTypeObject;
+using gRPCAstarteMessage = astarteplatform::msghub::AstarteMessage;
+using gRPCAstarteUnset = astarteplatform::msghub::AstarteUnset;
+using gRPCMessageHub = astarteplatform::msghub::MessageHub;
+using gRPCMessageHubError = astarteplatform::msghub::MessageHubError;
+using gRPCMessageHubEvent = astarteplatform::msghub::MessageHubEvent;
+using gRPCNode = astarteplatform::msghub::Node;
 
 // This class is only used for the PImpl of the class AstarteDeviceAstarteDevice, as such member
 // variables are not required to be private.
@@ -80,17 +74,17 @@ struct AstarteDevice::AstarteDeviceImpl {
       : server_addr_(std::move(server_addr)), node_uuid_(std::move(node_uuid)) {}
 
   /** @brief Handle the Astarte message hub events stream. */
-  void handle_events(std::unique_ptr<ClientReader<MessageHubEvent>> reader) {
+  void handle_events(std::unique_ptr<ClientReader<gRPCMessageHubEvent>> reader) {
     spdlog::debug("Event handler thread has been started");
 
     // Read the message stream.
-    MessageHubEvent msghub_event;
+    gRPCMessageHubEvent msghub_event;
     while (reader->Read(&msghub_event)) {
       spdlog::debug("Event from the message hub received.");
-      ParsedAstarteMessageHubEvent parsed_event =
+      std::optional<AstarteMessage> parsed_event =
           AstarteDeviceImpl::parse_message_hub_event(msghub_event);
       if (parsed_event.has_value()) {
-        const ParsedAstarteMessage &parsed_message = parsed_event.value();
+        const AstarteMessage &parsed_message = parsed_event.value();
         this->rcv_queue_.push(parsed_message);
       }
     }
@@ -107,7 +101,7 @@ struct AstarteDevice::AstarteDeviceImpl {
   /** @brief Unique identifier for the device connection with the Astarte message hub. */
   std::string node_uuid_;
   /** @brief Stub for the gRPC message hub service. */
-  std::unique_ptr<MessageHub::Stub> stub_;
+  std::unique_ptr<gRPCMessageHub::Stub> stub_;
   /** @brief List of json interfaces. Stored as binaries. */
   std::vector<std::string> interfaces_bins_;
   /** @brief Thread that handles the message hub events stream. */
@@ -120,18 +114,19 @@ struct AstarteDevice::AstarteDeviceImpl {
    */
   ClientContext client_context_;
   /** @brief Receive queue for the Astarte device. */
-  SharedQueue<ParsedAstarteMessage> rcv_queue_;
+  SharedQueue<AstarteMessage> rcv_queue_;
 
  private:
   /** @brief Parse a single message hub event. */
-  static auto parse_message_hub_event(const MessageHubEvent &event)
-      -> ParsedAstarteMessageHubEvent {
-    ParsedAstarteMessageHubEvent res = std::nullopt;
+  static auto parse_message_hub_event(const gRPCMessageHubEvent &event)
+      -> std::optional<AstarteMessage> {
+    std::optional<AstarteMessage> res = std::nullopt;
     if (event.has_message()) {
-      const AstarteMessage &astarteMessage = event.message();
-      res = parse_astarte_message(astarteMessage);
+      const gRPCAstarteMessage &astarteMessage = event.message();
+      AstarteMessageToAstarteMessage converter;
+      res = converter(astarteMessage);
     } else if (event.has_error()) {
-      const MessageHubError &error = event.error();
+      const gRPCMessageHubError &error = event.error();
       spdlog::error("Message hub error: {}", error.description());
       spdlog::error("Error source backtrace: ");
       for (const std::string &source : error.source()) {
@@ -142,116 +137,7 @@ struct AstarteDevice::AstarteDeviceImpl {
     }
     return res;
   }
-  /** @brief Parse an Astarte message. */
-  static auto parse_astarte_message(const AstarteMessage &message) -> ParsedAstarteMessage {
-    std::optional<ParsedAstarteDataType> value;
-    if (message.has_astarte_data()) {
-      const AstarteDataType &data = message.astarte_data();
-      value = parse_astarte_data_type(data);
-    } else if (message.has_astarte_unset()) {
-      spdlog::debug("Received unset message.");
-      value = std::nullopt;
-    }
-    return {message.interface_name(), message.path(), value};
-  }
-  /** @brief Parse an Astarte data type. */
-  static auto parse_astarte_data_type(const AstarteDataType &data) -> ParsedAstarteDataType {
-    ParsedAstarteDataType res;
-    if (data.has_astarte_individual()) {
-      const AstarteDataTypeIndividual &individual = data.astarte_individual();
-      spdlog::debug("Received individual message from Astarte: \n{}", individual.DebugString());
-      res = parse_astarte_data_type_individual(individual);
-    } else if (data.has_astarte_object()) {
-      std::unordered_map<std::string, AstarteIndividual> parsed_object_data;
-      const google::protobuf::Map<std::string, AstarteDataTypeIndividual> &object_data =
-          data.astarte_object().object_data();
-      spdlog::debug("Received object message from Astarte");
-      for (const auto &[key, individual] : object_data) {
-        spdlog::debug("[{}]: {}", key, individual.DebugString());
-        parsed_object_data[key] = parse_astarte_data_type_individual(individual);
-      }
-      res = parsed_object_data;
-    }
-    return res;
-  }
-  /** @brief Parse an Astarte data type individual. */
-  static auto parse_astarte_data_type_individual(const AstarteDataTypeIndividual &individual)
-      -> AstarteIndividual {
-    AstarteIndividual parsed_individual;
-    switch (individual.individual_data_case()) {
-      case AstarteDataTypeIndividual::kAstarteDouble:
-        parsed_individual = individual.astarte_double();
-        break;
-      case AstarteDataTypeIndividual::kAstarteInteger:
-        parsed_individual = individual.astarte_integer();
-        break;
-      case AstarteDataTypeIndividual::kAstarteBoolean:
-        parsed_individual = individual.astarte_boolean();
-        break;
-      case AstarteDataTypeIndividual::kAstarteLongInteger:
-        parsed_individual = individual.astarte_long_integer();
-        break;
-      case AstarteDataTypeIndividual::kAstarteString:
-        parsed_individual = individual.astarte_string();
-        break;
-      case AstarteDataTypeIndividual::kAstarteBinaryBlob:
-        parsed_individual = std::vector<uint8_t>(individual.astarte_binary_blob().begin(),
-                                                 individual.astarte_binary_blob().end());
-        break;
-      case AstarteDataTypeIndividual::kAstarteDateTime: {
-        const google::protobuf::Timestamp &timestamp = individual.astarte_date_time();
-        parsed_individual =
-            std::chrono::system_clock::time_point{std::chrono::seconds{timestamp.seconds()} +
-                                                  std::chrono::nanoseconds{timestamp.nanos()}};
-        break;
-      }
-      case AstarteDataTypeIndividual::kAstarteDoubleArray:
-        parsed_individual = std::vector<double>(individual.astarte_double_array().values().begin(),
-                                                individual.astarte_double_array().values().end());
-        break;
-      case AstarteDataTypeIndividual::kAstarteIntegerArray:
-        parsed_individual =
-            std::vector<int32_t>(individual.astarte_integer_array().values().begin(),
-                                 individual.astarte_integer_array().values().end());
-        break;
-      case AstarteDataTypeIndividual::kAstarteBooleanArray:
-        parsed_individual = std::vector<bool>(individual.astarte_boolean_array().values().begin(),
-                                              individual.astarte_boolean_array().values().end());
-        break;
-      case AstarteDataTypeIndividual::kAstarteLongIntegerArray:
-        parsed_individual =
-            std::vector<int64_t>(individual.astarte_long_integer_array().values().begin(),
-                                 individual.astarte_long_integer_array().values().end());
-        break;
-      case AstarteDataTypeIndividual::kAstarteStringArray:
-        parsed_individual =
-            std::vector<std::string>(individual.astarte_string_array().values().begin(),
-                                     individual.astarte_string_array().values().end());
-        break;
-      case AstarteDataTypeIndividual::kAstarteBinaryBlobArray: {
-        std::vector<std::vector<uint8_t>> binblob_vect;
-        for (const auto &str : individual.astarte_binary_blob_array().values()) {
-          binblob_vect.emplace_back(str.begin(), str.end());
-        }
-        parsed_individual = binblob_vect;
-        break;
-      }
-      case AstarteDataTypeIndividual::kAstarteDateTimeArray: {
-        std::vector<std::chrono::system_clock::time_point> timestamp_vect;
-        for (const auto &timestamp : individual.astarte_date_time_array().values()) {
-          timestamp_vect.emplace_back(std::chrono::seconds{timestamp.seconds()} +
-                                      std::chrono::nanoseconds{timestamp.nanos()});
-        }
-        parsed_individual = timestamp_vect;
-        break;
-      }
-      default:
-        break;
-    }
-    return parsed_individual;
-  }
 };
-
 // NOLINTEND(misc-non-private-member-variables-in-classes)
 
 AstarteDevice::AstarteDevice(const std::string &server_addr, const std::string &node_uuid)
@@ -287,16 +173,16 @@ void AstarteDevice::connect() {
       astarte_device_impl_->server_addr_, grpc::InsecureChannelCredentials(), args,
       std::move(interceptor_creators));
 
-  astarte_device_impl_->stub_ = MessageHub::NewStub(channel);
+  astarte_device_impl_->stub_ = gRPCMessageHub::NewStub(channel);
 
   // Create the node message for the attach RPC.
-  Node node;
+  gRPCNode node;
   for (const std::string &interface_json : astarte_device_impl_->interfaces_bins_) {
     node.add_interfaces_json(interface_json);
   }
 
   // Call the attach RPC.
-  std::unique_ptr<ClientReader<MessageHubEvent>> reader =
+  std::unique_ptr<ClientReader<gRPCMessageHubEvent>> reader =
       astarte_device_impl_->stub_->Attach(&astarte_device_impl_->client_context_, node);
 
   // Start a thread for the event stream
@@ -319,11 +205,11 @@ void AstarteDevice::disconnect() {
 }
 
 void AstarteDevice::send_individual(const std::string &interface_name, const std::string &path,
-                                    AstarteIndividual &individual,
-                                    std::chrono::system_clock::time_point *timestamp) {
-  auto *grpc_data = new AstarteDataType();
-  AstarteDataTypeIndividual *grpc_individual =
-      std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual);
+                                    const AstarteIndividual &individual,
+                                    const std::chrono::system_clock::time_point *timestamp) {
+  auto *grpc_data = new gRPCAstarteDataType();
+  gRPCAstarteDataTypeIndividual *grpc_individual =
+      std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual.get_data());
 
   grpc_data->set_allocated_astarte_individual(grpc_individual);
 
@@ -338,7 +224,7 @@ void AstarteDevice::send_individual(const std::string &interface_name, const std
     grpc_timestamp->set_nanos(static_cast<int32_t>(nano.count()));
   }
 
-  AstarteMessage message;
+  gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
   message.set_path(path);
   message.set_allocated_astarte_data(grpc_data);
@@ -358,11 +244,11 @@ void AstarteDevice::send_individual(const std::string &interface_name, const std
 }
 
 void AstarteDevice::send_object(const std::string &interface_name, const std::string &path,
-                                std::unordered_map<std::string, AstarteIndividual> &object,
-                                std::chrono::system_clock::time_point *timestamp) {
-  auto *grpc_data = new AstarteDataType();
+                                const AstarteObject &object,
+                                const std::chrono::system_clock::time_point *timestamp) {
+  auto *grpc_data = new gRPCAstarteDataType();
   AstarteObjectToAstarteDataTypeObject converter;
-  AstarteDataTypeObject *grpc_object = converter(object);
+  gRPCAstarteDataTypeObject *grpc_object = converter(object);
   grpc_data->set_allocated_astarte_object(grpc_object);
 
   google::protobuf::Timestamp *grpc_timestamp = nullptr;
@@ -376,7 +262,7 @@ void AstarteDevice::send_object(const std::string &interface_name, const std::st
     grpc_timestamp->set_nanos(static_cast<int32_t>(nano.count()));
   }
 
-  AstarteMessage message;
+  gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
   message.set_path(path);
   // The deallocation of grpc_data and grpc_timestamp is handled by gRPC
@@ -399,13 +285,13 @@ void AstarteDevice::send_object(const std::string &interface_name, const std::st
 }
 
 void AstarteDevice::set_property(const std::string &interface_name, const std::string &path,
-                                 AstarteIndividual &data) {
+                                 const AstarteIndividual &data) {
   this->send_individual(interface_name, path, data, nullptr);
 }
 
 void AstarteDevice::unset_property(const std::string &interface_name, const std::string &path) {
-  auto *grpc_data = new AstarteUnset();
-  AstarteMessage message;
+  auto *grpc_data = new gRPCAstarteUnset();
+  gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
   message.set_path(path);
   message.set_allocated_astarte_unset(grpc_data);
@@ -420,10 +306,7 @@ void AstarteDevice::unset_property(const std::string &interface_name, const std:
   }
 }
 
-auto AstarteDevice::poll_incoming() -> std::optional<
-    std::tuple<std::string, std::string,
-               std::optional<std::variant<AstarteIndividual,
-                                          std::unordered_map<std::string, AstarteIndividual>>>>> {
+auto AstarteDevice::poll_incoming() -> std::optional<AstarteMessage> {
   return astarte_device_impl_->rcv_queue_.pop();
 }
 

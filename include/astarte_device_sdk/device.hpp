@@ -6,7 +6,7 @@
 #define ASTARTE_DEVICE_SDK_DEVICE_H
 
 /**
- * @file astarte_device_sdk/device.h
+ * @file astarte_device_sdk/device.hpp
  * @brief Astarte device object and its related methods.
  */
 
@@ -15,11 +15,10 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <tuple>
-#include <unordered_map>
-#include <variant>
 
-#include "astarte_device_sdk/individual.h"
+#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/msg.hpp"
+#include "astarte_device_sdk/object.hpp"
 
 /** @brief Umbrella namespace for the Astarte device SDK */
 namespace AstarteDeviceSdk {
@@ -64,8 +63,8 @@ class AstarteDevice {
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
   void send_individual(const std::string &interface_name, const std::string &path,
-                       AstarteIndividual &individual,
-                       std::chrono::system_clock::time_point *timestamp);
+                       const AstarteIndividual &individual,
+                       const std::chrono::system_clock::time_point *timestamp);
   /**
    * @brief Send object data to Astarte.
    * @param interface_name The name of the interface on which to send the data.
@@ -74,8 +73,8 @@ class AstarteDevice {
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
   void send_object(const std::string &interface_name, const std::string &path,
-                   std::unordered_map<std::string, AstarteIndividual> &object,
-                   std::chrono::system_clock::time_point *timestamp);
+                   const AstarteObject &object,
+                   const std::chrono::system_clock::time_point *timestamp);
   /**
    * @brief Set a device property.
    * @param interface_name The name of the interface for the property.
@@ -83,7 +82,7 @@ class AstarteDevice {
    * @param data The property data.
    */
   void set_property(const std::string &interface_name, const std::string &path,
-                    AstarteIndividual &data);
+                    const AstarteIndividual &data);
   /**
    * @brief Unset a device property.
    * @param interface_name The name of the interface for the property.
@@ -94,10 +93,7 @@ class AstarteDevice {
    * @brief Poll incoming messages.
    * @return The received message when present, std::nullopt otherwise.
    */
-  auto poll_incoming() -> std::optional<
-      std::tuple<std::string, std::string,
-                 std::optional<std::variant<AstarteIndividual,
-                                            std::unordered_map<std::string, AstarteIndividual>>>>>;
+  auto poll_incoming() -> std::optional<AstarteMessage>;
 
  private:
   struct AstarteDeviceImpl;
