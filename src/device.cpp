@@ -96,6 +96,42 @@ struct AstarteDevice::AstarteDeviceImpl {
       spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
     }
   }
+
+  void send_generic(const std::string &interface_name, const std::string &path,
+                    const gRPCAstarteDataType &data,
+                    const std::chrono::system_clock::time_point *timestamp) const {
+    auto *grpc_data = new gRPCAstarteDataType(data);
+
+    google::protobuf::Timestamp *grpc_timestamp = nullptr;
+    if (timestamp != nullptr) {
+      const std::chrono::system_clock::duration t_duration = timestamp->time_since_epoch();
+      const std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(t_duration);
+      const std::chrono::nanoseconds nano =
+          std::chrono::duration_cast<std::chrono::nanoseconds>(t_duration) - sec;
+      grpc_timestamp = new google::protobuf::Timestamp();
+      grpc_timestamp->set_seconds(static_cast<int64_t>(sec.count()));
+      grpc_timestamp->set_nanos(static_cast<int32_t>(nano.count()));
+    }
+
+    gRPCAstarteMessage message;
+    message.set_interface_name(interface_name);
+    message.set_path(path);
+    message.set_allocated_astarte_data(grpc_data);
+    if (timestamp != nullptr) {
+      message.set_allocated_timestamp(grpc_timestamp);
+    }
+
+    ClientContext context;
+    google::protobuf::Empty response;
+    spdlog::trace("Sending data: {} {}", interface_name, path);
+    spdlog::trace("Content: \n{}", message.DebugString());
+    const Status status = stub_->Send(&context, message, &response);
+    if (!status.ok()) {
+      spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+      throw AstarteInvalidInputException(status.error_message());
+    }
+  }
+
   /** @brief gRPC server address for the Astarte message hub. */
   std::string server_addr_;
   /** @brief Unique identifier for the device connection with the Astarte message hub. */
@@ -207,89 +243,37 @@ void AstarteDevice::disconnect() {
 void AstarteDevice::send_individual(const std::string &interface_name, const std::string &path,
                                     const AstarteIndividual &individual,
                                     const std::chrono::system_clock::time_point *timestamp) {
-  auto *grpc_data = new gRPCAstarteDataType();
+  spdlog::debug("Sending individual: {} {}", interface_name, path);
+  gRPCAstarteDataType grpc_data = gRPCAstarteDataType();
   gRPCAstarteDataTypeIndividual *grpc_individual =
       std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual.get_data());
-
-  grpc_data->set_allocated_astarte_individual(grpc_individual);
-
-  google::protobuf::Timestamp *grpc_timestamp = nullptr;
-  if (timestamp != nullptr) {
-    const std::chrono::system_clock::duration t_duration = timestamp->time_since_epoch();
-    const std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(t_duration);
-    const std::chrono::nanoseconds nano =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(t_duration) - sec;
-    grpc_timestamp = new google::protobuf::Timestamp();
-    grpc_timestamp->set_seconds(static_cast<int64_t>(sec.count()));
-    grpc_timestamp->set_nanos(static_cast<int32_t>(nano.count()));
-  }
-
-  gRPCAstarteMessage message;
-  message.set_interface_name(interface_name);
-  message.set_path(path);
-  message.set_allocated_astarte_data(grpc_data);
-  if (timestamp != nullptr) {
-    message.set_allocated_timestamp(grpc_timestamp);
-  }
-
-  ClientContext context;
-  google::protobuf::Empty response;
-  spdlog::debug("Sending individual data: {} {}", interface_name, path);
-  spdlog::trace("Content: \n{}", message.DebugString());
-  const Status status = astarte_device_impl_->stub_->Send(&context, message, &response);
-  if (!status.ok()) {
-    spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    throw AstarteInvalidInputException(status.error_message());
-  }
+  grpc_data.set_allocated_astarte_individual(grpc_individual);
+  astarte_device_impl_->send_generic(interface_name, path, grpc_data, timestamp);
 }
 
 void AstarteDevice::send_object(const std::string &interface_name, const std::string &path,
                                 const AstarteObject &object,
                                 const std::chrono::system_clock::time_point *timestamp) {
-  auto *grpc_data = new gRPCAstarteDataType();
+  spdlog::debug("Sending object: {} {}", interface_name, path);
+  gRPCAstarteDataType grpc_data = gRPCAstarteDataType();
   AstarteObjectToAstarteDataTypeObject converter;
   gRPCAstarteDataTypeObject *grpc_object = converter(object);
-  grpc_data->set_allocated_astarte_object(grpc_object);
-
-  google::protobuf::Timestamp *grpc_timestamp = nullptr;
-  if (timestamp != nullptr) {
-    const std::chrono::system_clock::duration t_duration = timestamp->time_since_epoch();
-    const std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(t_duration);
-    const std::chrono::nanoseconds nano =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(t_duration) - sec;
-    grpc_timestamp = new google::protobuf::Timestamp();
-    grpc_timestamp->set_seconds(static_cast<int64_t>(sec.count()));
-    grpc_timestamp->set_nanos(static_cast<int32_t>(nano.count()));
-  }
-
-  gRPCAstarteMessage message;
-  message.set_interface_name(interface_name);
-  message.set_path(path);
-  // The deallocation of grpc_data and grpc_timestamp is handled by gRPC
-  // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
-  message.set_allocated_astarte_data(grpc_data);
-  if (timestamp != nullptr) {
-    message.set_allocated_timestamp(grpc_timestamp);
-  }
-
-  ClientContext context;
-  google::protobuf::Empty response;
-  spdlog::debug("Sending object data: {} {}", interface_name, path);
-  spdlog::trace("Content: \n{}", message.DebugString());
-  const Status status = astarte_device_impl_->stub_->Send(&context, message, &response);
-  if (!status.ok()) {
-    spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    throw AstarteInvalidInputException(status.error_message());
-  }
-  // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
+  grpc_data.set_allocated_astarte_object(grpc_object);
+  astarte_device_impl_->send_generic(interface_name, path, grpc_data, timestamp);
 }
 
 void AstarteDevice::set_property(const std::string &interface_name, const std::string &path,
                                  const AstarteIndividual &data) {
-  this->send_individual(interface_name, path, data, nullptr);
+  spdlog::debug("Setting property: {} {}", interface_name, path);
+  gRPCAstarteDataType grpc_data = gRPCAstarteDataType();
+  gRPCAstarteDataTypeIndividual *grpc_individual =
+      std::visit(AstarteIndividualToAstarteDataTypeIndividual(), data.get_data());
+  grpc_data.set_allocated_astarte_individual(grpc_individual);
+  astarte_device_impl_->send_generic(interface_name, path, grpc_data, nullptr);
 }
 
 void AstarteDevice::unset_property(const std::string &interface_name, const std::string &path) {
+  spdlog::debug("Unsetting property: {} {}", interface_name, path);
   auto *grpc_data = new gRPCAstarteUnset();
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -298,7 +282,6 @@ void AstarteDevice::unset_property(const std::string &interface_name, const std:
 
   ClientContext context;
   google::protobuf::Empty response;
-  spdlog::debug("Unsetting property: {} {}", interface_name, path);
   const Status status = astarte_device_impl_->stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
