@@ -7,19 +7,20 @@
 
 #include <astarteplatform/msghub/astarte_type.pb.h>
 
-#include <string>
-#include <unordered_map>
-
-#include "astarte_device_sdk/individual.h"
+#include "astarte_device_sdk/object.hpp"
 
 namespace AstarteDeviceSdk {
 
-using astarteplatform::msghub::AstarteDataTypeObject;
+using gRPCAstarteDataTypeObject = astarteplatform::msghub::AstarteDataTypeObject;
 
 class AstarteObjectToAstarteDataTypeObject {
  public:
-  auto operator()(std::unordered_map<std::string, AstarteIndividual>& value)
-      -> AstarteDataTypeObject*;
+  auto operator()(const AstarteObject &value) -> gRPCAstarteDataTypeObject *;
+};
+
+class AstarteDataTypeObjectToAstarteObject {
+ public:
+  auto operator()(const gRPCAstarteDataTypeObject &value) -> AstarteObject;
 };
 
 }  // namespace AstarteDeviceSdk

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device_sdk/exceptions.h"
+#include "astarte_device_sdk/exceptions.hpp"
 
 #include <string>
 #include <utility>
@@ -17,6 +17,9 @@ AstarteFileOpenException::AstarteFileOpenException(const std::string& filename)
 auto AstarteFileOpenException::get_filename() const -> const std::string& { return filename_; }
 
 AstarteInvalidInputException::AstarteInvalidInputException(const std::string& err_message)
+    : AstarteException(err_message) {}
+
+AstarteInternalException::AstarteInternalException(const std::string& err_message)
     : AstarteException(err_message) {}
 
 }  // namespace AstarteDeviceSdk

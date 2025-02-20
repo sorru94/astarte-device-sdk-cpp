@@ -6,7 +6,7 @@
 #define ASTARTE_DEVICE_SDK_EXCEPTIONS_H
 
 /**
- * @file astarte_device_sdk/exceptions.h
+ * @file astarte_device_sdk/exceptions.hpp
  * @brief Exceptions raised by the Astarte device.
  */
 
@@ -65,6 +65,18 @@ class AstarteInvalidInputException : public AstarteException {
    * @param err_message The error message with the specific of the incompatible input.
    */
   explicit AstarteInvalidInputException(const std::string& err_message);
+};
+
+/**
+ * @brief Generic exception for when an operation failed due to an internal error.
+ */
+class AstarteInternalException : public AstarteException {
+ public:
+  /**
+   * @brief Constructor for the Astarte internal exception.
+   * @param err_message The error message for the exception.
+   */
+  explicit AstarteInternalException(const std::string& err_message);
 };
 
 }  // namespace AstarteDeviceSdk
