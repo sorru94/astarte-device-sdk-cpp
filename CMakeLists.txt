@@ -79,7 +79,11 @@ target_sources(astarte_device_sdk_lib PRIVATE ${astarte_sdk_src})
 
 # Add the proto sources and headers
 file(GLOB astarte_msghub_proto_src "${astarte_msghub_proto_SOURCE_DIR}/cpp/astarteplatform/msghub/*.cc")
+if(MAKE_DEPENDENCIES_PUBLIC)
 target_include_directories(astarte_device_sdk_lib PUBLIC "${astarte_msghub_proto_SOURCE_DIR}/cpp")
+else()
+target_include_directories(astarte_device_sdk_lib PRIVATE "${astarte_msghub_proto_SOURCE_DIR}/cpp")
+endif()
 target_sources(astarte_device_sdk_lib PRIVATE ${astarte_msghub_proto_src})
 
 # Link the dependencies within the library
