@@ -65,15 +65,15 @@ jobs:
     - name: Build library for C++ 20
       working-directory: ./astarte-device-sdk-cpp
       run: |
-        mkdir ./samples/build
-        cd ./samples/build
+        mkdir ./samples/grpc/build
+        cd ./samples/grpc/build
         cmake -DUSE_SYSTEM_GRPC=ON -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
         make
     - name: Build library for C++ 17
       working-directory: ./astarte-device-sdk-cpp
       run: |
-        rm -r ./samples/build
-        mkdir ./samples/build
-        cd ./samples/build
+        rm -r ./samples/grpc/build
+        mkdir ./samples/grpc/build
+        cd ./samples/grpc/build
         cmake -DUSE_SYSTEM_GRPC=ON -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON ..
         make

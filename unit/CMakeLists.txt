@@ -29,7 +29,7 @@ target_include_directories(unit_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../priva
 
 target_link_libraries(
   unit_test
-  astarte_device_sdk_lib
+  astarte_device_sdk
   spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
   GTest::gtest_main
   gmock

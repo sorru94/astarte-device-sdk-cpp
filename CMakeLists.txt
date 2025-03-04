@@ -71,32 +71,32 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(astarte_msghub_proto)
 
 # Create a library from the source code
-add_library(astarte_device_sdk_lib)
-target_include_directories(astarte_device_sdk_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(astarte_device_sdk_lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private)
+add_library(astarte_device_sdk)
+target_include_directories(astarte_device_sdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(astarte_device_sdk PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private)
 file(GLOB astarte_sdk_src "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-target_sources(astarte_device_sdk_lib PRIVATE ${astarte_sdk_src})
+target_sources(astarte_device_sdk PRIVATE ${astarte_sdk_src})
 
 # Add the proto sources and headers
 file(GLOB astarte_msghub_proto_src "${astarte_msghub_proto_SOURCE_DIR}/cpp/astarteplatform/msghub/*.cc")
 if(MAKE_DEPENDENCIES_PUBLIC)
-target_include_directories(astarte_device_sdk_lib PUBLIC "${astarte_msghub_proto_SOURCE_DIR}/cpp")
+target_include_directories(astarte_device_sdk PUBLIC "${astarte_msghub_proto_SOURCE_DIR}/cpp")
 else()
-target_include_directories(astarte_device_sdk_lib PRIVATE "${astarte_msghub_proto_SOURCE_DIR}/cpp")
+target_include_directories(astarte_device_sdk PRIVATE "${astarte_msghub_proto_SOURCE_DIR}/cpp")
 endif()
-target_sources(astarte_device_sdk_lib PRIVATE ${astarte_msghub_proto_src})
+target_sources(astarte_device_sdk PRIVATE ${astarte_msghub_proto_src})
 
 # Link the dependencies within the library
 option(MAKE_DEPENDENCIES_PUBLIC "Make installed dependencies public" OFF)
 if(MAKE_DEPENDENCIES_PUBLIC)
-target_link_libraries(astarte_device_sdk_lib
+target_link_libraries(astarte_device_sdk
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
   PUBLIC absl::check
   PUBLIC ${_REFLECTION}
   PUBLIC ${_GRPC_GRPCPP}
   PUBLIC ${_PROTOBUF_LIBPROTOBUF})
 else()
-target_link_libraries(astarte_device_sdk_lib
+target_link_libraries(astarte_device_sdk
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
   PRIVATE absl::check
   PRIVATE ${_REFLECTION}

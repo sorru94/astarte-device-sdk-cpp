@@ -73,6 +73,7 @@ jobs:
     - name: Build the unit tests (C++ 17)
       working-directory: ./astarte-device-sdk-cpp/unit
       run: |
+        rm -r ./build
         cmake -DUSE_SYSTEM_GRPC=ON -DMAKE_DEPENDENCIES_PUBLIC=ON -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -S . -B build
         cmake --build build
     - name: Run the unit tests
