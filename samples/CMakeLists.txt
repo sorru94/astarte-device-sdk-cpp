@@ -11,9 +11,9 @@ project(SampleExecutable)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
 
 # Add the executable
-add_executable(astarte_device_sdk main.cpp)
+add_executable(app main.cpp)
 
 # Link the library created in the root directory
-target_link_libraries(astarte_device_sdk
-    PRIVATE astarte_device_sdk_lib
+target_link_libraries(app
+    PRIVATE astarte_device_sdk
     PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)

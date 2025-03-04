@@ -49,5 +49,5 @@ FetchContent_MakeAvailable(astarte_device_sdk)
 Additionally remember to link the library with your executable.
 ```CMake
 target_link_libraries(app
-    PRIVATE astarte_device_sdk_lib)
+    PRIVATE astarte_device_sdk)
 ```
