@@ -24,7 +24,7 @@ jobs:
     - name: Check formatting library
       run: clang-format --style=file --dry-run -Werror src/*.cpp include/astarte_device_sdk/*.hpp private/*.hpp
     - name: Check formatting examples
-      run: clang-format --style=file --dry-run -Werror samples/*.cpp
+      run: clang-format --style=file --dry-run -Werror samples/grpc/*.cpp
   clang-tidy-check:
     runs-on: ubuntu-latest
     concurrency:
@@ -86,19 +86,19 @@ jobs:
     - name: Configure library for C++ 20
       working-directory: ./astarte-device-sdk-cpp
       run: |
-        mkdir ./samples/build
-        cd ./samples/build
+        mkdir ./samples/grpc/build
+        cd ./samples/grpc/build
         cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DMAKE_DEPENDENCIES_PUBLIC=ON ..
     - name: Check library
       working-directory: ./astarte-device-sdk-cpp
-      run: clang-tidy -warnings-as-errors=* -header-filter='.*(?<!pb)\.hpp$' -p=samples/build include/astarte_device_sdk/*.hpp private/*.hpp src/*.cpp
+      run: clang-tidy -warnings-as-errors=* -header-filter='.*(?<!pb)\.hpp$' -p=samples/grpc/build include/astarte_device_sdk/*.hpp private/*.hpp src/*.cpp
     - name: Configure library for C++ 17
       working-directory: ./astarte-device-sdk-cpp
       run: |
-        rm -r ./samples/build
-        mkdir ./samples/build
-        cd ./samples/build
+        rm -r ./samples/grpc/build
+        mkdir ./samples/grpc/build
+        cd ./samples/grpc/build
         cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DMAKE_DEPENDENCIES_PUBLIC=ON ..
     - name: Check library
       working-directory: ./astarte-device-sdk-cpp
-      run: clang-tidy -warnings-as-errors=* -header-filter='.*(?<!pb)\.hpp$' -p=samples/build include/astarte_device_sdk/*.hpp private/*.hpp src/*.cpp
+      run: clang-tidy -warnings-as-errors=* -header-filter='.*(?<!pb)\.hpp$' -p=samples/grpc/build include/astarte_device_sdk/*.hpp private/*.hpp src/*.cpp

@@ -42,11 +42,11 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-if [[ ! -d "samples/build" ]]; then
-    mkdir -p samples/build
+if [[ ! -d "samples/grpc/build" ]]; then
+    mkdir -p samples/grpc/build
 fi
 
-cd samples/build
+cd samples/grpc/build
 
 cmake_options=""
 if [ "$no_system_grpc" != "true" ]; then

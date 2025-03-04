@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.15)
 project(SampleExecutable)
 
 # Add the root directory to make the library definition available
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
 
 # Add the executable
 add_executable(app main.cpp)
