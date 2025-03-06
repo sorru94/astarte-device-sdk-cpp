@@ -69,7 +69,7 @@ jobs:
         cmake --build build
     - name: Run the unit tests
       working-directory: ./astarte-device-sdk-cpp/unit/build
-      run: ctest
+      run: ctest || ./unit_test
     - name: Build the unit tests (C++ 17)
       working-directory: ./astarte-device-sdk-cpp/unit
       run: |
@@ -78,4 +78,4 @@ jobs:
         cmake --build build
     - name: Run the unit tests
       working-directory: ./astarte-device-sdk-cpp/unit/build
-      run: ctest
+      run: ctest || ./unit_test

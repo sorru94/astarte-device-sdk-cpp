@@ -127,6 +127,23 @@ class AstarteObject {
    * @return A string representing in human readable format the content of the class instance.
    */
   auto format() const -> std::string;
+  /**
+   * @brief Return the raw data contained in this class instance.
+   * @return The raw data contained in this class instance.
+   */
+  auto get_raw_data() const -> const MapType&;
+  /**
+   * @brief Overloader for the comparison operator ==.
+   * @param other The object to compare to.
+   * @return True when equal, false otherwise.
+   */
+  [[nodiscard]] auto operator==(const AstarteObject& other) const -> bool;
+  /**
+   * @brief Overloader for the comparison operator !=.
+   * @param other The object to compare to.
+   * @return True when different, false otherwise.
+   */
+  [[nodiscard]] auto operator!=(const AstarteObject& other) const -> bool;
 
  private:
   MapType data_;

@@ -55,6 +55,18 @@ class AstarteMessage {
    * @return A string representing in human readable format the content of the class instance.
    */
   [[nodiscard]] auto format() const -> std::string;
+  /**
+   * @brief Overloader for the comparison operator ==.
+   * @param other The object to compare to.
+   * @return True when equal, false otherwise.
+   */
+  [[nodiscard]] auto operator==(const AstarteMessage& other) const -> bool;
+  /**
+   * @brief Overloader for the comparison operator !=.
+   * @param other The object to compare to.
+   * @return True when different, false otherwise.
+   */
+  [[nodiscard]] auto operator!=(const AstarteMessage& other) const -> bool;
 
  private:
   std::string interface_;

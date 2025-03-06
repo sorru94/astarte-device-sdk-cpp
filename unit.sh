@@ -44,3 +44,4 @@ cmake --build build
 cd build && ctest
 
 make
+./unit_test

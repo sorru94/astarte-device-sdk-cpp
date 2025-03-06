@@ -6,17 +6,22 @@
 
 #include <astarteplatform/msghub/astarte_type.pb.h>
 #include <google/protobuf/timestamp.pb.h>
+#include <libbase64.h>
 #include <spdlog/spdlog.h>
 
 #include <chrono>
 #include <cstdint>
 #include <ctime>
-#include <iomanip>
-#include <ios>
 #include <sstream>
 #include <string>
 #include <variant>
 #include <vector>
+
+#if __cplusplus >= 202002L
+#include <format>
+#else  // __cplusplus >= 202002L
+#include <iomanip>
+#endif  // __cplusplus >= 202002L
 
 #include "astarte_device_sdk/exceptions.hpp"
 #include "astarte_device_sdk/type.hpp"
@@ -36,45 +41,6 @@ using gRPCAstarteIntegerArray = astarteplatform::msghub::AstarteIntegerArray;
 using gRPCAstarteLongIntegerArray = astarteplatform::msghub::AstarteLongIntegerArray;
 using gRPCAstarteStringArray = astarteplatform::msghub::AstarteStringArray;
 using gRPCAstarteDataTypeIndividual = astarteplatform::msghub::AstarteDataTypeIndividual;
-
-namespace {
-template <typename T>
-auto format_vector(const std::vector<T> &data) -> std::string {
-  std::ostringstream oss;
-  oss << "[";
-  for (size_t i = 0; i < data.size(); ++i) {
-    oss << data[i];
-    if (i != data.size() - 1) {
-      oss << ", ";
-    }
-  }
-  oss << "]";
-  return oss.str();
-}
-
-auto format_hex(const std::vector<uint8_t> &data) -> std::string {
-  std::ostringstream oss;
-  for (size_t i = 0; i < data.size(); ++i) {
-    oss << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(data[i]);
-    if (i != data.size() - 1) {
-      oss << " ";
-    }
-  }
-  return oss.str();
-}
-
-// This function is only used for pretty printing
-// NOLINTBEGIN(concurrency-mt-unsafe)
-auto format_time(const std::chrono::system_clock::time_point &data) -> std::string {
-  std::ostringstream oss;
-  const std::time_t time = std::chrono::system_clock::to_time_t(data);
-  const std::tm utc_tm = *std::gmtime(&time);
-  oss << std::put_time(&utc_tm, "%Y-%m-%d %H:%M:%S %Z");
-  return oss.str();
-}
-// NOLINTEND(concurrency-mt-unsafe)
-
-}  // namespace
 
 auto AstarteIndividual::get_type() const -> AstarteType {
   struct Visitor {
@@ -107,59 +73,6 @@ auto AstarteIndividual::get_type() const -> AstarteType {
   return std::visit(Visitor{}, data_);
 }
 
-// This function while not very readable has an acceptable size
-// NOLINTBEGIN(readability-function-size)
-auto AstarteIndividual::format() const -> std::string {
-  std::ostringstream oss;
-  if (std::holds_alternative<int32_t>(data_)) {
-    oss << std::get<int32_t>(data_);
-  } else if (std::holds_alternative<int64_t>(data_)) {
-    oss << std::get<int64_t>(data_);
-  } else if (std::holds_alternative<double>(data_)) {
-    oss << std::get<double>(data_);
-  } else if (std::holds_alternative<bool>(data_)) {
-    oss << std::get<bool>(data_);
-  } else if (std::holds_alternative<std::string>(data_)) {
-    oss << std::get<std::string>(data_);
-  } else if (std::holds_alternative<std::vector<uint8_t>>(data_)) {
-    oss << format_hex(std::get<std::vector<uint8_t>>(data_));
-  } else if (std::holds_alternative<std::chrono::system_clock::time_point>(data_)) {
-    oss << format_time(std::get<std::chrono::system_clock::time_point>(data_));
-  } else if (std::holds_alternative<std::vector<int32_t>>(data_)) {
-    oss << format_vector(std::get<std::vector<int32_t>>(data_));
-  } else if (std::holds_alternative<std::vector<int64_t>>(data_)) {
-    oss << format_vector(std::get<std::vector<int64_t>>(data_));
-  } else if (std::holds_alternative<std::vector<double>>(data_)) {
-    oss << format_vector(std::get<std::vector<double>>(data_));
-  } else if (std::holds_alternative<std::vector<bool>>(data_)) {
-    oss << format_vector(std::get<std::vector<bool>>(data_));
-  } else if (std::holds_alternative<std::vector<std::string>>(data_)) {
-    oss << format_vector(std::get<std::vector<std::string>>(data_));
-  } else if (std::holds_alternative<std::vector<std::vector<uint8_t>>>(data_)) {
-    const auto &data = std::get<std::vector<std::vector<uint8_t>>>(data_);
-    oss << "[";
-    for (size_t i = 0; i < data.size(); ++i) {
-      oss << format_hex(data[i]);
-      if (i != data.size() - 1) {
-        oss << ", ";
-      }
-    }
-    oss << "]";
-  } else if (std::holds_alternative<std::vector<std::chrono::system_clock::time_point>>(data_)) {
-    const auto &data = std::get<std::vector<std::chrono::system_clock::time_point>>(data_);
-    oss << "[";
-    for (size_t i = 0; i < data.size(); ++i) {
-      oss << format_time(data[i]);
-      if (i != data.size() - 1) {
-        oss << ", ";
-      }
-    }
-    oss << "]";
-  }
-  return oss.str();
-}
-// NOLINTEND(readability-function-size)
-
 auto AstarteIndividual::get_raw_data() const
     -> const std::variant<int32_t, int64_t, double, bool, std::string, std::vector<uint8_t>,
                           std::chrono::system_clock::time_point, std::vector<int32_t>,
@@ -167,6 +80,13 @@ auto AstarteIndividual::get_raw_data() const
                           std::vector<std::string>, std::vector<std::vector<uint8_t>>,
                           std::vector<std::chrono::system_clock::time_point>> & {
   return this->data_;
+}
+
+auto AstarteIndividual::operator==(const AstarteIndividual &other) const -> bool {
+  return this->data_ == other.get_raw_data();
+}
+auto AstarteIndividual::operator!=(const AstarteIndividual &other) const -> bool {
+  return this->data_ != other.get_raw_data();
 }
 
 auto AstarteIndividualToAstarteDataTypeIndividual::operator()(int32_t value)
@@ -370,6 +290,142 @@ auto AstarteDataTypeIndividualToAstarteIndividual::operator()(
       break;
   }
   throw AstarteInternalException("Found an unrecognized gRPC gRPCAstarteDataTypeIndividual.");
+}
+// NOLINTEND(readability-function-size)
+
+namespace {
+template <typename T>
+auto format_vector(const std::vector<T> &data) -> std::string {
+  std::ostringstream oss;
+  oss << "[";
+  for (size_t i = 0; i < data.size(); ++i) {
+    oss << data[i];
+    if (i != data.size() - 1) {
+      oss << ", ";
+    }
+  }
+  oss << "]";
+  return oss.str();
+}
+
+auto format_vector_bool(const std::vector<bool> &data) -> std::string {
+  std::ostringstream oss;
+  oss << "[";
+  for (size_t i = 0; i < data.size(); ++i) {
+    oss << (data[i] ? "true" : "false");
+    if (i != data.size() - 1) {
+      oss << ", ";
+    }
+  }
+  oss << "]";
+  return oss.str();
+}
+
+auto format_vector_string(const std::vector<std::string> &data) -> std::string {
+  std::ostringstream oss;
+  oss << "[";
+  for (size_t i = 0; i < data.size(); ++i) {
+    oss << "\"" << data[i] << "\"";
+    if (i != data.size() - 1) {
+      oss << ", ";
+    }
+  }
+  oss << "]";
+  return oss.str();
+}
+
+auto format_base64(const std::vector<uint8_t> &data) -> std::string {
+  std::ostringstream oss;
+  const size_t input_size = data.size();
+  size_t output_size = (input_size + 2) / 3 * 4;  // The +2 accounts for sizes non multiple of 3
+  std::vector<char> out_str(output_size + 1);
+  // Reinterpret cast is fine here as we go from `const unsigned char *` to `const char *`
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  base64_encode(reinterpret_cast<const char *>(data.data()), input_size, out_str.data(),
+                &output_size, 0);
+  oss << "\"" << out_str.data() << "\"";
+  return oss.str();
+}
+
+auto format_vector_binaryblob(const std::vector<std::vector<uint8_t>> &data) -> std::string {
+  std::ostringstream oss;
+  oss << "[";
+  for (size_t i = 0; i < data.size(); ++i) {
+    oss << format_base64(data[i]);
+    if (i != data.size() - 1) {
+      oss << ", ";
+    }
+  }
+  oss << "]";
+  return oss.str();
+}
+
+// This function is only used for pretty printing
+// NOLINTBEGIN(concurrency-mt-unsafe)
+auto format_timestamp(const std::chrono::system_clock::time_point &data) -> std::string {
+  std::ostringstream oss;
+#if __cplusplus >= 202002L
+  oss << std::format("{0:%F}T{0:%T}Z",
+                     std::chrono::time_point_cast<std::chrono::milliseconds>(data));
+#else   // __cplusplus >= 202002L
+  const std::time_t time = std::chrono::system_clock::to_time_t(data);
+  const std::tm utc_tm = *std::gmtime(&time);
+  oss << std::put_time(&utc_tm, "%FT%T.000Z");
+#endif  // __cplusplus >= 202002L
+  return oss.str();
+}
+// NOLINTEND(concurrency-mt-unsafe)
+
+auto format_vector_timestamp(const std::vector<std::chrono::system_clock::time_point> &data)
+    -> std::string {
+  std::ostringstream oss;
+  oss << "[";
+  for (size_t i = 0; i < data.size(); ++i) {
+    oss << "\"" << format_timestamp(data[i]) << "\"";
+    if (i != data.size() - 1) {
+      oss << ", ";
+    }
+  }
+  oss << "]";
+  return oss.str();
+}
+}  // namespace
+
+// This function while not very readable has an acceptable size
+// NOLINTBEGIN(readability-function-size)
+auto AstarteIndividual::format() const -> std::string {
+  std::ostringstream oss;
+  if (std::holds_alternative<int32_t>(data_)) {
+    oss << std::get<int32_t>(data_);
+  } else if (std::holds_alternative<int64_t>(data_)) {
+    oss << std::get<int64_t>(data_);
+  } else if (std::holds_alternative<double>(data_)) {
+    oss << std::get<double>(data_);
+  } else if (std::holds_alternative<bool>(data_)) {
+    oss << (std::get<bool>(data_) ? "true" : "false");
+  } else if (std::holds_alternative<std::string>(data_)) {
+    oss << "\"" << std::get<std::string>(data_) << "\"";
+  } else if (std::holds_alternative<std::vector<uint8_t>>(data_)) {
+    oss << format_base64(std::get<std::vector<uint8_t>>(data_));
+  } else if (std::holds_alternative<std::chrono::system_clock::time_point>(data_)) {
+    oss << "\"" << format_timestamp(std::get<std::chrono::system_clock::time_point>(data_)) << "\"";
+  } else if (std::holds_alternative<std::vector<int32_t>>(data_)) {
+    oss << format_vector(std::get<std::vector<int32_t>>(data_));
+  } else if (std::holds_alternative<std::vector<int64_t>>(data_)) {
+    oss << format_vector(std::get<std::vector<int64_t>>(data_));
+  } else if (std::holds_alternative<std::vector<double>>(data_)) {
+    oss << format_vector(std::get<std::vector<double>>(data_));
+  } else if (std::holds_alternative<std::vector<bool>>(data_)) {
+    oss << format_vector_bool(std::get<std::vector<bool>>(data_));
+  } else if (std::holds_alternative<std::vector<std::string>>(data_)) {
+    oss << format_vector_string(std::get<std::vector<std::string>>(data_));
+  } else if (std::holds_alternative<std::vector<std::vector<uint8_t>>>(data_)) {
+    oss << format_vector_binaryblob(std::get<std::vector<std::vector<uint8_t>>>(data_));
+  } else if (std::holds_alternative<std::vector<std::chrono::system_clock::time_point>>(data_)) {
+    oss << format_vector_timestamp(
+        std::get<std::vector<std::chrono::system_clock::time_point>>(data_));
+  }
+  return oss.str();
 }
 // NOLINTEND(readability-function-size)
 

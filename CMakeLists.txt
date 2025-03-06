@@ -60,6 +60,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+FetchContent_Declare(
+    base64
+    GIT_REPOSITORY https://github.com/aklomp/base64.git
+    GIT_TAG        v0.5.2
+)
+FetchContent_MakeAvailable(base64)
+
 # Astarte message hub protos
 set(MSGHUB_PROTO_REPO_URL https://github.com/astarte-platform/astarte-message-hub-proto.git)
 set(MSGHUB_PROTO_REPO_BRANCH master)
@@ -91,6 +98,7 @@ option(MAKE_DEPENDENCIES_PUBLIC "Make installed dependencies public" OFF)
 if(MAKE_DEPENDENCIES_PUBLIC)
 target_link_libraries(astarte_device_sdk
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
+  PRIVATE base64
   PUBLIC absl::check
   PUBLIC ${_REFLECTION}
   PUBLIC ${_GRPC_GRPCPP}
@@ -98,6 +106,7 @@ target_link_libraries(astarte_device_sdk
 else()
 target_link_libraries(astarte_device_sdk
   PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
+  PRIVATE base64
   PRIVATE absl::check
   PRIVATE ${_REFLECTION}
   PRIVATE ${_GRPC_GRPCPP}
