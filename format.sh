@@ -53,16 +53,22 @@ if [ "$installed_version" != "$package_version" ]; then
     fi
 fi
 
-# Run clang-format
-format_files=("src/*.cpp" "include/astarte_device_sdk/*.hpp" "private/*.hpp" "samples/*/*.cpp")
-if [ "$check_only" = true ]; then
-    command="--dry-run -Werror"
-else
-    command="-i"
-fi
-for file_pattern in "${format_files[@]}"; do
-    clang-format --style=file $command $file_pattern
-    if [ $? -ne 0 ]; then
-        exit 1
+# Define a format files function
+format_filess() {
+    if [ "$check_only" = true ]; then
+        command_args="--dry-run -Werror"
+    else
+        command_args="-i"
     fi
-done
+    for file_pattern in "$@"; do
+        clang-format --style=file $command_args $file_pattern
+        if [ $? -ne 0 ]; then
+            exit 1
+        fi
+    done
+}
+
+format_filess "src/*.cpp" "include/astarte_device_sdk/*.hpp" "private/*.hpp"
+format_filess "samples/*/*.cpp"
+format_filess "unit/*.cpp"
+format_filess "end_to_end/src/*.cpp" "end_to_end/include/*.hpp"

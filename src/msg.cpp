@@ -37,6 +37,15 @@ auto AstarteMessage::into() const
   return data_;
 }
 
+auto AstarteMessage::operator==(const AstarteMessage &other) const -> bool {
+  return this->interface_ == other.get_interface() && this->path_ == other.get_path() &&
+         this->data_ == other.into();
+}
+auto AstarteMessage::operator!=(const AstarteMessage &other) const -> bool {
+  return this->interface_ != other.get_interface() || this->path_ != other.get_path() ||
+         this->data_ != other.into();
+}
+
 auto AstarteMessage::format() const -> std::string {
   std::ostringstream oss;
   oss << "{interface: " << interface_ << ", path: " << path_;

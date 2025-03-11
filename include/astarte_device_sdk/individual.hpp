@@ -134,6 +134,18 @@ class AstarteIndividual {
                             std::vector<int64_t>, std::vector<double>, std::vector<bool>,
                             std::vector<std::string>, std::vector<std::vector<uint8_t>>,
                             std::vector<std::chrono::system_clock::time_point>>&;
+  /**
+   * @brief Overloader for the comparison operator ==.
+   * @param other The object to compare to.
+   * @return True when equal, false otherwise.
+   */
+  [[nodiscard]] auto operator==(const AstarteIndividual& other) const -> bool;
+  /**
+   * @brief Overloader for the comparison operator !=.
+   * @param other The object to compare to.
+   * @return True when different, false otherwise.
+   */
+  [[nodiscard]] auto operator!=(const AstarteIndividual& other) const -> bool;
 
  private:
   std::variant<int32_t, int64_t, double, bool, std::string, std::vector<uint8_t>,

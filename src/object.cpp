@@ -69,6 +69,15 @@ auto AstarteObject::format() const -> std::string {
   return oss.str();
 }
 
+auto AstarteObject::get_raw_data() const -> const MapType& { return this->data_; }
+
+auto AstarteObject::operator==(const AstarteObject& other) const -> bool {
+  return this->data_ == other.get_raw_data();
+}
+auto AstarteObject::operator!=(const AstarteObject& other) const -> bool {
+  return this->data_ != other.get_raw_data();
+}
+
 auto AstarteObjectToAstarteDataTypeObject::operator()(const AstarteObject& value)
     -> gRPCAstarteDataTypeObject* {
   auto* grpc_object = new gRPCAstarteDataTypeObject();

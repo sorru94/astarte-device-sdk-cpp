@@ -11,3 +11,9 @@ path = "samples/grpc/interfaces/*.json"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "SECO Mind Srl"
 SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "end_to_end/interfaces/*.json"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "SECO Mind Srl"
+SPDX-License-Identifier = "Apache-2.0"
