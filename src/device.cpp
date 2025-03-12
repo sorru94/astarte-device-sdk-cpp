@@ -37,10 +37,8 @@
 #include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
+#include "grpc_converter.hpp"
 #include "grpc_interceptors.hpp"
-#include "individual_private.hpp"
-#include "msg_private.hpp"
-#include "object_private.hpp"
 #include "shared_queue.hpp"
 
 namespace AstarteDeviceSdk {
@@ -159,7 +157,7 @@ struct AstarteDevice::AstarteDeviceImpl {
     std::optional<AstarteMessage> res = std::nullopt;
     if (event.has_message()) {
       const gRPCAstarteMessage &astarteMessage = event.message();
-      AstarteMessageToAstarteMessage converter;
+      GrpcConverter converter;
       res = converter(astarteMessage);
     } else if (event.has_error()) {
       const gRPCMessageHubError &error = event.error();
@@ -246,7 +244,7 @@ void AstarteDevice::send_individual(const std::string &interface_name, const std
   spdlog::debug("Sending individual: {} {}", interface_name, path);
   gRPCAstarteDataType grpc_data = gRPCAstarteDataType();
   gRPCAstarteDataTypeIndividual *grpc_individual =
-      std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual.get_raw_data());
+      std::visit(GrpcConverter(), individual.get_raw_data());
   grpc_data.set_allocated_astarte_individual(grpc_individual);
   astarte_device_impl_->send_generic(interface_name, path, grpc_data, timestamp);
 }
@@ -256,7 +254,7 @@ void AstarteDevice::send_object(const std::string &interface_name, const std::st
                                 const std::chrono::system_clock::time_point *timestamp) {
   spdlog::debug("Sending object: {} {}", interface_name, path);
   gRPCAstarteDataType grpc_data = gRPCAstarteDataType();
-  AstarteObjectToAstarteDataTypeObject converter;
+  GrpcConverter converter;
   gRPCAstarteDataTypeObject *grpc_object = converter(object);
   grpc_data.set_allocated_astarte_object(grpc_object);
   astarte_device_impl_->send_generic(interface_name, path, grpc_data, timestamp);
@@ -266,8 +264,7 @@ void AstarteDevice::set_property(const std::string &interface_name, const std::s
                                  const AstarteIndividual &data) {
   spdlog::debug("Setting property: {} {}", interface_name, path);
   gRPCAstarteDataType grpc_data = gRPCAstarteDataType();
-  gRPCAstarteDataTypeIndividual *grpc_individual =
-      std::visit(AstarteIndividualToAstarteDataTypeIndividual(), data.get_raw_data());
+  gRPCAstarteDataTypeIndividual *grpc_individual = std::visit(GrpcConverter(), data.get_raw_data());
   grpc_data.set_allocated_astarte_individual(grpc_individual);
   astarte_device_impl_->send_generic(interface_name, path, grpc_data, nullptr);
 }

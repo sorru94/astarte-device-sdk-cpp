@@ -2,9 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef INDIVIDUAL_PRIVATE_H
-#define INDIVIDUAL_PRIVATE_H
+#ifndef GRPC_CONVERTER_H
+#define GRPC_CONVERTER_H
 
+#include <astarteplatform/msghub/astarte_message.pb.h>
 #include <astarteplatform/msghub/astarte_type.pb.h>
 
 #include <chrono>
@@ -13,12 +14,16 @@
 #include <vector>
 
 #include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/msg.hpp"
+#include "astarte_device_sdk/object.hpp"
 
 namespace AstarteDeviceSdk {
 
 using gRPCAstarteDataTypeIndividual = astarteplatform::msghub::AstarteDataTypeIndividual;
+using gRPCAstarteDataTypeObject = astarteplatform::msghub::AstarteDataTypeObject;
+using gRPCAstarteMessage = astarteplatform::msghub::AstarteMessage;
 
-class AstarteIndividualToAstarteDataTypeIndividual {
+class GrpcConverter {
  public:
   auto operator()(int32_t value) -> gRPCAstarteDataTypeIndividual *;
   auto operator()(int64_t value) -> gRPCAstarteDataTypeIndividual *;
@@ -36,13 +41,14 @@ class AstarteIndividualToAstarteDataTypeIndividual {
       -> gRPCAstarteDataTypeIndividual *;
   auto operator()(const std::vector<std::chrono::system_clock::time_point> &values)
       -> gRPCAstarteDataTypeIndividual *;
-};
 
-class AstarteDataTypeIndividualToAstarteIndividual {
- public:
+  auto operator()(const AstarteObject &value) -> gRPCAstarteDataTypeObject *;
+
   auto operator()(const gRPCAstarteDataTypeIndividual &value) -> AstarteIndividual;
+  auto operator()(const gRPCAstarteDataTypeObject &value) -> AstarteObject;
+  auto operator()(const gRPCAstarteMessage &value) -> AstarteMessage;
 };
 
 }  // namespace AstarteDeviceSdk
 
-#endif  // INDIVIDUAL_PRIVATE_H
+#endif  // GRPC_CONVERTER_H
