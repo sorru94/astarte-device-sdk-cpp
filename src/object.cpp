@@ -4,22 +4,14 @@
 
 #include "astarte_device_sdk/object.hpp"
 
-#include <astarteplatform/msghub/astarte_type.pb.h>
-
 #include <initializer_list>
 #include <sstream>
 #include <string>
 #include <utility>
-#include <variant>
 
 #include "astarte_device_sdk/individual.hpp"
-#include "individual_private.hpp"
-#include "object_private.hpp"
 
 namespace AstarteDeviceSdk {
-
-using gRPCAstarteDataTypeIndividual = astarteplatform::msghub::AstarteDataTypeIndividual;
-using gRPCAstarteDataTypeObject = astarteplatform::msghub::AstarteDataTypeObject;
 
 // Default constructor
 AstarteObject::AstarteObject() = default;
@@ -76,34 +68,6 @@ auto AstarteObject::operator==(const AstarteObject& other) const -> bool {
 }
 auto AstarteObject::operator!=(const AstarteObject& other) const -> bool {
   return this->data_ != other.get_raw_data();
-}
-
-auto AstarteObjectToAstarteDataTypeObject::operator()(const AstarteObject& value)
-    -> gRPCAstarteDataTypeObject* {
-  auto* grpc_object = new gRPCAstarteDataTypeObject();
-  google::protobuf::Map<std::string, gRPCAstarteDataTypeIndividual>* grpc_map =
-      grpc_object->mutable_object_data();
-  for (const auto& pair : value) {
-    const std::string& path = pair.first;
-    const AstarteIndividual& individual = pair.second;
-    gRPCAstarteDataTypeIndividual* grpc_individual =
-        std::visit(AstarteIndividualToAstarteDataTypeIndividual(), individual.get_raw_data());
-    // TODO(simone): This could be a memory leak. It should be investigated.
-    (*grpc_map)[path] = *grpc_individual;
-  }
-  return grpc_object;
-}
-
-auto AstarteDataTypeObjectToAstarteObject::operator()(const gRPCAstarteDataTypeObject& value)
-    -> AstarteObject {
-  AstarteObject object;
-  const google::protobuf::Map<std::string, gRPCAstarteDataTypeIndividual>& object_data =
-      value.object_data();
-  AstarteDataTypeIndividualToAstarteIndividual converter;
-  for (const auto& [key, individual] : object_data) {
-    object.insert(key, converter(individual));
-  }
-  return object;
 }
 
 }  // namespace AstarteDeviceSdk

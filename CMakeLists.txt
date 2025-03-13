@@ -69,7 +69,7 @@ FetchContent_MakeAvailable(base64)
 
 # Astarte message hub protos
 set(MSGHUB_PROTO_REPO_URL https://github.com/astarte-platform/astarte-message-hub-proto.git)
-set(MSGHUB_PROTO_REPO_BRANCH master)
+set(MSGHUB_PROTO_REPO_BRANCH e3577c57b0e4849ef93f29547c183a294f045bec)
 FetchContent_Declare(
     astarte_msghub_proto
     GIT_REPOSITORY ${MSGHUB_PROTO_REPO_URL}
