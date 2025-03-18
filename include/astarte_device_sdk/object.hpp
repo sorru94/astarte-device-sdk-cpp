@@ -14,22 +14,22 @@
 #include <string>
 #include <unordered_map>
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 
 namespace AstarteDeviceSdk {
 
 /** @brief Astarte object class, representing the Astarte object datastream data. */
 class AstarteObject {
  public:
-  /** @brief Helper type for the map of paths and Astarte individuals. */
-  using MapType = std::unordered_map<std::string, AstarteIndividual>;
-  /** @brief Helper type for the iterator over the map of paths and Astarte individuals. */
+  /** @brief Helper type for the map of paths and Astarte datas. */
+  using MapType = std::unordered_map<std::string, AstarteData>;
+  /** @brief Helper type for the iterator over the map of paths and Astarte datas. */
   using iterator = MapType::iterator;
-  /** @brief Helper type for the const iterator over the map of paths and Astarte individuals. */
+  /** @brief Helper type for the const iterator over the map of paths and Astarte datas. */
   using const_iterator = MapType::const_iterator;
-  /** @brief Helper type for size type of the map of paths and Astarte individuals. */
+  /** @brief Helper type for size type of the map of paths and Astarte datas. */
   using size_type = MapType::size_type;
-  /** @brief Helper type for value type of the map of paths and Astarte individuals. */
+  /** @brief Helper type for value type of the map of paths and Astarte datas. */
   using value_type = MapType::value_type;
 
   /** @brief Constructor for the class. To instantiate an empty object. */
@@ -45,14 +45,14 @@ class AstarteObject {
    * @param key The key to search for.
    * @return Reference to the value corresponding to the key.
    */
-  auto at(const std::string& key) -> AstarteIndividual&;
+  auto at(const std::string& key) -> AstarteData&;
   /**
    * @brief Access specified element with bounds checking.
    * @details Soft wrapper for the equivalent method in the std::unordered_map.
    * @param key The key to search for.
    * @return Reference to the value corresponding to the key.
    */
-  auto at(const std::string& key) const -> const AstarteIndividual&;
+  auto at(const std::string& key) const -> const AstarteData&;
   /**
    * @brief Returns an iterator to the beginning of the specified bucket.
    * @details Soft wrapper for the equivalent method in the std::unordered_map.
@@ -93,9 +93,9 @@ class AstarteObject {
    * @brief Insert elements.
    * @details Soft wrapper for the equivalent method in the std::unordered_map.
    * @param key Key to insert.
-   * @param individual Value to insert.
+   * @param data Value to insert.
    */
-  void insert(const std::string& key, const AstarteIndividual& individual);
+  void insert(const std::string& key, const AstarteData& data);
   /**
    * @brief Erases elements.
    * @details Soft wrapper for the equivalent method in the std::unordered_map.

@@ -5,22 +5,21 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 #include "grpc_converter.hpp"
 
-using AstarteDeviceSdk::AstarteIndividual;
+using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::gRPCAstarteDataTypeIndividual;
 using AstarteDeviceSdk::GrpcConverter;
 
-TEST(ConversionTest, IndividualToGRPC) {
+TEST(ConversionTest, DataToGRPC) {
   int32_t value = 199;
-  auto individual = AstarteIndividual(value);
-  gRPCAstarteDataTypeIndividual *grpc_individual =
-      std::visit(GrpcConverter(), individual.get_raw_data());
+  auto data = AstarteData(value);
+  gRPCAstarteDataTypeIndividual *grpc_individual = std::visit(GrpcConverter(), data.get_raw_data());
   EXPECT_EQ(grpc_individual->individual_data_case(),
             gRPCAstarteDataTypeIndividual::kAstarteInteger);
   EXPECT_EQ(grpc_individual->astarte_integer(), value);
   GrpcConverter converter;
-  AstarteIndividual original = converter(*grpc_individual);
+  AstarteData original = converter(*grpc_individual);
   EXPECT_EQ(original.into<int32_t>(), value);
 }

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 
 #include <libbase64.h>
 
@@ -24,7 +24,7 @@
 
 namespace AstarteDeviceSdk {
 
-auto AstarteIndividual::get_type() const -> AstarteType {
+auto AstarteData::get_type() const -> AstarteType {
   struct Visitor {
     auto operator()(const int32_t & /*unused*/) -> AstarteType { return INTEGER; }
     auto operator()(const int64_t & /*unused*/) -> AstarteType { return LONGINTEGER; }
@@ -55,7 +55,7 @@ auto AstarteIndividual::get_type() const -> AstarteType {
   return std::visit(Visitor{}, data_);
 }
 
-auto AstarteIndividual::get_raw_data() const
+auto AstarteData::get_raw_data() const
     -> const std::variant<int32_t, int64_t, double, bool, std::string, std::vector<uint8_t>,
                           std::chrono::system_clock::time_point, std::vector<int32_t>,
                           std::vector<int64_t>, std::vector<double>, std::vector<bool>,
@@ -64,10 +64,10 @@ auto AstarteIndividual::get_raw_data() const
   return this->data_;
 }
 
-auto AstarteIndividual::operator==(const AstarteIndividual &other) const -> bool {
+auto AstarteData::operator==(const AstarteData &other) const -> bool {
   return this->data_ == other.get_raw_data();
 }
-auto AstarteIndividual::operator!=(const AstarteIndividual &other) const -> bool {
+auto AstarteData::operator!=(const AstarteData &other) const -> bool {
   return this->data_ != other.get_raw_data();
 }
 
@@ -171,7 +171,7 @@ auto format_vector_timestamp(const std::vector<std::chrono::system_clock::time_p
 
 // This function while not very readable has an acceptable size
 // NOLINTBEGIN(readability-function-size)
-auto AstarteIndividual::format() const -> std::string {
+auto AstarteData::format() const -> std::string {
   std::ostringstream oss;
   if (std::holds_alternative<int32_t>(data_)) {
     oss << std::get<int32_t>(data_);

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -10,90 +10,90 @@
 #include <chrono>
 #include <vector>
 
-using AstarteDeviceSdk::AstarteIndividual;
+using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteType;
 
 using testing::ContainerEq;
 
-TEST(InidividualTest, InstantiationInteger) {
+TEST(DataTest, InstantiationInteger) {
   int32_t value = 52;
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<int32_t>();
+  auto data = AstarteData(value);
+  auto original = data.into<int32_t>();
   EXPECT_EQ(value, original);
 }
-TEST(InidividualTest, FormatInteger) {
+TEST(DataTest, FormatInteger) {
   int32_t value = 52;
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "52");
 }
 
-TEST(InidividualTest, InstantiationLongInteger) {
+TEST(DataTest, InstantiationLongInteger) {
   int64_t value = 52;
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<int64_t>();
+  auto data = AstarteData(value);
+  auto original = data.into<int64_t>();
   EXPECT_EQ(value, original);
 }
-TEST(InidividualTest, FormatLongInteger) {
+TEST(DataTest, FormatLongInteger) {
   int64_t value = 52;
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "52");
 }
 
-TEST(InidividualTest, InstantiationDouble) {
+TEST(DataTest, InstantiationDouble) {
   double value = 43.5;
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<double>();
+  auto data = AstarteData(value);
+  auto original = data.into<double>();
   EXPECT_FLOAT_EQ(value, original);
 }
-TEST(InidividualTest, FormatDouble) {
+TEST(DataTest, FormatDouble) {
   double value = 43.5;
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "43.5");
 }
 
-TEST(InidividualTest, InstantiationBoolean) {
+TEST(DataTest, InstantiationBoolean) {
   bool value = true;
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<bool>();
+  auto data = AstarteData(value);
+  auto original = data.into<bool>();
   EXPECT_EQ(value, original);
 }
-TEST(InidividualTest, FormatBoolean) {
+TEST(DataTest, FormatBoolean) {
   bool value = true;
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "true");
 }
 
-TEST(InidividualTest, InstantiationString) {
+TEST(DataTest, InstantiationString) {
   std::string value = "Test string";
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::string>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::string>();
   EXPECT_STREQ(value.c_str(), original.c_str());
 }
-TEST(InidividualTest, FormatString) {
+TEST(DataTest, FormatString) {
   std::string value = "Test string";
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "\"Test string\"");
 }
 
-TEST(InidividualTest, InstantiationBinaryBlob) {
+TEST(DataTest, InstantiationBinaryBlob) {
   std::vector<uint8_t> value = {0x12U, 0x22U, 0x42};
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<uint8_t>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<uint8_t>>();
   EXPECT_THAT(value, ContainerEq(original));
 }
-TEST(InidividualTest, FormatBinaryBlob) {
+TEST(DataTest, FormatBinaryBlob) {
   std::vector<uint8_t> value = {0x12U, 0x22U, 0x42};
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "\"EiJC\"");
 }
 
-TEST(InidividualTest, InstantiationDatetime) {
+TEST(DataTest, InstantiationDatetime) {
 #if __cplusplus >= 202002L
   std::chrono::system_clock::time_point value =
       std::chrono::sys_days(std::chrono::year_month_day(
@@ -110,11 +110,11 @@ TEST(InidividualTest, InstantiationDatetime) {
   std::time_t time = std::mktime(&dtm);
   std::chrono::system_clock::time_point value = std::chrono::system_clock::from_time_t(time);
 #endif  // __cplusplus >= 202002L
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::chrono::system_clock::time_point>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::chrono::system_clock::time_point>();
   EXPECT_EQ(value, original);
 }
-TEST(InidividualTest, FormatDatetime) {
+TEST(DataTest, FormatDatetime) {
 #if __cplusplus >= 202002L
   std::chrono::system_clock::time_point value =
       std::chrono::sys_days(std::chrono::year_month_day(
@@ -131,90 +131,90 @@ TEST(InidividualTest, FormatDatetime) {
   std::time_t time = std::mktime(&dtm);
   std::chrono::system_clock::time_point value = std::chrono::system_clock::from_time_t(time);
 #endif  // __cplusplus >= 202002L
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "\"1994-04-12T10:15:00.000Z\"");
 }
 
-TEST(InidividualTest, InstantiationIntegerArray) {
+TEST(DataTest, InstantiationIntegerArray) {
   std::vector<int32_t> value{12, 43, 11, 0};
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<int32_t>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<int32_t>>();
   EXPECT_THAT(original, ContainerEq(value));
 }
-TEST(InidividualTest, FormatIntegerArray) {
+TEST(DataTest, FormatIntegerArray) {
   std::vector<int32_t> value{12, 43, 11, 0};
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "[12, 43, 11, 0]");
 }
 
-TEST(InidividualTest, InstantiationLongIntegerArray) {
+TEST(DataTest, InstantiationLongIntegerArray) {
   std::vector<int64_t> value{0, 8589934592, 11};
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<int64_t>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<int64_t>>();
   EXPECT_THAT(original, ContainerEq(value));
 }
-TEST(InidividualTest, FormatLongIntegerArray) {
+TEST(DataTest, FormatLongIntegerArray) {
   std::vector<int64_t> value{0, 8589934592, 11};
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "[0, 8589934592, 11]");
 }
 
-TEST(InidividualTest, InstantiationDoubleArray) {
+TEST(DataTest, InstantiationDoubleArray) {
   std::vector<double> value{0.0, 43.2};
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<double>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<double>>();
   EXPECT_THAT(original, ContainerEq(value));
 }
-TEST(InidividualTest, FormatDoubleArray) {
+TEST(DataTest, FormatDoubleArray) {
   std::vector<double> value{0.0, 43.2};
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "[0, 43.2]");
 }
 
-TEST(InidividualTest, InstantiationBooleanArray) {
+TEST(DataTest, InstantiationBooleanArray) {
   std::vector<bool> value{true, false, false};
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<bool>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<bool>>();
   EXPECT_THAT(original, ContainerEq(value));
 }
-TEST(InidividualTest, FormatBooleanArray) {
+TEST(DataTest, FormatBooleanArray) {
   std::vector<bool> value{true, false, false};
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "[true, false, false]");
 }
 
-TEST(InidividualTest, InstantiationStringArray) {
+TEST(DataTest, InstantiationStringArray) {
   std::vector<std::string> value{"Hello", "C++"};
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<std::string>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<std::string>>();
   EXPECT_THAT(original, ContainerEq(value));
 }
-TEST(InidividualTest, FormatStringArray) {
+TEST(DataTest, FormatStringArray) {
   std::vector<std::string> value{"Hello", "C++"};
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "[\"Hello\", \"C++\"]");
 }
 
-TEST(InidividualTest, InstantiationBinaryBlobArray) {
+TEST(DataTest, InstantiationBinaryBlobArray) {
   std::vector<std::vector<uint8_t>> value{{0x12U, 0x22U, 0x42}, {0x10U, 0x8FU}};
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<std::vector<uint8_t>>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<std::vector<uint8_t>>>();
   EXPECT_THAT(original, ContainerEq(value));
 }
-TEST(InidividualTest, FormatBinaryBlobArray) {
+TEST(DataTest, FormatBinaryBlobArray) {
   std::vector<std::vector<uint8_t>> value{{0x12U, 0x22U, 0x42}, {0x10U, 0x8FU}};
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "[\"EiJC\", \"EI8=\"]");
 }
 
-TEST(InidividualTest, InstantiationDatetimeArray) {
+TEST(DataTest, InstantiationDatetimeArray) {
 #if __cplusplus >= 202002L
   std::chrono::system_clock::time_point datetime0 =
       std::chrono::sys_days(std::chrono::year_month_day(
@@ -245,11 +245,11 @@ TEST(InidividualTest, InstantiationDatetimeArray) {
   std::vector<std::chrono::system_clock::time_point> value{
       std::chrono::system_clock::from_time_t(time0), std::chrono::system_clock::from_time_t(time1)};
 #endif  // __cplusplus >= 202002L
-  auto individual = AstarteIndividual(value);
-  auto original = individual.into<std::vector<std::chrono::system_clock::time_point>>();
+  auto data = AstarteData(value);
+  auto original = data.into<std::vector<std::chrono::system_clock::time_point>>();
   EXPECT_THAT(original, ContainerEq(value));
 }
-TEST(InidividualTest, FormatDatetimeArray) {
+TEST(DataTest, FormatDatetimeArray) {
 #if __cplusplus >= 202002L
   std::chrono::system_clock::time_point datetime0 =
       std::chrono::sys_days(std::chrono::year_month_day(
@@ -281,7 +281,7 @@ TEST(InidividualTest, FormatDatetimeArray) {
       std::chrono::system_clock::from_time_t(time0), std::chrono::system_clock::from_time_t(time1)};
 #endif  // __cplusplus >= 202002L
 
-  auto individual = AstarteIndividual(value);
-  auto str = individual.format();
+  auto data = AstarteData(value);
+  auto str = data.format();
   EXPECT_STREQ(str.c_str(), "[\"1994-04-12T10:15:00.000Z\", \"1984-05-02T10:15:00.000Z\"]");
 }

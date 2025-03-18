@@ -2,12 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef ASTARTE_DEVICE_SDK_INDIVIDUAL_H
-#define ASTARTE_DEVICE_SDK_INDIVIDUAL_H
+#ifndef ASTARTE_DEVICE_SDK_DATA_H
+#define ASTARTE_DEVICE_SDK_DATA_H
 
 /**
- * @file astarte_device_sdk/individual.hpp
- * @brief Astarte individual class and its related methods.
+ * @file astarte_device_sdk/data.hpp
+ * @brief Astarte data class and its related methods.
  */
 
 #include <chrono>
@@ -24,9 +24,9 @@
 namespace AstarteDeviceSdk {
 
 #if __cplusplus >= 202002L
-/** @brief Restricts the allowed types for instances of an Astarte individual class. */
+/** @brief Restricts the allowed types for instances of an Astarte data class. */
 template <typename T>
-concept AstarteIndividualAllowedType = requires {
+concept AstarteDataAllowedType = requires {
   requires std::is_same_v<T, int32_t> || std::is_same_v<T, int64_t> || std::is_same_v<T, double> ||
                std::is_same_v<T, bool> || std::is_same_v<T, std::string> ||
                std::is_same_v<T, std::vector<uint8_t>> ||
@@ -39,82 +39,80 @@ concept AstarteIndividualAllowedType = requires {
 };
 #else   // __cplusplus >= 202002L
 template <typename T>
-struct astarte_individual_is_allowed_type : std::false_type {};
+struct astarte_data_is_allowed_type : std::false_type {};
 template <>
-struct astarte_individual_is_allowed_type<int32_t> : std::true_type {};
+struct astarte_data_is_allowed_type<int32_t> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<int64_t> : std::true_type {};
+struct astarte_data_is_allowed_type<int64_t> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<double> : std::true_type {};
+struct astarte_data_is_allowed_type<double> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<bool> : std::true_type {};
+struct astarte_data_is_allowed_type<bool> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::string> : std::true_type {};
+struct astarte_data_is_allowed_type<std::string> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<uint8_t>> : std::true_type {};
+struct astarte_data_is_allowed_type<std::vector<uint8_t>> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::chrono::system_clock::time_point> : std::true_type {
-};
+struct astarte_data_is_allowed_type<std::chrono::system_clock::time_point> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<int32_t>> : std::true_type {};
+struct astarte_data_is_allowed_type<std::vector<int32_t>> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<int64_t>> : std::true_type {};
+struct astarte_data_is_allowed_type<std::vector<int64_t>> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<double>> : std::true_type {};
+struct astarte_data_is_allowed_type<std::vector<double>> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<bool>> : std::true_type {};
+struct astarte_data_is_allowed_type<std::vector<bool>> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<std::string>> : std::true_type {};
+struct astarte_data_is_allowed_type<std::vector<std::string>> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<std::vector<uint8_t>>> : std::true_type {};
+struct astarte_data_is_allowed_type<std::vector<std::vector<uint8_t>>> : std::true_type {};
 template <>
-struct astarte_individual_is_allowed_type<std::vector<std::chrono::system_clock::time_point>>
+struct astarte_data_is_allowed_type<std::vector<std::chrono::system_clock::time_point>>
     : std::true_type {};
 #endif  // __cplusplus >= 202002L
 
-/** @brief Astarte individual class, representing the basic Astarte types. */
-class AstarteIndividual {
+/** @brief Astarte data class, representing the basic Astarte types. */
+class AstarteData {
  public:
 #if __cplusplus >= 202002L
   /**
-   * @brief Constructor for the AstarteIndividual class.
-   * @param value The content of the Astarte individual instance.
+   * @brief Constructor for the AstarteData class.
+   * @param value The content of the Astarte data instance.
    */
-  template <AstarteIndividualAllowedType T>
-  explicit AstarteIndividual(T value) : data_(value) {}
+  template <AstarteDataAllowedType T>
+  explicit AstarteData(T value) : data_(value) {}
 
   /**
-   * @brief Convert the Astarte individual class to the appropriate data type.
+   * @brief Convert the Astarte data class to the appropriate data type.
    * @return The value contained in the class instance.
    */
-  template <AstarteIndividualAllowedType T>
+  template <AstarteDataAllowedType T>
   auto into() const -> const T& {
     return std::get<T>(data_);
   }
 #else   // __cplusplus >= 202002L
   /**
-   * @brief Constructor for the AstarteIndividual class.
-   * @param value The content of the Astarte individual instance.
+   * @brief Constructor for the AstarteData class.
+   * @param value The content of the Astarte data instance.
    */
   template <typename T>
-  explicit AstarteIndividual(
-      T value,
-      std::enable_if_t<astarte_individual_is_allowed_type<T>::value, bool> /*unused*/ = true)
+  explicit AstarteData(
+      T value, std::enable_if_t<astarte_data_is_allowed_type<T>::value, bool> /*unused*/ = true)
       : data_(value) {}
 
   /**
-   * @brief Convert the Astarte individual class to the appropriate data type.
+   * @brief Convert the Astarte data class to the appropriate data type.
    * @return The value contained in the class instance.
    */
   template <typename T>
-  auto into(std::enable_if_t<astarte_individual_is_allowed_type<T>::value, bool> /*unused*/ =
-                true) const -> const T& {
+  auto into(std::enable_if_t<astarte_data_is_allowed_type<T>::value, bool> /*unused*/ = true) const
+      -> const T& {
     return std::get<T>(data_);
   }
 #endif  // __cplusplus >= 202002L
 
   /**
-   * @brief Pretty format the Astarte individual.
+   * @brief Pretty format the Astarte data.
    * @return A string representing in human readable format the content of the class instance.
    */
   [[nodiscard]] auto format() const -> std::string;
@@ -139,13 +137,13 @@ class AstarteIndividual {
    * @param other The object to compare to.
    * @return True when equal, false otherwise.
    */
-  [[nodiscard]] auto operator==(const AstarteIndividual& other) const -> bool;
+  [[nodiscard]] auto operator==(const AstarteData& other) const -> bool;
   /**
    * @brief Overloader for the comparison operator !=.
    * @param other The object to compare to.
    * @return True when different, false otherwise.
    */
-  [[nodiscard]] auto operator!=(const AstarteIndividual& other) const -> bool;
+  [[nodiscard]] auto operator!=(const AstarteData& other) const -> bool;
 
  private:
   std::variant<int32_t, int64_t, double, bool, std::string, std::vector<uint8_t>,
@@ -158,4 +156,4 @@ class AstarteIndividual {
 
 }  // namespace AstarteDeviceSdk
 
-#endif  // ASTARTE_DEVICE_SDK_INDIVIDUAL_H
+#endif  // ASTARTE_DEVICE_SDK_DATA_H
