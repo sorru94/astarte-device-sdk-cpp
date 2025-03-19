@@ -10,8 +10,8 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
+#include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device.hpp"
-#include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 #include "exceptions.hpp"
@@ -19,8 +19,8 @@
 
 using json = nlohmann::json;
 
+using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteDevice;
-using AstarteDeviceSdk::AstarteIndividual;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstarteObject;
 
@@ -125,11 +125,11 @@ class TestActionTransmitMQTTData : public TestAction {
   TestActionTransmitMQTTData(const AstarteMessage& message) : message_(message) {}
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Transmitting MQTT data...", case_name);
-    const std::optional<std::variant<AstarteIndividual, AstarteObject>>& data = message_.into();
+    const std::optional<std::variant<AstarteData, AstarteObject>>& data = message_.into();
     if (data.has_value()) {
-      if (std::holds_alternative<AstarteIndividual>(data.value())) {
+      if (std::holds_alternative<AstarteData>(data.value())) {
         device_->send_individual(message_.get_interface(), message_.get_path(),
-                                 std::get<AstarteIndividual>(data.value()), nullptr);
+                                 std::get<AstarteData>(data.value()), nullptr);
       } else if (std::holds_alternative<AstarteObject>(data.value())) {
         device_->send_object(message_.get_interface(), message_.get_path(),
                              std::get<AstarteObject>(data.value()), nullptr);
@@ -176,10 +176,10 @@ class TestActionTransmitRESTData : public TestAction {
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
                               "/interfaces/" + message_.get_interface() + message_.get_path();
 
-    const std::optional<std::variant<AstarteIndividual, AstarteObject>>& data = message_.into();
+    const std::optional<std::variant<AstarteData, AstarteObject>>& data = message_.into();
     if (data.has_value()) {
-      if (std::holds_alternative<AstarteIndividual>(data.value())) {
-        AstarteIndividual indiv = std::get<AstarteIndividual>(data.value());
+      if (std::holds_alternative<AstarteData>(data.value())) {
+        AstarteData indiv = std::get<AstarteData>(data.value());
         std::string payload = "{\"data\":" + indiv.format() + "}";
         spdlog::debug("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
@@ -224,11 +224,10 @@ class TestActionFetchRESTData : public TestAction {
       throw EndToEndHTTPException("Fetching of data through REST API failed.");
     }
     json fetched_data = response_json[message_.get_path()]["value"];
-    const std::optional<std::variant<AstarteIndividual, AstarteObject>>& expected_data =
-        message_.into();
+    const std::optional<std::variant<AstarteData, AstarteObject>>& expected_data = message_.into();
     if (expected_data.has_value()) {
-      if (std::holds_alternative<AstarteIndividual>(expected_data.value())) {
-        AstarteIndividual indiv = std::get<AstarteIndividual>(expected_data.value());
+      if (std::holds_alternative<AstarteData>(expected_data.value())) {
+        AstarteData indiv = std::get<AstarteData>(expected_data.value());
         json expected_data_json = json::parse(indiv.format());
         if (expected_data_json != fetched_data) {
           spdlog::error("Fetched data: {}", fetched_data.dump());

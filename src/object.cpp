@@ -9,7 +9,7 @@
 #include <string>
 #include <utility>
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 
 namespace AstarteDeviceSdk {
 
@@ -18,11 +18,9 @@ AstarteObject::AstarteObject() = default;
 // Constructor with initializer list
 AstarteObject::AstarteObject(std::initializer_list<MapType::value_type> init) : data_(init) {}
 // Access element by key (modifiable)
-auto AstarteObject::at(const std::string& key) -> AstarteIndividual& { return data_.at(key); }
+auto AstarteObject::at(const std::string& key) -> AstarteData& { return data_.at(key); }
 // Access element by key (const)
-auto AstarteObject::at(const std::string& key) const -> const AstarteIndividual& {
-  return data_.at(key);
-}
+auto AstarteObject::at(const std::string& key) const -> const AstarteData& { return data_.at(key); }
 // Begin iterator (modifiable)
 auto AstarteObject::begin() -> iterator { return data_.begin(); }
 // Begin iterator (const)
@@ -36,8 +34,8 @@ auto AstarteObject::size() const -> size_type { return data_.size(); }
 // Check if map is empty
 auto AstarteObject::empty() const -> bool { return data_.empty(); }
 // Insert element into the map
-void AstarteObject::insert(const std::string& key, const AstarteIndividual& individual) {
-  data_.insert({key, individual});
+void AstarteObject::insert(const std::string& key, const AstarteData& data) {
+  data_.insert({key, data});
 }
 // Erase element by key
 auto AstarteObject::erase(const std::string& key) -> size_type { return data_.erase(key); }

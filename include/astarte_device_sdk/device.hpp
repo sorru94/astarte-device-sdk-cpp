@@ -16,7 +16,7 @@
 #include <optional>
 #include <string>
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 
@@ -59,11 +59,11 @@ class AstarteDevice {
    * @brief Send individual data to Astarte.
    * @param interface_name The name of the interface on which to send the data.
    * @param path The path to the interface endpoint to use for sending.
-   * @param individual The data to send.
+   * @param data The data to send.
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
   void send_individual(const std::string &interface_name, const std::string &path,
-                       const AstarteIndividual &individual,
+                       const AstarteData &data,
                        const std::chrono::system_clock::time_point *timestamp);
   /**
    * @brief Send object data to Astarte.
@@ -82,7 +82,7 @@ class AstarteDevice {
    * @param data The property data.
    */
   void set_property(const std::string &interface_name, const std::string &path,
-                    const AstarteIndividual &data);
+                    const AstarteData &data);
   /**
    * @brief Unset a device property.
    * @param interface_name The name of the interface for the property.

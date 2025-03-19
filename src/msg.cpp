@@ -10,13 +10,13 @@
 #include <utility>
 #include <variant>
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/object.hpp"
 
 namespace AstarteDeviceSdk {
 
 AstarteMessage::AstarteMessage(std::string interface, std::string path,
-                               std::optional<std::variant<AstarteIndividual, AstarteObject>> data)
+                               std::optional<std::variant<AstarteData, AstarteObject>> data)
     : interface_(std::move(interface)), path_(std::move(path)), data_(std::move(data)) {}
 
 auto AstarteMessage::get_interface() const -> const std::string & { return interface_; }
@@ -24,7 +24,7 @@ auto AstarteMessage::get_interface() const -> const std::string & { return inter
 auto AstarteMessage::get_path() const -> const std::string & { return path_; }
 
 auto AstarteMessage::into() const
-    -> const std::optional<std::variant<AstarteIndividual, AstarteObject>> & {
+    -> const std::optional<std::variant<AstarteData, AstarteObject>> & {
   return data_;
 }
 
@@ -41,8 +41,8 @@ auto AstarteMessage::format() const -> std::string {
   std::ostringstream oss;
   oss << "{interface: " << interface_ << ", path: " << path_;
   if (data_.has_value()) {
-    if (std::holds_alternative<AstarteIndividual>(data_.value())) {
-      const AstarteIndividual ind = std::get<AstarteIndividual>(data_.value());
+    if (std::holds_alternative<AstarteData>(data_.value())) {
+      const AstarteData ind = std::get<AstarteData>(data_.value());
       oss << ", value: " << ind.format();
     } else {
       const AstarteObject obj = std::get<AstarteObject>(data_.value());

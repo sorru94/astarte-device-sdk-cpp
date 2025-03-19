@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "astarte_device_sdk/individual.hpp"
+#include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 
@@ -44,7 +44,7 @@ class GrpcConverter {
 
   auto operator()(const AstarteObject &value) -> gRPCAstarteDataTypeObject *;
 
-  auto operator()(const gRPCAstarteDataTypeIndividual &value) -> AstarteIndividual;
+  auto operator()(const gRPCAstarteDataTypeIndividual &value) -> AstarteData;
   auto operator()(const gRPCAstarteDataTypeObject &value) -> AstarteObject;
   auto operator()(const gRPCAstarteMessage &value) -> AstarteMessage;
 };
