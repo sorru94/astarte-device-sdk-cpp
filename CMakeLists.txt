@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(
   AstarteDeviceSDKcpp
-  VERSION 1.0
+  VERSION 0.4.99
   LANGUAGES CXX)
 
 include(FetchContent)
