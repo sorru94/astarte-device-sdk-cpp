@@ -118,7 +118,7 @@ struct AstarteDevice::AstarteDeviceImpl {
     std::optional<AstarteMessage> res = std::nullopt;
     if (event.has_message()) {
       const gRPCAstarteMessage &astarteMessage = event.message();
-      GrpcConverter converter;
+      GrpcConverterFrom converter;
       res = converter(astarteMessage);
     } else if (event.has_error()) {
       const gRPCMessageHubError &error = event.error();
@@ -207,7 +207,7 @@ void AstarteDevice::send_individual(const std::string &interface_name, const std
   message.set_interface_name(interface_name);
   message.set_path(path);
 
-  GrpcConverter converter;
+  GrpcConverterTo converter;
   gRPCAstarteDatastreamIndividual *grpc_datastream_individual = converter(data, timestamp);
   message.set_allocated_datastream_individual(grpc_datastream_individual);
 
@@ -230,7 +230,7 @@ void AstarteDevice::send_object(const std::string &interface_name, const std::st
   message.set_interface_name(interface_name);
   message.set_path(path);
 
-  GrpcConverter converter;
+  GrpcConverterTo converter;
   gRPCAstarteDatastreamObject *grpc_datastream_object = converter(object, timestamp);
   message.set_allocated_datastream_object(grpc_datastream_object);
 
@@ -253,7 +253,7 @@ void AstarteDevice::set_property(const std::string &interface_name, const std::s
   message.set_path(path);
 
   const std::optional<AstarteData> &opt_data = data;
-  GrpcConverter converter;
+  GrpcConverterTo converter;
   gRPCAstartePropertyIndividual *grpc_property_individual = converter(opt_data);
   message.set_allocated_property_individual(grpc_property_individual);
 
@@ -275,7 +275,7 @@ void AstarteDevice::unset_property(const std::string &interface_name, const std:
   message.set_path(path);
 
   const std::optional<AstarteData> opt_data = std::nullopt;
-  GrpcConverter converter;
+  GrpcConverterTo converter;
   gRPCAstartePropertyIndividual *grpc_property_individual = converter(opt_data);
   message.set_allocated_property_individual(grpc_property_individual);
 

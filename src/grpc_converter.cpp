@@ -40,44 +40,44 @@ using gRPCAstarteDatastreamObject = astarteplatform::msghub::AstarteDatastreamOb
 using gRPCAstartePropertyIndividual = astarteplatform::msghub::AstartePropertyIndividual;
 using gRPCAstarteMessage = astarteplatform::msghub::AstarteMessage;
 
-auto GrpcConverter::operator()(int32_t value) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(int32_t value) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   grpc_data->set_integer(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(int64_t value) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(int64_t value) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   grpc_data->set_long_integer(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(double value) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(double value) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   grpc_data->set_double_(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(bool value) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(bool value) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   grpc_data->set_boolean(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::string &value) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(const std::string &value) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   grpc_data->set_string(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<uint8_t> &value) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(const std::vector<uint8_t> &value) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   std::string str_vector(value.begin(), value.end());
   grpc_data->set_binary_blob(str_vector);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(std::chrono::system_clock::time_point value) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(std::chrono::system_clock::time_point value) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   const std::chrono::system_clock::duration t_duration = value.time_since_epoch();
   const seconds sec = duration_cast<seconds>(t_duration);
@@ -89,7 +89,7 @@ auto GrpcConverter::operator()(std::chrono::system_clock::time_point value) -> g
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<int32_t> &values) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(const std::vector<int32_t> &values) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   auto *grpc_array = new gRPCAstarteIntegerArray();
   for (const int32_t &value : values) {
@@ -99,7 +99,7 @@ auto GrpcConverter::operator()(const std::vector<int32_t> &values) -> gRPCAstart
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<int64_t> &values) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(const std::vector<int64_t> &values) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   auto *grpc_array = new gRPCAstarteLongIntegerArray();
   for (const int64_t &value : values) {
@@ -109,7 +109,7 @@ auto GrpcConverter::operator()(const std::vector<int64_t> &values) -> gRPCAstart
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<double> &values) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(const std::vector<double> &values) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   auto *grpc_array = new gRPCAstarteDoubleArray();
   for (const double &value : values) {
@@ -119,7 +119,7 @@ auto GrpcConverter::operator()(const std::vector<double> &values) -> gRPCAstarte
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<bool> &values) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(const std::vector<bool> &values) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   auto *grpc_array = new gRPCAstarteBooleanArray();
   for (const bool &value : values) {
@@ -129,7 +129,7 @@ auto GrpcConverter::operator()(const std::vector<bool> &values) -> gRPCAstarteDa
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<std::string> &values) -> gRPCAstarteData * {
+auto GrpcConverterTo::operator()(const std::vector<std::string> &values) -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   auto *grpc_array = new gRPCAstarteStringArray();
   for (const std::string &value : values) {
@@ -139,7 +139,7 @@ auto GrpcConverter::operator()(const std::vector<std::string> &values) -> gRPCAs
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<std::vector<uint8_t>> &values)
+auto GrpcConverterTo::operator()(const std::vector<std::vector<uint8_t>> &values)
     -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   auto *grpc_array = new gRPCAstarteBinaryBlobArray();
@@ -151,7 +151,7 @@ auto GrpcConverter::operator()(const std::vector<std::vector<uint8_t>> &values)
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverter::operator()(const std::vector<std::chrono::system_clock::time_point> &values)
+auto GrpcConverterTo::operator()(const std::vector<std::chrono::system_clock::time_point> &values)
     -> gRPCAstarteData * {
   auto *grpc_data = new gRPCAstarteData();
   auto *grpc_array = new gRPCAstarteDateTimeArray();
@@ -170,8 +170,8 @@ auto GrpcConverter::operator()(const std::vector<std::chrono::system_clock::time
   return grpc_data;
 }
 
-auto GrpcConverter::operator()(const AstarteData &value,
-                               const std::chrono::system_clock::time_point *timestamp)
+auto GrpcConverterTo::operator()(const AstarteData &value,
+                                 const std::chrono::system_clock::time_point *timestamp)
     -> gRPCAstarteDatastreamIndividual * {
   auto *grpc_individual = new gRPCAstarteDatastreamIndividual();
 
@@ -187,13 +187,13 @@ auto GrpcConverter::operator()(const AstarteData &value,
     grpc_individual->set_allocated_timestamp(grpc_timestamp);
   }
 
-  gRPCAstarteData *grpc_data = std::visit(GrpcConverter(), value.get_raw_data());
+  gRPCAstarteData *grpc_data = std::visit(GrpcConverterTo(), value.get_raw_data());
   grpc_individual->set_allocated_data(grpc_data);
   return grpc_individual;
 }
 
-auto GrpcConverter::operator()(const AstarteObject &value,
-                               const std::chrono::system_clock::time_point *timestamp)
+auto GrpcConverterTo::operator()(const AstarteObject &value,
+                                 const std::chrono::system_clock::time_point *timestamp)
     -> gRPCAstarteDatastreamObject * {
   auto *grpc_object = new gRPCAstarteDatastreamObject();
 
@@ -213,19 +213,19 @@ auto GrpcConverter::operator()(const AstarteObject &value,
   for (const auto &pair : value) {
     const std::string &path = pair.first;
     const AstarteData &data = pair.second;
-    gRPCAstarteData *grpc_data = std::visit(GrpcConverter(), data.get_raw_data());
+    gRPCAstarteData *grpc_data = std::visit(GrpcConverterTo(), data.get_raw_data());
     // TODO(simone): This could be a memory leak. It should be investigated.
     (*grpc_map)[path] = *grpc_data;
   }
   return grpc_object;
 }
 
-auto GrpcConverter::operator()(const std::optional<AstarteData> &value)
+auto GrpcConverterTo::operator()(const std::optional<AstarteData> &value)
     -> gRPCAstartePropertyIndividual * {
   auto *grpc_property = new gRPCAstartePropertyIndividual();
   if (value.has_value()) {
     const AstarteData &data = value.value();
-    gRPCAstarteData *grpc_data = std::visit(GrpcConverter(), data.get_raw_data());
+    gRPCAstarteData *grpc_data = std::visit(GrpcConverterTo(), data.get_raw_data());
     grpc_property->set_allocated_data(grpc_data);
   }
   // Check if has_data is false when optional has no value (if it's true use clear_data)
@@ -233,7 +233,7 @@ auto GrpcConverter::operator()(const std::optional<AstarteData> &value)
 }
 
 // NOLINTBEGIN(readability-function-size)
-auto GrpcConverter::operator()(const gRPCAstarteData &value) -> AstarteData {
+auto GrpcConverterFrom::operator()(const gRPCAstarteData &value) -> AstarteData {
   switch (value.astarte_data_case()) {
     case gRPCAstarteData::kDouble:
       return AstarteData(value.double_());
@@ -290,45 +290,37 @@ auto GrpcConverter::operator()(const gRPCAstarteData &value) -> AstarteData {
 }
 // NOLINTEND(readability-function-size)
 
-auto GrpcConverter::operator()(const gRPCAstarteDatastreamObject &value) -> AstarteObject {
+auto GrpcConverterFrom::operator()(const gRPCAstarteDatastreamObject &value) -> AstarteObject {
   AstarteObject object;
   const google::protobuf::Map<std::string, gRPCAstarteData> &grpc_data = value.data();
-  GrpcConverter converter;
+  GrpcConverterFrom converter;
   for (const auto &[key, data] : grpc_data) {
     object.insert(key, converter(data));
   }
   return object;
 }
 
-auto GrpcConverter::operator()(const gRPCAstarteMessage &value) -> AstarteMessage {
+auto GrpcConverterFrom::operator()(const gRPCAstarteMessage &value) -> AstarteMessage {
   std::optional<std::variant<AstarteData, AstarteObject>> parsed_data;
   if (value.has_datastream_individual()) {
     const gRPCAstarteDatastreamIndividual &grpc_datastream_individual =
         value.datastream_individual();
     const gRPCAstarteData &grpc_data = grpc_datastream_individual.data();
-    GrpcConverter converter;
+    GrpcConverterFrom converter;
     parsed_data = converter(grpc_data);
   } else if (value.has_datastream_object()) {
     const gRPCAstarteDatastreamObject &grpc_datastream_object = value.datastream_object();
-    GrpcConverter converter;
+    GrpcConverterFrom converter;
     parsed_data = converter(grpc_datastream_object);
   } else if (value.has_property_individual()) {
     const gRPCAstartePropertyIndividual &grpc_property_individual = value.property_individual();
     if (grpc_property_individual.has_data()) {
       const gRPCAstarteData &grpc_data = grpc_property_individual.data();
-      GrpcConverter converter;
+      GrpcConverterFrom converter;
       parsed_data = converter(grpc_data);
     } else {
       parsed_data = std::nullopt;
     }
-
-    // } else if (data.has_astarte_object()) {
-    //     GrpcConverter converter;
-    //     parsed_data = converter(data.astarte_object());
-    //   } else {
-    //
-    //   }
-
   } else {
     throw AstarteInternalException("Found an unrecognized gRPC gRPCAstarteDataType.");
   }

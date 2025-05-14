@@ -26,7 +26,7 @@ using gRPCAstarteDatastreamObject = astarteplatform::msghub::AstarteDatastreamOb
 using gRPCAstartePropertyIndividual = astarteplatform::msghub::AstartePropertyIndividual;
 using gRPCAstarteMessage = astarteplatform::msghub::AstarteMessage;
 
-class GrpcConverter {
+class GrpcConverterTo {
  public:
   auto operator()(int32_t value) -> gRPCAstarteData *;
   auto operator()(int64_t value) -> gRPCAstarteData *;
@@ -50,7 +50,10 @@ class GrpcConverter {
                   const std::chrono::system_clock::time_point *timestamp)
       -> gRPCAstarteDatastreamObject *;
   auto operator()(const std::optional<AstarteData> &value) -> gRPCAstartePropertyIndividual *;
+};
 
+class GrpcConverterFrom {
+ public:
   auto operator()(const gRPCAstarteData &value) -> AstarteData;
   auto operator()(const gRPCAstarteDatastreamObject &value) -> AstarteObject;
   auto operator()(const gRPCAstarteMessage &value) -> AstarteMessage;
