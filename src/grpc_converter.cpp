@@ -214,9 +214,13 @@ auto GrpcConverterTo::operator()(const AstarteObject &value,
     const std::string &path = pair.first;
     const AstarteData &data = pair.second;
     gRPCAstarteData *grpc_data = std::visit(GrpcConverterTo(), data.get_raw_data());
-    // TODO(simone): This could be a memory leak. It should be investigated.
+    // NOTE: It is quite unclear from the protobuffer documentation if this assigment changes
+    // ownership of the pointer. After testing with valgrind it appears that this is not the case.
+    // As a consequence this grpc_data and its contents should be freed manually.
     (*grpc_map)[path] = *grpc_data;
+    delete grpc_data;
   }
+
   return grpc_object;
 }
 
