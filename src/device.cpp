@@ -208,8 +208,9 @@ void AstarteDevice::send_individual(const std::string &interface_name, const std
   message.set_path(path);
 
   GrpcConverterTo converter;
-  gRPCAstarteDatastreamIndividual *grpc_datastream_individual = converter(data, timestamp);
-  message.set_allocated_datastream_individual(grpc_datastream_individual);
+  std::unique_ptr<gRPCAstarteDatastreamIndividual> grpc_datastream_individual =
+      converter(data, timestamp);
+  message.set_allocated_datastream_individual(grpc_datastream_individual.release());
 
   ClientContext context;
   google::protobuf::Empty response;
@@ -231,8 +232,9 @@ void AstarteDevice::send_object(const std::string &interface_name, const std::st
   message.set_path(path);
 
   GrpcConverterTo converter;
-  gRPCAstarteDatastreamObject *grpc_datastream_object = converter(object, timestamp);
-  message.set_allocated_datastream_object(grpc_datastream_object);
+  std::unique_ptr<gRPCAstarteDatastreamObject> grpc_datastream_object =
+      converter(object, timestamp);
+  message.set_allocated_datastream_object(grpc_datastream_object.release());
 
   ClientContext context;
   google::protobuf::Empty response;
@@ -254,8 +256,8 @@ void AstarteDevice::set_property(const std::string &interface_name, const std::s
 
   const std::optional<AstarteData> &opt_data = data;
   GrpcConverterTo converter;
-  gRPCAstartePropertyIndividual *grpc_property_individual = converter(opt_data);
-  message.set_allocated_property_individual(grpc_property_individual);
+  std::unique_ptr<gRPCAstartePropertyIndividual> grpc_property_individual = converter(opt_data);
+  message.set_allocated_property_individual(grpc_property_individual.release());
 
   ClientContext context;
   google::protobuf::Empty response;
@@ -276,8 +278,8 @@ void AstarteDevice::unset_property(const std::string &interface_name, const std:
 
   const std::optional<AstarteData> opt_data = std::nullopt;
   GrpcConverterTo converter;
-  gRPCAstartePropertyIndividual *grpc_property_individual = converter(opt_data);
-  message.set_allocated_property_individual(grpc_property_individual);
+  std::unique_ptr<gRPCAstartePropertyIndividual> grpc_property_individual = converter(opt_data);
+  message.set_allocated_property_individual(grpc_property_individual.release());
 
   ClientContext context;
   google::protobuf::Empty response;

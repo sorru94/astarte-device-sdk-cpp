@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
@@ -40,199 +41,209 @@ using gRPCAstarteDatastreamObject = astarteplatform::msghub::AstarteDatastreamOb
 using gRPCAstartePropertyIndividual = astarteplatform::msghub::AstartePropertyIndividual;
 using gRPCAstarteMessage = astarteplatform::msghub::AstarteMessage;
 
-auto GrpcConverterTo::operator()(int32_t value) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
+auto GrpcConverterTo::operator()(int32_t value) -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_integer(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(int64_t value) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
+auto GrpcConverterTo::operator()(int64_t value) -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_long_integer(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(double value) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
+auto GrpcConverterTo::operator()(double value) -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_double_(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(bool value) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
+auto GrpcConverterTo::operator()(bool value) -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_boolean(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(const std::string &value) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
+auto GrpcConverterTo::operator()(const std::string &value) -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_string(value);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(const std::vector<uint8_t> &value) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
+auto GrpcConverterTo::operator()(const std::vector<uint8_t> &value)
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
   std::string str_vector(value.begin(), value.end());
   grpc_data->set_binary_blob(str_vector);
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(std::chrono::system_clock::time_point value) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
+auto GrpcConverterTo::operator()(std::chrono::system_clock::time_point value)
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
   const std::chrono::system_clock::duration t_duration = value.time_since_epoch();
   const seconds sec = duration_cast<seconds>(t_duration);
   const nanoseconds nano = duration_cast<nanoseconds>(t_duration) - sec;
-  auto *timestamp = new google::protobuf::Timestamp();
+  auto timestamp = std::make_unique<google::protobuf::Timestamp>();
   timestamp->set_seconds(static_cast<int64_t>(sec.count()));
   timestamp->set_nanos(static_cast<int32_t>(nano.count()));
-  grpc_data->set_allocated_date_time(timestamp);
+  grpc_data->set_allocated_date_time(timestamp.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(const std::vector<int32_t> &values) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
-  auto *grpc_array = new gRPCAstarteIntegerArray();
+auto GrpcConverterTo::operator()(const std::vector<int32_t> &values)
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
+  auto grpc_array = std::make_unique<gRPCAstarteIntegerArray>();
   for (const int32_t &value : values) {
     grpc_array->add_values(value);
   }
-  grpc_data->set_allocated_integer_array(grpc_array);
+  grpc_data->set_allocated_integer_array(grpc_array.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(const std::vector<int64_t> &values) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
-  auto *grpc_array = new gRPCAstarteLongIntegerArray();
+auto GrpcConverterTo::operator()(const std::vector<int64_t> &values)
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
+  auto grpc_array = std::make_unique<gRPCAstarteLongIntegerArray>();
   for (const int64_t &value : values) {
     grpc_array->add_values(value);
   }
-  grpc_data->set_allocated_long_integer_array(grpc_array);
+  grpc_data->set_allocated_long_integer_array(grpc_array.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(const std::vector<double> &values) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
-  auto *grpc_array = new gRPCAstarteDoubleArray();
+auto GrpcConverterTo::operator()(const std::vector<double> &values)
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
+  auto grpc_array = std::make_unique<gRPCAstarteDoubleArray>();
   for (const double &value : values) {
     grpc_array->add_values(value);
   }
-  grpc_data->set_allocated_double_array(grpc_array);
+  grpc_data->set_allocated_double_array(grpc_array.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(const std::vector<bool> &values) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
-  auto *grpc_array = new gRPCAstarteBooleanArray();
+auto GrpcConverterTo::operator()(const std::vector<bool> &values)
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
+  auto grpc_array = std::make_unique<gRPCAstarteBooleanArray>();
   for (const bool &value : values) {
     grpc_array->add_values(value);
   }
-  grpc_data->set_allocated_boolean_array(grpc_array);
+  grpc_data->set_allocated_boolean_array(grpc_array.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
-auto GrpcConverterTo::operator()(const std::vector<std::string> &values) -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
-  auto *grpc_array = new gRPCAstarteStringArray();
+auto GrpcConverterTo::operator()(const std::vector<std::string> &values)
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
+  auto grpc_array = std::make_unique<gRPCAstarteStringArray>();
   for (const std::string &value : values) {
     grpc_array->add_values(value);
   }
-  grpc_data->set_allocated_string_array(grpc_array);
+  grpc_data->set_allocated_string_array(grpc_array.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::vector<uint8_t>> &values)
-    -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
-  auto *grpc_array = new gRPCAstarteBinaryBlobArray();
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
+  auto grpc_array = std::make_unique<gRPCAstarteBinaryBlobArray>();
   for (const std::vector<uint8_t> &value : values) {
     const std::string str_value(value.begin(), value.end());
     grpc_array->add_values(str_value);
   }
-  grpc_data->set_allocated_binary_blob_array(grpc_array);
+  grpc_data->set_allocated_binary_blob_array(grpc_array.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::chrono::system_clock::time_point> &values)
-    -> gRPCAstarteData * {
-  auto *grpc_data = new gRPCAstarteData();
-  auto *grpc_array = new gRPCAstarteDateTimeArray();
+    -> std::unique_ptr<gRPCAstarteData> {
+  auto grpc_data = std::make_unique<gRPCAstarteData>();
+  auto grpc_array = std::make_unique<gRPCAstarteDateTimeArray>();
   for (const std::chrono::system_clock::time_point &value : values) {
     const std::chrono::system_clock::duration t_duration = value.time_since_epoch();
     const std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(t_duration);
     const std::chrono::nanoseconds nano =
         std::chrono::duration_cast<std::chrono::nanoseconds>(t_duration) - sec;
-    // Instantiate the protobuf timestamp
+    // New timestamp in the array, allocated and managed by gRPC
     google::protobuf::Timestamp *timestamp = grpc_array->add_values();
     timestamp->set_seconds(static_cast<int64_t>(sec.count()));
     timestamp->set_nanos(static_cast<int32_t>(nano.count()));
   }
-  grpc_data->set_allocated_date_time_array(grpc_array);
+  grpc_data->set_allocated_date_time_array(grpc_array.release());
   spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
   return grpc_data;
 }
 
+// Clang-tidy assumes some of the gRPC calls are memory leaks
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 auto GrpcConverterTo::operator()(const AstarteData &value,
                                  const std::chrono::system_clock::time_point *timestamp)
-    -> gRPCAstarteDatastreamIndividual * {
-  auto *grpc_individual = new gRPCAstarteDatastreamIndividual();
+    -> std::unique_ptr<gRPCAstarteDatastreamIndividual> {
+  auto grpc_individual = std::make_unique<gRPCAstarteDatastreamIndividual>();
 
-  google::protobuf::Timestamp *grpc_timestamp = nullptr;
   if (timestamp != nullptr) {
     const std::chrono::system_clock::duration t_duration = timestamp->time_since_epoch();
     const std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(t_duration);
     const std::chrono::nanoseconds nano =
         std::chrono::duration_cast<std::chrono::nanoseconds>(t_duration) - sec;
-    grpc_timestamp = new google::protobuf::Timestamp();
+    auto grpc_timestamp = std::make_unique<google::protobuf::Timestamp>();
     grpc_timestamp->set_seconds(static_cast<int64_t>(sec.count()));
     grpc_timestamp->set_nanos(static_cast<int32_t>(nano.count()));
-    grpc_individual->set_allocated_timestamp(grpc_timestamp);
+    grpc_individual->set_allocated_timestamp(grpc_timestamp.release());
   }
 
-  gRPCAstarteData *grpc_data = std::visit(GrpcConverterTo(), value.get_raw_data());
-  grpc_individual->set_allocated_data(grpc_data);
+  std::unique_ptr<gRPCAstarteData> grpc_data = std::visit(GrpcConverterTo(), value.get_raw_data());
+  grpc_individual->set_allocated_data(grpc_data.release());
   return grpc_individual;
 }
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
+// Clang-tidy assumes some of the gRPC calls are memory leaks
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 auto GrpcConverterTo::operator()(const AstarteObject &value,
                                  const std::chrono::system_clock::time_point *timestamp)
-    -> gRPCAstarteDatastreamObject * {
-  auto *grpc_object = new gRPCAstarteDatastreamObject();
+    -> std::unique_ptr<gRPCAstarteDatastreamObject> {
+  auto grpc_object = std::make_unique<gRPCAstarteDatastreamObject>();
 
-  google::protobuf::Timestamp *grpc_timestamp = nullptr;
   if (timestamp != nullptr) {
     const std::chrono::system_clock::duration t_duration = timestamp->time_since_epoch();
     const std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(t_duration);
     const std::chrono::nanoseconds nano =
         std::chrono::duration_cast<std::chrono::nanoseconds>(t_duration) - sec;
-    grpc_timestamp = new google::protobuf::Timestamp();
+    auto grpc_timestamp = std::make_unique<google::protobuf::Timestamp>();
     grpc_timestamp->set_seconds(static_cast<int64_t>(sec.count()));
     grpc_timestamp->set_nanos(static_cast<int32_t>(nano.count()));
-    grpc_object->set_allocated_timestamp(grpc_timestamp);
+    grpc_object->set_allocated_timestamp(grpc_timestamp.release());
   }
 
   google::protobuf::Map<std::string, gRPCAstarteData> *grpc_map = grpc_object->mutable_data();
   for (const auto &pair : value) {
     const std::string &path = pair.first;
     const AstarteData &data = pair.second;
-    gRPCAstarteData *grpc_data = std::visit(GrpcConverterTo(), data.get_raw_data());
+
+    const std::unique_ptr<gRPCAstarteData> grpc_data =
+        std::visit(GrpcConverterTo(), data.get_raw_data());
     // NOTE: It is quite unclear from the protobuffer documentation if this assigment changes
     // ownership of the pointer. After testing with valgrind it appears that this is not the case.
-    // As a consequence this grpc_data and its contents should be freed manually.
+    // As a consequence ownership of this grpc_data is not released.
     (*grpc_map)[path] = *grpc_data;
-    delete grpc_data;
   }
-
   return grpc_object;
 }
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 auto GrpcConverterTo::operator()(const std::optional<AstarteData> &value)
-    -> gRPCAstartePropertyIndividual * {
-  auto *grpc_property = new gRPCAstartePropertyIndividual();
+    -> std::unique_ptr<gRPCAstartePropertyIndividual> {
+  auto grpc_property = std::make_unique<gRPCAstartePropertyIndividual>();
   if (value.has_value()) {
     const AstarteData &data = value.value();
-    gRPCAstarteData *grpc_data = std::visit(GrpcConverterTo(), data.get_raw_data());
-    grpc_property->set_allocated_data(grpc_data);
+    std::unique_ptr<gRPCAstarteData> grpc_data = std::visit(GrpcConverterTo(), data.get_raw_data());
+    grpc_property->set_allocated_data(grpc_data.release());
   }
-  // Check if has_data is false when optional has no value (if it's true use clear_data)
   return grpc_property;
 }
 

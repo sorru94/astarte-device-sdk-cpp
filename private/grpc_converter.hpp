@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -28,28 +29,30 @@ using gRPCAstarteMessage = astarteplatform::msghub::AstarteMessage;
 
 class GrpcConverterTo {
  public:
-  auto operator()(int32_t value) -> gRPCAstarteData *;
-  auto operator()(int64_t value) -> gRPCAstarteData *;
-  auto operator()(double value) -> gRPCAstarteData *;
-  auto operator()(bool value) -> gRPCAstarteData *;
-  auto operator()(const std::string &value) -> gRPCAstarteData *;
-  auto operator()(const std::vector<uint8_t> &value) -> gRPCAstarteData *;
-  auto operator()(std::chrono::system_clock::time_point value) -> gRPCAstarteData *;
-  auto operator()(const std::vector<int32_t> &values) -> gRPCAstarteData *;
-  auto operator()(const std::vector<int64_t> &values) -> gRPCAstarteData *;
-  auto operator()(const std::vector<double> &values) -> gRPCAstarteData *;
-  auto operator()(const std::vector<bool> &values) -> gRPCAstarteData *;
-  auto operator()(const std::vector<std::string> &values) -> gRPCAstarteData *;
-  auto operator()(const std::vector<std::vector<uint8_t>> &values) -> gRPCAstarteData *;
+  auto operator()(int32_t value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(int64_t value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(double value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(bool value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::string &value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<uint8_t> &value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(std::chrono::system_clock::time_point value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<int32_t> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<int64_t> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<double> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<bool> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<std::string> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<std::vector<uint8_t>> &values)
+      -> std::unique_ptr<gRPCAstarteData>;
   auto operator()(const std::vector<std::chrono::system_clock::time_point> &values)
-      -> gRPCAstarteData *;
+      -> std::unique_ptr<gRPCAstarteData>;
 
   auto operator()(const AstarteData &value, const std::chrono::system_clock::time_point *timestamp)
-      -> gRPCAstarteDatastreamIndividual *;
+      -> std::unique_ptr<gRPCAstarteDatastreamIndividual>;
   auto operator()(const AstarteObject &value,
                   const std::chrono::system_clock::time_point *timestamp)
-      -> gRPCAstarteDatastreamObject *;
-  auto operator()(const std::optional<AstarteData> &value) -> gRPCAstartePropertyIndividual *;
+      -> std::unique_ptr<gRPCAstarteDatastreamObject>;
+  auto operator()(const std::optional<AstarteData> &value)
+      -> std::unique_ptr<gRPCAstartePropertyIndividual>;
 };
 
 class GrpcConverterFrom {
