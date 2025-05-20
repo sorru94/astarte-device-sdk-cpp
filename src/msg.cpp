@@ -15,13 +15,18 @@
 
 namespace AstarteDeviceSdk {
 
-AstarteMessage::AstarteMessage(std::string interface, std::string path,
+AstarteMessage::AstarteMessage(std::string interface, std::string path, AstarteMessageType type,
                                std::optional<std::variant<AstarteData, AstarteObject>> data)
-    : interface_(std::move(interface)), path_(std::move(path)), data_(std::move(data)) {}
+    : interface_(std::move(interface)),
+      path_(std::move(path)),
+      type_(type),
+      data_(std::move(data)) {}
 
 auto AstarteMessage::get_interface() const -> const std::string & { return interface_; }
 
 auto AstarteMessage::get_path() const -> const std::string & { return path_; }
+
+auto AstarteMessage::get_message_type() const -> const AstarteMessageType & { return type_; }
 
 auto AstarteMessage::into() const
     -> const std::optional<std::variant<AstarteData, AstarteObject>> & {

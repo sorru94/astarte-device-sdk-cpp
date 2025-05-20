@@ -10,6 +10,7 @@
  * @brief Astarte message class and its related methods.
  */
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <variant>
@@ -19,6 +20,16 @@
 
 namespace AstarteDeviceSdk {
 
+/** @brief Possible Astarte message types. */
+enum class AstarteMessageType : int8_t {
+  /** @brief Datastream individual. */
+  DATASTREAM_INDIVIDUAL,
+  /** @brief Datastream aggregated object. */
+  DATASTREAM_OBJECT,
+  /** @brief Property individual. */
+  PROPERTY_INDIVIDUAL
+};
+
 /** @brief Astarte message class, represents a full message for/from Astarte. */
 class AstarteMessage {
  public:
@@ -26,12 +37,13 @@ class AstarteMessage {
    * @brief Constructor for the AstarteMessage class.
    * @param interface The interface for the message.
    * @param path The path for the message.
+   * @param type The type of the message.
    * @param data The data for the message. This may be one of:
    *             - A data value used for individual datastreams and properties
    *             - An object message used for object datastreams
    *             - The no-option value used for unsetting properties (there is no new value)
    */
-  AstarteMessage(std::string interface, std::string path,
+  AstarteMessage(std::string interface, std::string path, AstarteMessageType type,
                  std::optional<std::variant<AstarteData, AstarteObject>> data);
 
   /**
@@ -44,6 +56,11 @@ class AstarteMessage {
    * @return The path.
    */
   [[nodiscard]] auto get_path() const -> const std::string&;
+  /**
+   * @brief Get the type of the message.
+   * @return The message type.
+   */
+  [[nodiscard]] auto get_message_type() const -> const AstarteMessageType&;
   /**
    * @brief Get the content of the message.
    * @return The value contained in the message.
@@ -70,6 +87,7 @@ class AstarteMessage {
  private:
   std::string interface_;
   std::string path_;
+  AstarteMessageType type_;
   std::optional<std::variant<AstarteData, AstarteObject>> data_;
 };
 

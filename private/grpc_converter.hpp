@@ -5,11 +5,13 @@
 #ifndef GRPC_CONVERTER_H
 #define GRPC_CONVERTER_H
 
+#include <astarteplatform/msghub/astarte_data.pb.h>
 #include <astarteplatform/msghub/astarte_message.pb.h>
-#include <astarteplatform/msghub/astarte_type.pb.h>
 
 #include <chrono>
 #include <cstdint>
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -19,33 +21,44 @@
 
 namespace AstarteDeviceSdk {
 
-using gRPCAstarteDataTypeIndividual = astarteplatform::msghub::AstarteDataTypeIndividual;
-using gRPCAstarteDataTypeObject = astarteplatform::msghub::AstarteDataTypeObject;
+using gRPCAstarteData = astarteplatform::msghub::AstarteData;
+using gRPCAstarteDatastreamIndividual = astarteplatform::msghub::AstarteDatastreamIndividual;
+using gRPCAstarteDatastreamObject = astarteplatform::msghub::AstarteDatastreamObject;
+using gRPCAstartePropertyIndividual = astarteplatform::msghub::AstartePropertyIndividual;
 using gRPCAstarteMessage = astarteplatform::msghub::AstarteMessage;
 
-class GrpcConverter {
+class GrpcConverterTo {
  public:
-  auto operator()(int32_t value) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(int64_t value) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(double value) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(bool value) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(const std::string &value) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(const std::vector<uint8_t> &value) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(std::chrono::system_clock::time_point value) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(const std::vector<int32_t> &values) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(const std::vector<int64_t> &values) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(const std::vector<double> &values) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(const std::vector<bool> &values) -> gRPCAstarteDataTypeIndividual *;
-  auto operator()(const std::vector<std::string> &values) -> gRPCAstarteDataTypeIndividual *;
+  auto operator()(int32_t value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(int64_t value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(double value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(bool value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::string &value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<uint8_t> &value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(std::chrono::system_clock::time_point value) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<int32_t> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<int64_t> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<double> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<bool> &values) -> std::unique_ptr<gRPCAstarteData>;
+  auto operator()(const std::vector<std::string> &values) -> std::unique_ptr<gRPCAstarteData>;
   auto operator()(const std::vector<std::vector<uint8_t>> &values)
-      -> gRPCAstarteDataTypeIndividual *;
+      -> std::unique_ptr<gRPCAstarteData>;
   auto operator()(const std::vector<std::chrono::system_clock::time_point> &values)
-      -> gRPCAstarteDataTypeIndividual *;
+      -> std::unique_ptr<gRPCAstarteData>;
 
-  auto operator()(const AstarteObject &value) -> gRPCAstarteDataTypeObject *;
+  auto operator()(const AstarteData &value, const std::chrono::system_clock::time_point *timestamp)
+      -> std::unique_ptr<gRPCAstarteDatastreamIndividual>;
+  auto operator()(const AstarteObject &value,
+                  const std::chrono::system_clock::time_point *timestamp)
+      -> std::unique_ptr<gRPCAstarteDatastreamObject>;
+  auto operator()(const std::optional<AstarteData> &value)
+      -> std::unique_ptr<gRPCAstartePropertyIndividual>;
+};
 
-  auto operator()(const gRPCAstarteDataTypeIndividual &value) -> AstarteData;
-  auto operator()(const gRPCAstarteDataTypeObject &value) -> AstarteObject;
+class GrpcConverterFrom {
+ public:
+  auto operator()(const gRPCAstarteData &value) -> AstarteData;
+  auto operator()(const gRPCAstarteDatastreamObject &value) -> AstarteObject;
   auto operator()(const gRPCAstarteMessage &value) -> AstarteMessage;
 };
 

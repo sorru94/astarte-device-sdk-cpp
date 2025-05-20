@@ -4,6 +4,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <cstdlib>
 #include <iostream>
 #include <thread>
 
@@ -299,5 +300,5 @@ int main(int argc, char **argv) {
   msghub_client->disconnect();
 
   std::this_thread::sleep_for(std::chrono::seconds(3));
-  return 0;
+  std::exit(EXIT_SUCCESS);
 }
