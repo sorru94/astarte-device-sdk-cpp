@@ -42,6 +42,7 @@ auto AstarteMessage::operator!=(const AstarteMessage &other) const -> bool {
          this->data_ != other.into();
 }
 
+#if defined(ASTARTE_FORMAT_ENABLED)
 auto AstarteMessage::format() const -> std::string {
   std::ostringstream oss;
   oss << "{interface: " << interface_ << ", path: " << path_;
@@ -57,5 +58,6 @@ auto AstarteMessage::format() const -> std::string {
   oss << "}";
   return oss.str();
 }
+#endif
 
 }  // namespace AstarteDeviceSdk

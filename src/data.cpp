@@ -4,7 +4,9 @@
 
 #include "astarte_device_sdk/data.hpp"
 
+#if defined(ASTARTE_FORMAT_ENABLED)
 #include <libbase64.h>
+#endif
 
 #include <chrono>
 #include <cstdint>
@@ -71,6 +73,7 @@ auto AstarteData::operator!=(const AstarteData &other) const -> bool {
   return this->data_ != other.get_raw_data();
 }
 
+#if defined(ASTARTE_FORMAT_ENABLED)
 namespace {
 template <typename T>
 auto format_vector(const std::vector<T> &data) -> std::string {
@@ -206,5 +209,6 @@ auto AstarteData::format() const -> std::string {
   return oss.str();
 }
 // NOLINTEND(readability-function-size)
+#endif
 
 }  // namespace AstarteDeviceSdk
