@@ -45,6 +45,7 @@ void AstarteObject::clear() { data_.clear(); }
 auto AstarteObject::find(const std::string& key) -> iterator { return data_.find(key); }
 // Find element by key (const)
 auto AstarteObject::find(const std::string& key) const -> const_iterator { return data_.find(key); }
+#if defined(ASTARTE_FORMAT_ENABLED)
 // Format the map content
 auto AstarteObject::format() const -> std::string {
   std::ostringstream oss;
@@ -58,6 +59,7 @@ auto AstarteObject::format() const -> std::string {
   }
   return oss.str();
 }
+#endif
 
 auto AstarteObject::get_raw_data() const -> const MapType& { return this->data_; }
 

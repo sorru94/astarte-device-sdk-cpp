@@ -66,11 +66,13 @@ class AstarteMessage {
    * @return The value contained in the message.
    */
   [[nodiscard]] auto into() const -> const std::optional<std::variant<AstarteData, AstarteObject>>&;
+#if defined(ASTARTE_FORMAT_ENABLED)
   /**
    * @brief Pretty format the Astarte message.
    * @return A string representing in human readable format the content of the class instance.
    */
   [[nodiscard]] auto format() const -> std::string;
+#endif
   /**
    * @brief Overloader for the comparison operator ==.
    * @param other The object to compare to.

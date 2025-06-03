@@ -11,27 +11,84 @@ This repo contains an implementation of an Astarte device SDK for C++.
 > **N.B.** At the current state this SDK only provides connectivity to Astarte through the
 [Astarte message hub](https://github.com/astarte-platform/astarte-message-hub).
 
-## Required dependencies
-
-This library has only one notable dependency, gRPC.
-You can choose to use your system gRPC installation, or to let the library check out gRPC
-internally.
-When building with CMake use the option `USE_SYSTEM_GRPC` to select if building with the system
-gRPC or if to fetch it at build time.
-
-> **N.B.** Importing gRPC internally to the library requires a re-compilation of the gRPC library
-leading to a much longer build time.
-> We suggest using your system gRPC for fast developement.
-
-The officially supported version of gRPC is `v0.69.0`.
-
-## Required C++ version
+## Minimum C++ version
 
 This library requires at least C++ 17.
 
+## Supported Astarte message hub versions
+
+This library relies on the Astarte message hub for connectivity with Astarte.
+The message hub should be at least at version X.X for this library to function properly.
+
+## Optional features
+
+Some features of the library can be enabled or disabled using CMake options.
+
+### Formatting Astarte data
+
+Astarte data, both in transmission and reception is encapsulated in C++ objects.
+This feature enables a set of format methods of such objects making it possible to pretty print
+data objects. The resulting string will be in a JSON compabile format and can be used to
+interact with the Astarte REST APIs during developement.
+
+The option to enable this feature is: `ASTARTE_ENABLE_FORMAT`.
+
+### Public message hub proto dependency
+
+The [Astarte message hub proto](https://github.com/astarte-platform/astarte-message-hub-proto) is a
+separate CMake project that contains the protobuffer definitions of the gRPC used by this library
+to connect with the Astarte message hub.
+This feature makes the Astarte message hub proto project a public dependency of this library.
+The user can subsequently access the gRPC stubs directly from within C++ code.
+
+The option to enable this feature is: `ASTARTE_PUBLIC_PROTO_DEP`.
+
+> **N.B.** This option should only be enabled during developement.
+
+## Dependencies
+
+For this library to properly work some dependencies are required. All of them can be imported
+directly by the library using fetch content.
+However, the user may choose to use system installed ones setting some cmake options.
+
+### gRPC
+
+The most importand and large depencency for this library is [gRPC](https://github.com/grpc/grpc).
+The officially supported version of gRPC is `v0.69.0`, but any gRPC version following that one
+should work just fine.
+
+By default gRPC will be imported using FetchContent. Users can choose to use their system gRPC
+by setting the CMake option `USE_SYSTEM_GRPC`.
+
+> **N.B.** Importing gRPC with FetchContent requires a re-compilation of the gRPC library
+leading to a much longer build time.
+> We suggest using your system gRPC for fast developement.
+
+### Astarte message hub proto
+
+The [Astarte message hub proto](https://github.com/astarte-platform/astarte-message-hub-proto) is
+a separate project that contains the protobuffer definitions of the gRPC used by this library
+to connect with the Astarte message hub.
+This dependency is imported using fetch content and it's necessary for the proper functioning of
+the library.
+
+### spdlog
+
+This library uses [spdlog](https://github.com/gabime/spdlog) to log information.
+The logging utility is imported using FetchContent and is an essential component of this library.
+
+### base64
+
+The optional dependency [base64](https://github.com/aklomp/base64.git) is only required when
+formatting of Astarte data is enabled using `ASTARTE_ENABLE_FORMAT`.
+It is fetched directly with fetch content and no option is currently available to use a system
+version of this library.
+
 ## Get started with the samples
 
-Check out the sample folder and get started using the library.
+Various samples have been added in the `samples` folder of this project.
+An utility bash script has also been added, named `build_samples.sh`. It can be used to build one of
+the samples without having to deal directly with CMake.
 
 ## Importing the library in an external project
 

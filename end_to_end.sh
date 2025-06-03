@@ -86,6 +86,7 @@ if [ "$system_grpc" = true ]; then
 fi
 cmake_options_array+=("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
 cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
+cmake_options_array+=("-DASTARTE_ENABLE_FORMAT=ON")
 
 echo "CMake options: ${cmake_options_array[*]}"
 if ! cmake "${cmake_options_array[@]}" ..; then
