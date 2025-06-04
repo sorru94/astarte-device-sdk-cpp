@@ -43,8 +43,8 @@ if(ASTARTE_ENABLE_FORMAT)
 endif()
 
 # Astarte message hub protos
-set(MSGHUB_PROTO_GITHUB_URL https://github.com/astarte-platform/astarte-message-hub-proto.git)
-set(MSGHUB_PROTO_GIT_TAG 9cd8ca061841ab539b63252427e149a676258281)
+set(MSGHUB_PROTO_GITHUB_URL https://github.com/sorru94/astarte-message-hub-proto.git)
+set(MSGHUB_PROTO_GIT_TAG custom_cmake)
 FetchContent_Declare(
   astarte_msghub_proto
   GIT_REPOSITORY ${MSGHUB_PROTO_GITHUB_URL}
