@@ -121,7 +121,7 @@ fi
 echo "Running CMake..."
 cmake_options_array=()
 if [ "$system_grpc" = true ]; then
-    cmake_options_array+=("-DUSE_SYSTEM_GRPC=ON")
+    cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
 cmake_options_array+=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")

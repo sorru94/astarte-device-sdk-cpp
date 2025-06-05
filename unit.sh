@@ -95,9 +95,7 @@ cmake_options_array+=("-DCMAKE_CXX_STANDARD_REQUIRED=ON")
 cmake_options_array+=("-DASTARTE_PUBLIC_PROTO_DEP=ON")
 cmake_options_array+=("-DASTARTE_ENABLE_FORMAT=ON")
 if [ "$system_grpc" = true ]; then
-    cmake_options_array+=("-DUSE_SYSTEM_GRPC=ON")
-else
-    cmake_options_array+=("-DUSE_SYSTEM_GRPC=OFF") # Explicitly OFF if not specified
+    cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 
 echo "CMake options: ${cmake_options_array[*]}"

@@ -58,7 +58,7 @@ The officially supported version of gRPC is `v0.69.0`, but any gRPC version foll
 should work just fine.
 
 By default gRPC will be imported using FetchContent. Users can choose to use their system gRPC
-by setting the CMake option `USE_SYSTEM_GRPC`.
+by setting the CMake option `ASTARTE_USE_SYSTEM_GRPC`.
 
 > **N.B.** Importing gRPC with FetchContent requires a re-compilation of the gRPC library
 leading to a much longer build time.
