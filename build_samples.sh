@@ -71,7 +71,7 @@ cd "$build_dir" || error_exit "Failed to navigate to $build_dir"
 echo "Running CMake..."
 cmake_options_array=()
 if [ "$system_grpc" = true ]; then
-    cmake_options_array+=("-DUSE_SYSTEM_GRPC=ON")
+    cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 cmake_options_array+=("-DCMAKE_CXX_STANDARD=$cpp_standard")
 cmake_options_array+=("-DCMAKE_CXX_STANDARD_REQUIRED=ON")
