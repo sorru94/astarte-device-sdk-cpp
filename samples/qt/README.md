@@ -55,12 +55,11 @@ To run the example from root:
 
 ## 🧰 Building from terminal with script
 
-Instead of using **Qt Creator**, you can build the project directly from the terminal using the provided script:
+Instead of using **Qt Creator**, you can build the project directly from the terminal using the
+provided script:
 
 ```bash
-cd /samples/qt
-
-./build_qt_example.sh [OPTIONS]
+./build_sample.sh qt [OPTIONS]
 ```
 
 After building, the executable can be found in `build` folder.
@@ -85,7 +84,8 @@ Please verify:
 - `main.cpp` is part of the CMake project and recognized by Qt Creator.
 - `CMAKE_AUTOMOC` is enabled in your `CMakeLists.txt` (as shown above).
 
-The `main.moc` file is generated automatically during the build if the project is properly configured.
+The `main.moc` file is generated automatically during the build if the project is properly
+configured.
 
 ### 📄 About the CMakeList.txt
 
@@ -102,4 +102,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_BINARY_DIR}/l
 set(CMAKE_AUTOMOC ON)
 ```
 
-This configuration ensures that the **Astarte device SDK** is fetched from GitHub and properly linked with the Qt project. The `CMAKE_AUTOMOC` setting is essential for Qt’s meta-object compiler to generate required `.moc` files automatically.
+This configuration ensures that the **Astarte device SDK** is fetched from GitHub and properly
+linked with the Qt project. The `CMAKE_AUTOMOC` setting is essential for Qt’s meta-object compiler
+to generate required `.moc` files automatically.
