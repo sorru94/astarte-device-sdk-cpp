@@ -9,7 +9,7 @@ fresh_mode=false
 system_grpc=false
 cpp_standard=20
 jobs=$(nproc --all)
-build_dir="samples/grpc/build"
+build_dir="samples/simple/build"
 
 # --- Helper Functions ---
 display_help() {
