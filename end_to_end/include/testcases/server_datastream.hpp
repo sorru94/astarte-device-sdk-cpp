@@ -8,8 +8,8 @@
 #include "constants/astarte_interfaces.hpp"
 
 namespace testcases {
-std::unique_ptr<TestCase> server_datastream() {
-  auto astarte_to_device = std::make_unique<TestCase>(
+TestCase server_datastream() {
+  return TestCase(
       "Astarte to device",
       std::vector<std::shared_ptr<TestAction>>{
           std::make_shared<TestActionConnect>(),
@@ -130,7 +130,5 @@ std::unique_ptr<TestCase> server_datastream() {
           std::make_shared<TestActionSleep>(std::chrono::seconds(1)),
           std::make_shared<TestActionDisconnect>(),
           std::make_shared<TestActionSleep>(std::chrono::seconds(1))});
-
-  return astarte_to_device;
 }
 }  // namespace testcases

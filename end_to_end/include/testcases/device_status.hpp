@@ -8,8 +8,8 @@
 #include "constants/astarte_interfaces.hpp"
 
 namespace testcases {
-std::unique_ptr<TestCase> device_status() {
-  auto device_status = std::make_unique<TestCase>(
+TestCase device_status() {
+  return TestCase(
       "Device status",
       std::vector<std::shared_ptr<TestAction>>{
           std::make_shared<TestActionConnect>(),
@@ -23,7 +23,5 @@ std::unique_ptr<TestCase> device_status() {
                                              std::string(astarte_interfaces::SERVER_PROPERTY)}),
           std::make_shared<TestActionDisconnect>(),
           std::make_shared<TestActionSleep>(std::chrono::seconds(1))});
-
-  return device_status;
 }
 }  // namespace testcases
