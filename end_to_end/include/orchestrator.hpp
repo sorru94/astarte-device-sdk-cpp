@@ -31,7 +31,7 @@ class TestOrchestrator {
       : grpc_config_(config_grpc), curl_config_(config_curl) {}
 
   // Add test case to orchestrator
-  void add_test_case(TestCase&& test_case) {
+  void add_test_case(TestCase test_case) {
     std::shared_ptr<AstarteDevice> device =
         std::make_shared<AstarteDevice>(grpc_config_.server_addr, grpc_config_.node_id);
     for (const std::filesystem::path& interface_path : grpc_config_.interfaces) {

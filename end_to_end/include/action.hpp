@@ -56,39 +56,67 @@ class TestAction {
 
 class TestActionSleep : public TestAction {
  public:
-  TestActionSleep(std::chrono::milliseconds milliseconds) : duration_(milliseconds) {}
-  TestActionSleep(std::chrono::seconds seconds)
-      : duration_(std::chrono::duration_cast<std::chrono::milliseconds>(seconds)) {}
+  static std::shared_ptr<TestActionSleep> Create(std::chrono::seconds seconds) {
+    return std::shared_ptr<TestActionSleep>(new TestActionSleep(seconds));
+  }
+
+  static std::shared_ptr<TestActionSleep> Create(std::chrono::milliseconds milliseconds) {
+    return std::shared_ptr<TestActionSleep>(new TestActionSleep(milliseconds));
+  }
+
   void execute(const std::string& case_name) const override {
-    spdlog::info("[{}] Sleeping...", case_name);
+    spdlog::info("[{}] Sleeping for {}ms...", case_name, duration_.count());
     std::this_thread::sleep_for(duration_);
   }
 
  private:
+  TestActionSleep(std::chrono::milliseconds milliseconds) : duration_(milliseconds) {}
+
+  TestActionSleep(std::chrono::seconds seconds)
+      : duration_(std::chrono::duration_cast<std::chrono::milliseconds>(seconds)) {}
+
   std::chrono::milliseconds duration_;
 };
 
 class TestActionConnect : public TestAction {
  public:
+  static std::shared_ptr<TestActionConnect> Create() {
+    return std::shared_ptr<TestActionConnect>(new TestActionConnect());
+  }
+
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Connecting...", case_name);
     device_->connect();
   }
+
+ private:
+  TestActionConnect() = default;
 };
 
 class TestActionDisconnect : public TestAction {
  public:
+  static std::shared_ptr<TestActionDisconnect> Create() {
+    return std::shared_ptr<TestActionDisconnect>(new TestActionDisconnect());
+  }
+
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Disconnecting...", case_name);
     device_->disconnect();
     *kill_reception_ = true;
   }
+
+ private:
+  TestActionDisconnect() = default;
 };
 
 class TestActionCheckDeviceStatus : public TestAction {
  public:
-  TestActionCheckDeviceStatus(bool connected, const std::vector<std::string>& introspection)
-      : connected_(connected), introspection_(introspection) {}
+  static std::shared_ptr<TestActionCheckDeviceStatus> Create(
+      bool connected, const std::vector<std::string>& introspection) {
+    return std::shared_ptr<TestActionCheckDeviceStatus>(
+        new TestActionCheckDeviceStatus(connected, introspection));
+  }
+
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Checking device status...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_;
@@ -118,13 +146,19 @@ class TestActionCheckDeviceStatus : public TestAction {
   }
 
  private:
+  TestActionCheckDeviceStatus(bool connected, const std::vector<std::string>& introspection)
+      : connected_(connected), introspection_(introspection) {}
+
   bool connected_;
   std::vector<std::string> introspection_;
 };
 
 class TestActionTransmitMQTTData : public TestAction {
  public:
-  TestActionTransmitMQTTData(const AstarteMessage& message) : message_(message) {}
+  static std::shared_ptr<TestActionTransmitMQTTData> Create(const AstarteMessage& message) {
+    return std::shared_ptr<TestActionTransmitMQTTData>(new TestActionTransmitMQTTData(message));
+  }
+
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Transmitting MQTT data...", case_name);
     if (message_.is_datastream()) {
@@ -142,12 +176,18 @@ class TestActionTransmitMQTTData : public TestAction {
   }
 
  private:
+  TestActionTransmitMQTTData(const AstarteMessage& message) : message_(message) {}
+
   AstarteMessage message_;
 };
 
 class TestActionReadReceivedMQTTData : public TestAction {
  public:
-  TestActionReadReceivedMQTTData(const AstarteMessage& message) : message_(message) {}
+  static std::shared_ptr<TestActionReadReceivedMQTTData> Create(const AstarteMessage& message) {
+    return std::shared_ptr<TestActionReadReceivedMQTTData>(
+        new TestActionReadReceivedMQTTData(message));
+  }
+
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Reading received MQTT data...", case_name);
     auto start = std::chrono::high_resolution_clock::now();
@@ -169,12 +209,17 @@ class TestActionReadReceivedMQTTData : public TestAction {
   }
 
  private:
+  TestActionReadReceivedMQTTData(const AstarteMessage& message) : message_(message) {}
+
   AstarteMessage message_;
 };
 
 class TestActionTransmitRESTData : public TestAction {
  public:
-  TestActionTransmitRESTData(const AstarteMessage& message) : message_(message) {}
+  static std::shared_ptr<TestActionTransmitRESTData> Create(const AstarteMessage& message) {
+    return std::shared_ptr<TestActionTransmitRESTData>(new TestActionTransmitRESTData(message));
+  }
+
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Transmitting REST data...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
@@ -201,12 +246,17 @@ class TestActionTransmitRESTData : public TestAction {
   }
 
  private:
+  TestActionTransmitRESTData(const AstarteMessage& message) : message_(message) {}
+
   AstarteMessage message_;
 };
 
 class TestActionFetchRESTData : public TestAction {
  public:
-  TestActionFetchRESTData(const AstarteMessage& message) : message_(message) {}
+  static std::shared_ptr<TestActionFetchRESTData> Create(const AstarteMessage& message) {
+    return std::shared_ptr<TestActionFetchRESTData>(new TestActionFetchRESTData(message));
+  }
+
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Fetching REST data...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
@@ -244,5 +294,7 @@ class TestActionFetchRESTData : public TestAction {
   }
 
  private:
+  TestActionFetchRESTData(const AstarteMessage& message) : message_(message) {}
+
   AstarteMessage message_;
 };
