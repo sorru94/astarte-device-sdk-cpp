@@ -20,7 +20,7 @@ jobs:
       with:
         python-version: '3.13'
     - name: Check formatting
-      run: ./format.sh
+      run: ./format.sh --check-only
   clang-tidy-check:
     runs-on: ubuntu-latest
     concurrency:
