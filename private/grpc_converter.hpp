@@ -16,8 +16,10 @@
 #include <vector>
 
 #include "astarte_device_sdk/data.hpp"
+#include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
+#include "astarte_device_sdk/property.hpp"
 
 namespace AstarteDeviceSdk {
 
@@ -48,7 +50,7 @@ class GrpcConverterTo {
 
   auto operator()(const AstarteData &value, const std::chrono::system_clock::time_point *timestamp)
       -> std::unique_ptr<gRPCAstarteDatastreamIndividual>;
-  auto operator()(const AstarteObject &value,
+  auto operator()(const AstarteDatastreamObject &value,
                   const std::chrono::system_clock::time_point *timestamp)
       -> std::unique_ptr<gRPCAstarteDatastreamObject>;
   auto operator()(const std::optional<AstarteData> &value)
@@ -58,7 +60,9 @@ class GrpcConverterTo {
 class GrpcConverterFrom {
  public:
   auto operator()(const gRPCAstarteData &value) -> AstarteData;
-  auto operator()(const gRPCAstarteDatastreamObject &value) -> AstarteObject;
+  auto operator()(const gRPCAstarteDatastreamIndividual &value) -> AstarteDatastreamIndividual;
+  auto operator()(const gRPCAstarteDatastreamObject &value) -> AstarteDatastreamObject;
+  auto operator()(const gRPCAstartePropertyIndividual &value) -> AstartePropertyIndividual;
   auto operator()(const gRPCAstarteMessage &value) -> AstarteMessage;
 };
 
