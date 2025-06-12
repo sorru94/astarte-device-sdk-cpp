@@ -11,6 +11,7 @@
  */
 
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 
@@ -30,8 +31,8 @@ class AstarteMessage {
    * @param data The data for the message.
    */
   template <typename T>
-  AstarteMessage(std::string interface, std::string path, T data)
-      : interface_(std::move(interface)), path_(std::move(path)), data_(data) {}
+  AstarteMessage(std::string_view interface, std::string path, T data)
+      : interface_(interface), path_(std::move(path)), data_(data) {}
 
   /**
    * @brief Get the interface of the message.
