@@ -20,9 +20,11 @@
 using json = nlohmann::json;
 
 using AstarteDeviceSdk::AstarteData;
+using AstarteDeviceSdk::AstarteDatastreamIndividual;
+using AstarteDeviceSdk::AstarteDatastreamObject;
 using AstarteDeviceSdk::AstarteDevice;
 using AstarteDeviceSdk::AstarteMessage;
-using AstarteDeviceSdk::AstarteObject;
+using AstarteDeviceSdk::AstartePropertyIndividual;
 
 class TestAction {
  public:
@@ -125,15 +127,17 @@ class TestActionTransmitMQTTData : public TestAction {
   TestActionTransmitMQTTData(const AstarteMessage& message) : message_(message) {}
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Transmitting MQTT data...", case_name);
-    const std::optional<std::variant<AstarteData, AstarteObject>>& data = message_.into();
-    if (data.has_value()) {
-      if (std::holds_alternative<AstarteData>(data.value())) {
-        device_->send_individual(message_.get_interface(), message_.get_path(),
-                                 std::get<AstarteData>(data.value()), nullptr);
-      } else if (std::holds_alternative<AstarteObject>(data.value())) {
-        device_->send_object(message_.get_interface(), message_.get_path(),
-                             std::get<AstarteObject>(data.value()), nullptr);
+    if (message_.is_datastream()) {
+      if (message_.is_individual()) {
+        const auto& data(message_.into<AstarteDatastreamIndividual>());
+        device_->send_individual(message_.get_interface(), message_.get_path(), data.get_value(),
+                                 nullptr);
+      } else {
+        const auto& data(message_.into<AstarteDatastreamObject>());
+        device_->send_object(message_.get_interface(), message_.get_path(), data, nullptr);
       }
+    } else {
+      // TODO: Handle properties
     }
   }
 
@@ -175,12 +179,10 @@ class TestActionTransmitRESTData : public TestAction {
     spdlog::info("[{}] Transmitting REST data...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
                               "/interfaces/" + message_.get_interface() + message_.get_path();
-
-    const std::optional<std::variant<AstarteData, AstarteObject>>& data = message_.into();
-    if (data.has_value()) {
-      if (std::holds_alternative<AstarteData>(data.value())) {
-        AstarteData indiv = std::get<AstarteData>(data.value());
-        std::string payload = "{\"data\":" + indiv.format() + "}";
+    if (message_.is_datastream()) {
+      if (message_.is_individual()) {
+        const auto& data(message_.into<AstarteDatastreamIndividual>());
+        std::string payload = "{\"data\":" + data.format() + "}";
         spdlog::debug("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
@@ -190,11 +192,11 @@ class TestActionTransmitRESTData : public TestAction {
           spdlog::error("HTTP POST failed, status code: {}", post_response.status_code);
           throw EndToEndHTTPException("Transmission of data through REST API failed.");
         }
-
-      } else if (std::holds_alternative<AstarteObject>(data.value())) {
-        AstarteObject obj = std::get<AstarteObject>(data.value());
+      } else {
         // TODO: Encode an object
       }
+    } else {
+      // TODO: Encode properties
     }
   }
 
@@ -224,20 +226,20 @@ class TestActionFetchRESTData : public TestAction {
       throw EndToEndHTTPException("Fetching of data through REST API failed.");
     }
     json fetched_data = response_json[message_.get_path()]["value"];
-    const std::optional<std::variant<AstarteData, AstarteObject>>& expected_data = message_.into();
-    if (expected_data.has_value()) {
-      if (std::holds_alternative<AstarteData>(expected_data.value())) {
-        AstarteData indiv = std::get<AstarteData>(expected_data.value());
-        json expected_data_json = json::parse(indiv.format());
+    if (message_.is_datastream()) {
+      if (message_.is_individual()) {
+        const auto& expected_data(message_.into<AstarteDatastreamIndividual>());
+        json expected_data_json = json::parse(expected_data.format());
         if (expected_data_json != fetched_data) {
           spdlog::error("Fetched data: {}", fetched_data.dump());
           spdlog::error("Expected data: {}", expected_data_json.dump());
           throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
         }
-      } else if (std::holds_alternative<AstarteObject>(expected_data.value())) {
-        AstarteObject obj = std::get<AstarteObject>(expected_data.value());
+      } else {
         // TODO: Parse an expected Object
       }
+    } else {
+      // TODO: Parse properties
     }
   }
 
