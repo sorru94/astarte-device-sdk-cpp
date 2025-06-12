@@ -28,6 +28,10 @@ void AstarteDevice::add_interface_from_json(const std::filesystem::path &json_fi
 
 void AstarteDevice::connect() { astarte_device_impl_->connect(); }
 
+auto AstarteDevice::is_connected(std::chrono::milliseconds timeout) -> bool {
+  return astarte_device_impl_->is_connected(timeout);
+}
+
 void AstarteDevice::disconnect() { astarte_device_impl_->disconnect(); }
 
 void AstarteDevice::send_individual(const std::string &interface_name, const std::string &path,

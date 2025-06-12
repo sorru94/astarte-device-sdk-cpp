@@ -19,12 +19,14 @@
 #include <spdlog/spdlog.h>
 
 #include <chrono>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <stop_token>
 #include <string>
 #include <thread>
 #include <utility>
@@ -35,6 +37,7 @@
 #include "astarte_device_sdk/exceptions.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
+#include "exponential_backoff.hpp"
 #include "grpc_converter.hpp"
 #include "grpc_interceptors.hpp"
 #include "shared_queue.hpp"
@@ -77,40 +80,45 @@ void AstarteDevice::AstarteDeviceImpl::add_interface_from_json(
 }
 
 void AstarteDevice::AstarteDeviceImpl::connect() {
-  spdlog::info("Connecting to the message hub");
-
-  // Create a new channel and initialize the gRPC stub
-  const grpc::ChannelArguments args;
-  std::vector<std::unique_ptr<ClientInterceptorFactoryInterface>> interceptor_creators;
-  interceptor_creators.push_back(std::make_unique<NodeIdInterceptorFactory>(node_uuid_));
-
-  const std::shared_ptr<Channel> channel = CreateCustomChannelWithInterceptors(
-      server_addr_, grpc::InsecureChannelCredentials(), args, std::move(interceptor_creators));
-
-  stub_ = gRPCMessageHub::NewStub(channel);
-
-  // Create the node message for the attach RPC.
-  gRPCNode node;
-  for (const std::string &interface_json : interfaces_bins_) {
-    node.add_interfaces_json(interface_json);
+  if (connection_thread_.joinable()) {
+    spdlog::warn("Connection process is already running.");
+    return;
   }
+  connection_thread_ =
+      std::jthread([this](std::stop_token stop_token) { this->connection_loop(stop_token); });
+}
 
-  // Call the attach RPC.
-  std::unique_ptr<ClientReader<gRPCMessageHubEvent>> reader = stub_->Attach(&client_context_, node);
-
-  // Start a thread for the event stream
-  event_handler_ = std::thread(&AstarteDeviceImpl::handle_events, this, std::move(reader));
+auto AstarteDevice::AstarteDeviceImpl::is_connected(std::chrono::milliseconds timeout) -> bool {
+  // The event handler is started when a connection attempt is performed.
+  // If a connection cannot be established it will exit quickly.
+  if (!event_handler_.joinable()) {
+    return false;
+  }
+  std::this_thread::sleep_for(timeout);
+  return event_handler_.joinable();
 }
 
 void AstarteDevice::AstarteDeviceImpl::disconnect() {
   spdlog::info("Disconnecting from the message hub");
 
-  // Call the dettach RPC.
-  ClientContext context;
-  google::protobuf::Empty response;
-  const Status status = stub_->Detach(&context, google::protobuf::Empty(), &response);
-  if (!status.ok()) {
-    spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+  // If the device is still attempting to connect request a stop.
+  if (connection_thread_.joinable()) {
+    connection_thread_.request_stop();
+  }
+
+  // If the device is connected (an event_handler_ exists) call the detach function.
+  if (event_handler_.joinable()) {
+    ClientContext context;
+    google::protobuf::Empty response;
+    const Status status = stub_->Detach(&context, google::protobuf::Empty(), &response);
+    if (!status.ok()) {
+      spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+    }
+  }
+
+  // Wait for the connection thread to stop.
+  if (connection_thread_.joinable()) {
+    connection_thread_.join();
   }
 }
 
@@ -118,6 +126,10 @@ void AstarteDevice::AstarteDeviceImpl::send_individual(
     const std::string &interface_name, const std::string &path, const AstarteData &data,
     const std::chrono::system_clock::time_point *timestamp) {
   spdlog::debug("Sending individual: {} {}", interface_name, path);
+  if (!event_handler_.joinable()) {
+    spdlog::warn("Device disconnected, operation aborted.");
+    return;
+  }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
   message.set_path(path);
@@ -142,6 +154,10 @@ void AstarteDevice::AstarteDeviceImpl::send_object(
     const std::string &interface_name, const std::string &path,
     const AstarteDatastreamObject &object, const std::chrono::system_clock::time_point *timestamp) {
   spdlog::debug("Sending object: {} {}", interface_name, path);
+  if (!event_handler_.joinable()) {
+    spdlog::warn("Device disconnected, operation aborted.");
+    return;
+  }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
   message.set_path(path);
@@ -166,6 +182,10 @@ void AstarteDevice::AstarteDeviceImpl::set_property(const std::string &interface
                                                     const std::string &path,
                                                     const AstarteData &data) {
   spdlog::debug("Setting property: {} {}", interface_name, path);
+  if (!event_handler_.joinable()) {
+    spdlog::warn("Device disconnected, operation aborted.");
+    return;
+  }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
   message.set_path(path);
@@ -189,6 +209,10 @@ void AstarteDevice::AstarteDeviceImpl::set_property(const std::string &interface
 void AstarteDevice::AstarteDeviceImpl::unset_property(const std::string &interface_name,
                                                       const std::string &path) {
   spdlog::debug("Unsetting property: {} {}", interface_name, path);
+  if (!event_handler_.joinable()) {
+    spdlog::warn("Device disconnected, operation aborted.");
+    return;
+  }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
   message.set_path(path);
@@ -211,8 +235,56 @@ auto AstarteDevice::AstarteDeviceImpl::poll_incoming() -> std::optional<AstarteM
   return rcv_queue_.pop();
 }
 
+void AstarteDevice::AstarteDeviceImpl::connection_attempt() {
+  if (event_handler_.joinable()) {
+    spdlog::warn("Device is already connected.");
+    return;
+  }
+  spdlog::info("Attempting to connect to the message hub at {}", server_addr_);
+
+  // Create a new channel and initialize the gRPC stub
+  const grpc::ChannelArguments args;
+  std::vector<std::unique_ptr<ClientInterceptorFactoryInterface>> interceptor_creators;
+  interceptor_creators.push_back(std::make_unique<NodeIdInterceptorFactory>(node_uuid_));
+
+  const std::shared_ptr<Channel> channel = CreateCustomChannelWithInterceptors(
+      server_addr_, grpc::InsecureChannelCredentials(), args, std::move(interceptor_creators));
+
+  stub_ = gRPCMessageHub::NewStub(channel);
+
+  // Create the node message for the attach RPC.
+  gRPCNode node;
+  for (const std::string &interface_json : interfaces_bins_) {
+    node.add_interfaces_json(interface_json);
+  }
+
+  // Generate a new client context for the Attach method.
+  // From the documentation it appears that a context needs to be valid for the duration of the RPC
+  // In this case the RPC ends when the return stream is closed, so the context should survive at
+  // least for that long.
+  // See: https://grpc.github.io/grpc/cpp/classgrpc_1_1_client_context.html
+  std::unique_ptr<ClientContext> client_context = std::make_unique<ClientContext>();
+
+  // Call the attach RPC.
+  std::unique_ptr<ClientReader<gRPCMessageHubEvent>> reader =
+      stub_->Attach(client_context.get(), node);
+
+  // Start a thread for the event stream.
+  event_handler_ = std::thread(&AstarteDeviceImpl::handle_events, this, std::move(client_context),
+                               std::move(reader));
+
+  // Wait for the event stream to finish.
+  // N.B. This makes this function blocking!
+  if (event_handler_.joinable()) {
+    event_handler_.join();
+  }
+}
+
 void AstarteDevice::AstarteDeviceImpl::handle_events(
+    std::unique_ptr<grpc::ClientContext> context,
     std::unique_ptr<ClientReader<gRPCMessageHubEvent>> reader) {
+  (void)context;
+
   spdlog::debug("Event handler thread has been started");
 
   // Read the message stream.
@@ -253,6 +325,33 @@ auto AstarteDevice::AstarteDeviceImpl::parse_message_hub_event(const gRPCMessage
     spdlog::error("Unknown event type!");
   }
   return res;
+}
+
+void AstarteDevice::AstarteDeviceImpl::connection_loop(std::stop_token &stop_token) {
+  ExponentialBackoff backoff(std::chrono::seconds(2), std::chrono::minutes(1));
+
+  // The loop now checks if a stop has been requested.
+  while (!stop_token.stop_requested()) {
+    try {
+      // This is a blocking function.
+      // It will return only if the connection fails or the device is disconnected.
+      connection_attempt();
+    } catch (const std::exception &e) {
+      spdlog::error("Connection failed: {}", e.what());
+    }
+
+    if (stop_token.stop_requested()) {
+      spdlog::info("Stop requested, will not attempt to reconnect.");
+      break;
+    }
+
+    auto delay = backoff.getNextDelay();
+    spdlog::info("Will attempt to reconnect in {} seconds.",
+                 std::chrono::duration_cast<std::chrono::seconds>(delay).count());
+    std::this_thread::sleep_for(delay);
+  }
+
+  spdlog::info("Connection loop has been terminated.");
 }
 
 }  // namespace AstarteDeviceSdk
