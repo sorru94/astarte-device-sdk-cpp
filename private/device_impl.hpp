@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <stop_token>
 #include <string>
 #include <thread>
 #include <vector>
@@ -45,11 +46,17 @@ struct AstarteDevice::AstarteDeviceImpl {
    */
   void add_interface_from_json(const std::filesystem::path& json_file);
   /**
-   * @brief Connect to the Astarte message hub.
-   * @details Establishes a gRPC connection and starts a background thread to listen for incoming
-   * events from the message hub stream.
+   * @brief Connect the device to Astarte.
+   * @details This is an asynchronous funciton. It will start a management thread that will
+   * manage the device connectivity.
    */
   void connect();
+  /**
+   * @brief Check if the device is connected.
+   * @param timeout This is the maximum timeout used to check if the device is connected.
+   * @return True if the device is connected to the message hub, false otherwise.
+   */
+  auto is_connected(std::chrono::milliseconds timeout) -> bool;
   /**
    * @brief Disconnect from the Astarte message hub.
    * @details Gracefully terminates the connection by sending a Detach message.
@@ -100,16 +107,19 @@ struct AstarteDevice::AstarteDeviceImpl {
   auto poll_incoming() -> std::optional<AstarteMessage>;
 
  private:
-  void handle_events(std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
+  void connection_attempt();
+  void handle_events(std::unique_ptr<grpc::ClientContext> context,
+                     std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
   static auto parse_message_hub_event(const gRPCMessageHubEvent& event)
       -> std::optional<AstarteMessage>;
+  void connection_loop(std::stop_token& stop_token);
 
   std::string server_addr_;
   std::string node_uuid_;
   std::unique_ptr<gRPCMessageHub::Stub> stub_;
   std::vector<std::string> interfaces_bins_;
+  std::jthread connection_thread_;
   std::thread event_handler_;
-  grpc::ClientContext client_context_;
   SharedQueue<AstarteMessage> rcv_queue_;
 };
 
