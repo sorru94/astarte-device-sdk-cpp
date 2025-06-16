@@ -18,6 +18,7 @@
 #include <grpcpp/support/status.h>
 #include <spdlog/spdlog.h>
 
+#include <atomic>
 #include <chrono>
 #include <exception>
 #include <filesystem>
@@ -26,7 +27,6 @@
 #include <iterator>
 #include <memory>
 #include <optional>
-#include <stop_token>
 #include <string>
 #include <thread>
 #include <utility>
@@ -61,7 +61,15 @@ using gRPCMessageHubEvent = astarteplatform::msghub::MessageHubEvent;
 using gRPCNode = astarteplatform::msghub::Node;
 
 AstarteDevice::AstarteDeviceImpl::AstarteDeviceImpl(std::string server_addr, std::string node_uuid)
-    : server_addr_(std::move(server_addr)), node_uuid_(std::move(node_uuid)) {}
+    : server_addr_(std::move(server_addr)),
+      node_uuid_(std::move(node_uuid)),
+      connection_stop_flag_(std::make_shared<std::atomic_bool>(false)) {}
+
+AstarteDevice::AstarteDeviceImpl::~AstarteDeviceImpl() {
+  if (connection_thread_.joinable() || event_handler_.joinable()) {
+    disconnect();
+  }
+}
 
 void AstarteDevice::AstarteDeviceImpl::add_interface_from_json(
     const std::filesystem::path &json_file) {
@@ -84,8 +92,7 @@ void AstarteDevice::AstarteDeviceImpl::connect() {
     spdlog::warn("Connection process is already running.");
     return;
   }
-  connection_thread_ =
-      std::jthread([this](std::stop_token stop_token) { this->connection_loop(stop_token); });
+  connection_thread_ = std::thread([this]() { this->connection_loop(); });
 }
 
 auto AstarteDevice::AstarteDeviceImpl::is_connected(std::chrono::milliseconds timeout) -> bool {
@@ -103,7 +110,7 @@ void AstarteDevice::AstarteDeviceImpl::disconnect() {
 
   // If the device is still attempting to connect request a stop.
   if (connection_thread_.joinable()) {
-    connection_thread_.request_stop();
+    connection_stop_flag_->store(true);
   }
 
   // If the device is connected (an event_handler_ exists) call the detach function.
@@ -120,6 +127,9 @@ void AstarteDevice::AstarteDeviceImpl::disconnect() {
   if (connection_thread_.joinable()) {
     connection_thread_.join();
   }
+
+  // Reset the stop flag for a future reconnection
+  connection_stop_flag_->store(false);
 }
 
 void AstarteDevice::AstarteDeviceImpl::send_individual(
@@ -327,11 +337,11 @@ auto AstarteDevice::AstarteDeviceImpl::parse_message_hub_event(const gRPCMessage
   return res;
 }
 
-void AstarteDevice::AstarteDeviceImpl::connection_loop(std::stop_token &stop_token) {
+void AstarteDevice::AstarteDeviceImpl::connection_loop() {
   ExponentialBackoff backoff(std::chrono::seconds(2), std::chrono::minutes(1));
 
   // The loop now checks if a stop has been requested.
-  while (!stop_token.stop_requested()) {
+  while (!connection_stop_flag_->load()) {
     try {
       // This is a blocking function.
       // It will return only if the connection fails or the device is disconnected.
@@ -340,7 +350,7 @@ void AstarteDevice::AstarteDeviceImpl::connection_loop(std::stop_token &stop_tok
       spdlog::error("Connection failed: {}", e.what());
     }
 
-    if (stop_token.stop_requested()) {
+    if (connection_stop_flag_->load()) {
       spdlog::info("Stop requested, will not attempt to reconnect.");
       break;
     }

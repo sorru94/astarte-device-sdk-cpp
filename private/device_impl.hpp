@@ -10,11 +10,11 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/client_interceptor.h>
 
+#include <atomic>
 #include <chrono>
 #include <filesystem>
 #include <memory>
 #include <optional>
-#include <stop_token>
 #include <string>
 #include <thread>
 #include <vector>
@@ -38,6 +38,16 @@ struct AstarteDevice::AstarteDeviceImpl {
    * @param node_uuid The unique identifier for the device connection.
    */
   AstarteDeviceImpl(std::string server_addr, std::string node_uuid);
+  /** @brief Destructor for the Astarte device class. */
+  ~AstarteDeviceImpl();
+  /** @brief Copy constructor for the Astarte device class. */
+  AstarteDeviceImpl(AstarteDeviceImpl& other) = delete;
+  /** @brief Copy assignment operator for the Astarte device class. */
+  auto operator=(AstarteDeviceImpl& other) -> AstarteDeviceImpl& = delete;
+  /** @brief Move constructor for the Astarte device class. */
+  AstarteDeviceImpl(AstarteDeviceImpl&& other) = delete;
+  /** @brief Move assignment operator for the Astarte device class. */
+  auto operator=(AstarteDeviceImpl&& other) -> AstarteDeviceImpl& = delete;
 
   /**
    * @brief Parse an interface definition from a JSON file and adds it to the device.
@@ -112,13 +122,14 @@ struct AstarteDevice::AstarteDeviceImpl {
                      std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
   static auto parse_message_hub_event(const gRPCMessageHubEvent& event)
       -> std::optional<AstarteMessage>;
-  void connection_loop(std::stop_token& stop_token);
+  void connection_loop();
 
   std::string server_addr_;
   std::string node_uuid_;
   std::unique_ptr<gRPCMessageHub::Stub> stub_;
   std::vector<std::string> interfaces_bins_;
-  std::jthread connection_thread_;
+  std::thread connection_thread_;
+  std::shared_ptr<std::atomic_bool> connection_stop_flag_;
   std::thread event_handler_;
   SharedQueue<AstarteMessage> rcv_queue_;
 };
