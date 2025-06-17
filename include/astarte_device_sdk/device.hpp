@@ -23,7 +23,7 @@
 /** @brief Umbrella namespace for the Astarte device SDK */
 namespace AstarteDeviceSdk {
 
-/** @brief Namespace containign chrono literals such as ms */
+/** @brief Namespace containing chrono literals such as ms */
 using namespace std::chrono_literals;
 
 /**

@@ -16,7 +16,7 @@ namespace AstarteDeviceSdk {
 class ExponentialBackoff {
  public:
   /**
-   * @brief Constructs an ExponentialBackoff instance.
+   * @brief Construct an ExponentialBackoff instance.
    * @param initial_delay The value for the first backoff delay.
    * @param max_delay The upper bound for all the backoff delays.
    */
@@ -24,7 +24,7 @@ class ExponentialBackoff {
       : initial_delay_(initial_delay), max_delay_(max_delay) {}
 
   /**
-   * @brief Calculates and returns the next backoff delay.
+   * @brief Calculate and returns the next backoff delay.
    * @details Computes the appropriate delay for the current backoff generation and increments the
    * internal generation counter for the next call.
    * @return The calculated delay duration.
@@ -46,7 +46,7 @@ class ExponentialBackoff {
     return std::min(jittery_delay, max_delay_);
   }
 
-  /** @brief Resets the backoff generator. */
+  /** @brief Reset the backoff generator. */
   void reset() { generated_delays_ = 0; }
 
  private:
