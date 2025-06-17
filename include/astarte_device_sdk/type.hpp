@@ -17,33 +17,33 @@ namespace AstarteDeviceSdk {
 /** @brief Possible Astarte types. */
 enum AstarteType : int8_t {
   /** @brief Binary blob Astarte type. */
-  BINARYBLOB,
+  kBinaryBlob,
   /** @brief Boolean Astarte type. */
-  BOOLEAN,
+  kBoolean,
   /** @brief Date-time Astarte type. */
-  DATETIME,
+  kDatetime,
   /** @brief Double Astarte type. */
-  DOUBLE,
+  kDouble,
   /** @brief Integer Astarte type. */
-  INTEGER,
+  kInteger,
   /** @brief Long integer Astarte type. */
-  LONGINTEGER,
+  kLongInteger,
   /** @brief String Astarte type. */
-  STRING,
+  kString,
   /** @brief Binary blob array Astarte type. */
-  BINARYBLOBARRAY,
+  kBinaryBlobArray,
   /** @brief Boolean array Astarte type. */
-  BOOLEANARRAY,
+  kBooleanArray,
   /** @brief Datetime array Astarte type. */
-  DATETIMEARRAY,
+  kDatetimeArray,
   /** @brief Double array Astarte type. */
-  DOUBLEARRAY,
+  kDoubleArray,
   /** @brief Integer array Astarte type. */
-  INTEGERARRAY,
+  kIntegerArray,
   /** @brief Long integer array Astarte type. */
-  LONGINTEGERARRAY,
+  kLongIntegerArray,
   /** @brief String array Astarte type. */
-  STRINGARRAY
+  kStringArray
 };
 
 }  // namespace AstarteDeviceSdk

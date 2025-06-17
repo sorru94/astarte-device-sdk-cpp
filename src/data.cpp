@@ -28,30 +28,32 @@ namespace AstarteDeviceSdk {
 
 auto AstarteData::get_type() const -> AstarteType {
   struct Visitor {
-    auto operator()(const int32_t & /*unused*/) -> AstarteType { return INTEGER; }
-    auto operator()(const int64_t & /*unused*/) -> AstarteType { return LONGINTEGER; }
-    auto operator()(const double & /*unused*/) -> AstarteType { return DOUBLE; }
-    auto operator()(const bool & /*unused*/) -> AstarteType { return BOOLEAN; }
-    auto operator()(const std::string & /*unused*/) -> AstarteType { return STRING; }
-    auto operator()(const std::vector<uint8_t> & /*unused*/) -> AstarteType { return BINARYBLOB; }
+    auto operator()(const int32_t & /*unused*/) -> AstarteType { return kInteger; }
+    auto operator()(const int64_t & /*unused*/) -> AstarteType { return kLongInteger; }
+    auto operator()(const double & /*unused*/) -> AstarteType { return kDouble; }
+    auto operator()(const bool & /*unused*/) -> AstarteType { return kBoolean; }
+    auto operator()(const std::string & /*unused*/) -> AstarteType { return kString; }
+    auto operator()(const std::vector<uint8_t> & /*unused*/) -> AstarteType { return kBinaryBlob; }
     auto operator()(const std::chrono::system_clock::time_point & /*unused*/) -> AstarteType {
-      return DATETIME;
+      return kDatetime;
     }
-    auto operator()(const std::vector<int32_t> & /*unused*/) -> AstarteType { return INTEGERARRAY; }
+    auto operator()(const std::vector<int32_t> & /*unused*/) -> AstarteType {
+      return kIntegerArray;
+    }
     auto operator()(const std::vector<int64_t> & /*unused*/) -> AstarteType {
-      return LONGINTEGERARRAY;
+      return kLongIntegerArray;
     }
-    auto operator()(const std::vector<double> & /*unused*/) -> AstarteType { return DOUBLEARRAY; }
-    auto operator()(const std::vector<bool> & /*unused*/) -> AstarteType { return BOOLEANARRAY; }
+    auto operator()(const std::vector<double> & /*unused*/) -> AstarteType { return kDoubleArray; }
+    auto operator()(const std::vector<bool> & /*unused*/) -> AstarteType { return kBooleanArray; }
     auto operator()(const std::vector<std::string> & /*unused*/) -> AstarteType {
-      return STRINGARRAY;
+      return kStringArray;
     }
     auto operator()(const std::vector<std::vector<uint8_t>> & /*unused*/) -> AstarteType {
-      return BINARYBLOBARRAY;
+      return kBinaryBlobArray;
     }
     auto operator()(const std::vector<std::chrono::system_clock::time_point> & /*unused*/)
         -> AstarteType {
-      return DATETIMEARRAY;
+      return kDatetimeArray;
     }
   };
   return std::visit(Visitor{}, data_);
