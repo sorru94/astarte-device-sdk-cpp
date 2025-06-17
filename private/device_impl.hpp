@@ -10,6 +10,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/client_interceptor.h>
 
+#include <atomic>
 #include <chrono>
 #include <filesystem>
 #include <memory>
@@ -37,6 +38,16 @@ struct AstarteDevice::AstarteDeviceImpl {
    * @param node_uuid The unique identifier for the device connection.
    */
   AstarteDeviceImpl(std::string server_addr, std::string node_uuid);
+  /** @brief Destructor for the Astarte device class. */
+  ~AstarteDeviceImpl();
+  /** @brief Copy constructor for the Astarte device class. */
+  AstarteDeviceImpl(AstarteDeviceImpl& other) = delete;
+  /** @brief Copy assignment operator for the Astarte device class. */
+  auto operator=(AstarteDeviceImpl& other) -> AstarteDeviceImpl& = delete;
+  /** @brief Move constructor for the Astarte device class. */
+  AstarteDeviceImpl(AstarteDeviceImpl&& other) = delete;
+  /** @brief Move assignment operator for the Astarte device class. */
+  auto operator=(AstarteDeviceImpl&& other) -> AstarteDeviceImpl& = delete;
 
   /**
    * @brief Parse an interface definition from a JSON file and adds it to the device.
@@ -45,11 +56,17 @@ struct AstarteDevice::AstarteDeviceImpl {
    */
   void add_interface_from_json(const std::filesystem::path& json_file);
   /**
-   * @brief Connect to the Astarte message hub.
-   * @details Establishes a gRPC connection and starts a background thread to listen for incoming
-   * events from the message hub stream.
+   * @brief Connect the device to Astarte.
+   * @details This is an asynchronous funciton. It will start a management thread that will
+   * manage the device connectivity.
    */
   void connect();
+  /**
+   * @brief Check if the device is connected.
+   * @param timeout This is the maximum timeout used to check if the device is connected.
+   * @return True if the device is connected to the message hub, false otherwise.
+   */
+  auto is_connected(std::chrono::milliseconds timeout) -> bool;
   /**
    * @brief Disconnect from the Astarte message hub.
    * @details Gracefully terminates the connection by sending a Detach message.
@@ -100,16 +117,20 @@ struct AstarteDevice::AstarteDeviceImpl {
   auto poll_incoming() -> std::optional<AstarteMessage>;
 
  private:
-  void handle_events(std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
+  void connection_attempt();
+  void handle_events(std::unique_ptr<grpc::ClientContext> context,
+                     std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
   static auto parse_message_hub_event(const gRPCMessageHubEvent& event)
       -> std::optional<AstarteMessage>;
+  void connection_loop();
 
   std::string server_addr_;
   std::string node_uuid_;
   std::unique_ptr<gRPCMessageHub::Stub> stub_;
   std::vector<std::string> interfaces_bins_;
+  std::thread connection_thread_;
+  std::shared_ptr<std::atomic_bool> connection_stop_flag_;
   std::thread event_handler_;
-  grpc::ClientContext client_context_;
   SharedQueue<AstarteMessage> rcv_queue_;
 };
 
