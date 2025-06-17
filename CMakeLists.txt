@@ -44,7 +44,7 @@ endif()
 
 # Astarte message hub protos
 set(MSGHUB_PROTO_GITHUB_URL https://github.com/astarte-platform/astarte-message-hub-proto.git)
-set(MSGHUB_PROTO_GIT_TAG master)
+set(MSGHUB_PROTO_GIT_TAG v0.8.0)
 FetchContent_Declare(
   astarte_msghub_proto
   GIT_REPOSITORY ${MSGHUB_PROTO_GITHUB_URL}
