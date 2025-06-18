@@ -158,8 +158,11 @@ class TestActionCheckDeviceStatus : public TestAction {
 
 class TestActionTransmitMQTTData : public TestAction {
  public:
-  static std::shared_ptr<TestActionTransmitMQTTData> Create(const AstarteMessage& message) {
-    return std::shared_ptr<TestActionTransmitMQTTData>(new TestActionTransmitMQTTData(message));
+  static std::shared_ptr<TestActionTransmitMQTTData> Create(
+      const AstarteMessage& message,
+      const std::chrono::system_clock::time_point* timestamp = nullptr) {
+    return std::shared_ptr<TestActionTransmitMQTTData>(
+        new TestActionTransmitMQTTData(message, timestamp));
   }
 
   void execute(const std::string& case_name) const override {
@@ -168,10 +171,10 @@ class TestActionTransmitMQTTData : public TestAction {
       if (message_.is_individual()) {
         const auto& data(message_.into<AstarteDatastreamIndividual>());
         device_->send_individual(message_.get_interface(), message_.get_path(), data.get_value(),
-                                 nullptr);
+                                 timestamp_);
       } else {
         const auto& data(message_.into<AstarteDatastreamObject>());
-        device_->send_object(message_.get_interface(), message_.get_path(), data, nullptr);
+        device_->send_object(message_.get_interface(), message_.get_path(), data, timestamp_);
       }
     } else {
       // TODO: Handle properties
@@ -179,9 +182,12 @@ class TestActionTransmitMQTTData : public TestAction {
   }
 
  private:
-  TestActionTransmitMQTTData(const AstarteMessage& message) : message_(message) {}
+  TestActionTransmitMQTTData(const AstarteMessage& message,
+                             const std::chrono::system_clock::time_point* timestamp)
+      : message_(message), timestamp_(timestamp) {}
 
   AstarteMessage message_;
+  const std::chrono::system_clock::time_point* timestamp_;
 };
 
 class TestActionReadReceivedMQTTData : public TestAction {
