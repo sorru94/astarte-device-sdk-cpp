@@ -207,8 +207,7 @@ int main(int argc, char **argv) {
     msghub_client->set_property(interface_name, boolean_path, boolean_value);
 
     std::string string_path("/string_endpoint");
-    std::string hello_string("Hello from cpp!");
-    AstarteData string_value = AstarteData(hello_string);
+    AstarteData string_value = AstarteData(std::string("Hello from cpp!"));
     msghub_client->set_property(interface_name, string_path, string_value);
 
     std::string binaryblob_path("/binaryblob_endpoint");
