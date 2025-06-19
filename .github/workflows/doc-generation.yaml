@@ -7,7 +7,7 @@ name: Documentation generation
 on:
   push:
     branches:
-    - 'master'
+    - 'main'
     - 'release-*'
 
 env:
@@ -46,7 +46,7 @@ jobs:
         path: astarte-device-sdk-cpp/doc/_build/html
     - name: Copy HTML documentation
       run: |
-        export DOCS_DIRNAME="device-sdks/cpp/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/master/snapshot/g' | sed 's/release-//g')"
+        export DOCS_DIRNAME="device-sdks/cpp/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/main/snapshot/g' | sed 's/release-//g')"
         rm -rf docs/$DOCS_DIRNAME
         mkdir -p docs/$DOCS_DIRNAME/api
         cp -r astarte-device-sdk-cpp/doc/_build/html/* docs/$DOCS_DIRNAME/api
