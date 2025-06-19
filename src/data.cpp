@@ -6,6 +6,11 @@
 
 #if defined(ASTARTE_FORMAT_ENABLED)
 #include <libbase64.h>
+#if __cplusplus >= 202002L
+#include <format>
+#else  // __cplusplus >= 202002L
+#include <iomanip>
+#endif  // __cplusplus >= 202002L
 #endif
 
 #include <chrono>
@@ -15,12 +20,6 @@
 #include <string>
 #include <variant>
 #include <vector>
-
-#if __cplusplus >= 202002L
-#include <format>
-#else  // __cplusplus >= 202002L
-#include <iomanip>
-#endif  // __cplusplus >= 202002L
 
 #include "astarte_device_sdk/type.hpp"
 
