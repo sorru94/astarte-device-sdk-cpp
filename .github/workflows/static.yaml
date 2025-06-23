@@ -7,6 +7,11 @@ name: Static analysis of the C++ sources
 on:
   pull_request:
   push:
+defaults:
+  run:
+    shell: bash
+env:
+  GRPC_VERSION: "1.69.0"
 
 jobs:
   clang-format-check:
@@ -15,71 +20,42 @@ jobs:
       group: clang-format-check-${{ github.ref }}
       cancel-in-progress: true
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.13'
-    - name: Check formatting
-      run: ./format.sh --check-only
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Check formatting
+        run: ./format.sh --check-only
   clang-tidy-check:
     runs-on: ubuntu-latest
     concurrency:
       group: clang-tidy-check-${{ github.ref }}
       cancel-in-progress: true
-    env:
-      GRPC_VERSION: "1.69.0"
     steps:
-    - uses: actions/checkout@v4
-      with:
-        path: astarte-device-sdk-cpp
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.13'
-    - name: Install gRPC dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y build-essential autoconf libtool pkg-config
-    - name: Check out the gRPC repo
-      run: git clone --recurse-submodules -b v${{ env.GRPC_VERSION }} --depth 1 --shallow-submodules https://github.com/grpc/grpc
-    - name: Set MY_INSTALL_DIR variable
-      run: |
-        MY_INSTALL_DIR=$PWD/grpc-install
-        echo "MY_INSTALL_DIR=$MY_INSTALL_DIR" >> $GITHUB_ENV
-        mkdir -p $MY_INSTALL_DIR
-        echo "$MY_INSTALL_DIR/bin" >> "$GITHUB_PATH"
-    - name: Restore cached gRPC build directory
-      id: cache-grpc-cpp-restore
-      uses: actions/cache/restore@v4
-      with:
-        path: |
-          ./grpc/cmake
-          ./grpc-install
-        key: grpc-cpp-v${{ env.GRPC_VERSION }}
-    - name: Compile from source gRPC
-      if: steps.cache-grpc-cpp-restore.outputs.cache-hit != 'true'
-      run: |
-        mkdir ./grpc/cmake/build
-        pushd ./grpc/cmake/build
-        cmake -DgRPC_INSTALL=ON \
-              -DgRPC_BUILD_TESTS=OFF \
-              -DCMAKE_CXX_STANDARD=17 \
-              -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
-              ../..
-        make -j $(nproc)
-        make install
-        popd
-    - name: Cache the gRPC build directory
-      if: steps.cache-grpc-cpp-restore.outputs.cache-hit != 'true'
-      id: cache-grpc-cpp-save
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          ./grpc/cmake
-          ./grpc-install
-        key: ${{ steps.cache-grpc-cpp-restore.outputs.cache-primary-key }}
-    - name: Check library with C++ 20
-      working-directory: ./astarte-device-sdk-cpp
-      run: ./tidy.sh --fresh --system_grpc --stdcpp 20
-    - name: Configure library for C++ 17
-      working-directory: ./astarte-device-sdk-cpp
-      run: ./tidy.sh --fresh --system_grpc --stdcpp 17
+      - uses: actions/checkout@v4
+        with:
+          path: astarte-device-sdk-cpp
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Setup gRPC build cache
+        id: cache-grpc-cpp
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./grpc
+            ./grpc-install
+          # Cache the hash of the build script for the CMAKE flags
+          key: grpc-cpp-v${{ env.GRPC_VERSION }}-${{ hashFiles('astarte-device-sdk-cpp/.github/scripts/build-grpc.sh') }}
+      - name: Setup gRPC for build
+        run: |
+          ./astarte-device-sdk-cpp/.github/scripts/setup-grpc.sh "$GRPC_VERSION"
+      - name: Compile gRPC from source
+        run: |
+          ./astarte-device-sdk-cpp/.github/scripts/build-grpc.sh
+      - name: Check library with C++ 20
+        working-directory: ./astarte-device-sdk-cpp
+        run: ./tidy.sh --fresh --system_grpc --stdcpp 20
+      - name: Configure library for C++ 17
+        working-directory: ./astarte-device-sdk-cpp
+        run: ./tidy.sh --fresh --system_grpc --stdcpp 17

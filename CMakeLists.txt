@@ -14,6 +14,12 @@ project(
 
 include(FetchContent)
 
+# Setup libraries
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+
 # Configuration options for this library
 option(ASTARTE_ENABLE_FORMAT "Enable formatting of Astarte device data" OFF)
 option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
@@ -48,7 +54,7 @@ if(ASTARTE_MESSAGE_HUB_PROTO_DIR)
     add_subdirectory(${ASTARTE_MESSAGE_HUB_PROTO_DIR} astarte_msghub_proto)
 else()
     set(MSGHUB_PROTO_GITHUB_URL https://github.com/astarte-platform/astarte-message-hub-proto.git)
-    set(MSGHUB_PROTO_GIT_TAG v0.8.1)
+    set(MSGHUB_PROTO_GIT_TAG release-0.8)
     FetchContent_Declare(
         astarte_msghub_proto
         GIT_REPOSITORY ${MSGHUB_PROTO_GITHUB_URL}
@@ -65,6 +71,14 @@ target_include_directories(astarte_device_sdk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/i
 target_include_directories(astarte_device_sdk PRIVATE ${CMAKE_CURRENT_LIST_DIR}/private)
 file(GLOB astarte_sdk_src "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
 target_sources(astarte_device_sdk PRIVATE ${astarte_sdk_src})
+
+# Link with the msghub grpc
+target_link_libraries(astarte_device_sdk
+    PRIVATE
+        ${_GRPC_CPP}
+        ${_REFLECTION}
+        ${_PROTOBUF_LIBPROTOBUF}
+)
 
 # Link the dependencies within the library
 if(ASTARTE_ENABLE_FORMAT)
@@ -83,28 +97,33 @@ file(GLOB_RECURSE SDK_PUBLIC_HEADERS "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp")
 
 set_target_properties(astarte_device_sdk
     PROPERTIES
-    PUBLIC_HEADER "${SDK_PUBLIC_HEADERS}"
+        PUBLIC_HEADER "${SDK_PUBLIC_HEADERS}"
+        POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
 )
 
+include(GNUInstallDirs)
 
-install(TARGETS astarte_device_sdk
-    RUNTIME
-        DESTINATION bin
+install(
+    TARGETS astarte_device_sdk
+    EXPORT astarte_device_sdk
     LIBRARY
-        DESTINATION lib
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE
-        DESTINATION lib
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
     PUBLIC_HEADER
-        DESTINATION include/astarte_device_sdk
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/astarte_device_sdk
 )
+
 
 # create pkg-conf .pc for astarte_device_sdk
 set(PC_NAME "astarte_device_sdk")
 set(PC_DESCRIPTION "Astarte Device SDK Cpp")
 set(PC_VERSION ${PROJECT_VERSION})
-set(PC_REQUIRES "spdlog astarte_message_hub_proto grpc++ grpc protobuf re2 openssl")
+set(PC_REQUIRES "spdlog astarte_msghub_proto grpc++ protobuf")
 set(PC_REQUIRES_PRIVATE "")
-set(PC_LIB "-lastarte_device_sdk -laddress_sorting -lupb")
+set(PC_LIB "-lastarte_device_sdk -lgrpc++_reflection -laddress_sorting -lre2 -lupb --as-needed")
 set(PC_LIBS_PRIVATE "")
 configure_file(
     cmake/pkg-config-template.pc.in
