@@ -87,6 +87,14 @@ void AstarteDevice::AstarteDeviceImpl::add_interface_from_json(
   interface_file.close();
 }
 
+void AstarteDevice::AstarteDeviceImpl::add_interface_from_str(std::string json) {
+  spdlog::debug("Adding interface");
+
+  interfaces_bins_.push_back(json);
+
+  spdlog::trace("Added interface: \n{}", json);
+}
+
 void AstarteDevice::AstarteDeviceImpl::connect() {
   if (connection_thread_.joinable()) {
     spdlog::warn("Connection process is already running.");

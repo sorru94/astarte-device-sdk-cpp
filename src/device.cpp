@@ -9,6 +9,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/msg.hpp"
@@ -24,6 +26,14 @@ AstarteDevice::~AstarteDevice() = default;
 
 void AstarteDevice::add_interface_from_json(const std::filesystem::path &json_file) {
   astarte_device_impl_->add_interface_from_json(json_file);
+}
+
+void AstarteDevice::add_interface_from_str(std::string json) {
+  astarte_device_impl_->add_interface_from_str(std::move(json));
+}
+
+void AstarteDevice::add_interface_from_str(const std::string_view json) {
+  astarte_device_impl_->add_interface_from_str(std::string(json));
 }
 
 void AstarteDevice::connect() { astarte_device_impl_->connect(); }
