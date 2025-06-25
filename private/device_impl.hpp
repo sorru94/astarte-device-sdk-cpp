@@ -56,6 +56,11 @@ struct AstarteDevice::AstarteDeviceImpl {
    */
   void add_interface_from_json(const std::filesystem::path& json_file);
   /**
+   * @brief Parse an interface definition from a JSON string and adds it to the device.
+   * @param json The interface to add.
+   */
+  void add_interface_from_str(std::string json);
+  /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will
    * manage the device connectivity.

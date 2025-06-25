@@ -15,6 +15,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/msg.hpp"
@@ -54,6 +55,16 @@ class AstarteDevice {
    * @param json_file The path to the .json interface file.
    */
   void add_interface_from_json(const std::filesystem::path &json_file);
+  /**
+   * @brief Add an interface for the device from a json string.
+   * @param json The interface to add.
+   */
+  void add_interface_from_str(std::string json);
+  /**
+   * @brief Add an interface for the device from a json file.
+   * @param json The interface to add.
+   */
+  void add_interface_from_str(std::string_view json);
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will
