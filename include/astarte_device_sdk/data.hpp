@@ -12,6 +12,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -90,6 +91,18 @@ class AstarteData {
   auto into() const -> const T& {
     return std::get<T>(data_);
   }
+  /**
+   * @brief Convert the Astarte data class to the given type if it's the correct variant.
+   * @return The value contained in the class instance or nullopt.
+   */
+  template <AstarteDataAllowedType T>
+  auto try_into() const -> std::optional<T> {
+    if (std::holds_alternative<T>(data_)) {
+      return std::move(std::get<T>(data_));
+    }
+
+    return std::nullopt;
+  }
 #else   // __cplusplus >= 202002L
   /**
    * @brief Constructor for the AstarteData class.
@@ -108,6 +121,19 @@ class AstarteData {
   auto into(std::enable_if_t<astarte_data_is_allowed_type<T>::value, bool> /*unused*/ = true) const
       -> const T& {
     return std::get<T>(data_);
+  }
+  /**
+   * @brief Convert the Astarte data class to the given type if it's the correct variant.
+   * @return The value contained in the class instance or nullopt.
+   */
+  template <typename T>
+  auto try_into(std::enable_if_t<astarte_data_is_allowed_type<T>::value, bool> /*unused*/ =
+                    true) const -> std::optional<T> {
+    if (std::holds_alternative<T>(data_)) {
+      return std::move(std::get<T>(data_));
+    }
+
+    return std::nullopt;
   }
 #endif  // __cplusplus >= 202002L
 
