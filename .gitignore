@@ -6,6 +6,7 @@
 build/
 _build/
 .cache/
+install/
 
 # Python venv
 .venv/
@@ -21,3 +22,6 @@ config.toml
 *.pro.user*
 *.qbs.user*
 CMakeLists.txt.user*
+
+grpc/
+grpc-install/

@@ -50,48 +50,21 @@ jobs:
           echo "E2E_PAIRING_URL=https://api.autotest.astarte-platform.org/pairing" >> $GITHUB_ENV
           echo "E2E_DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
           echo "E2E_CREDENTIALS_SECRET=$CREDENTIALS_SECRET" >> $GITHUB_ENV
-      - name: Install gRPC dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential autoconf libtool pkg-config
-      - name: Check out the gRPC repo
-        run: git clone --recurse-submodules -b v${{ matrix.grpc-version }} --depth 1 --shallow-submodules https://github.com/grpc/grpc
-      - name: Set MY_INSTALL_DIR variable
-        run: |
-          MY_INSTALL_DIR=$PWD/grpc-install
-          echo "MY_INSTALL_DIR=$MY_INSTALL_DIR" >> $GITHUB_ENV
-          mkdir -p $MY_INSTALL_DIR
-          echo "$MY_INSTALL_DIR" >> "$GITHUB_PATH"
-      - name: Restore cached gRPC build directory
-        id: cache-grpc-cpp-restore
-        uses: actions/cache/restore@v4
+      - name: Setup gRPC build cache
+        id: cache-grpc-cpp
+        uses: actions/cache@v4
         with:
           path: |
-            ./grpc/cmake
+            ./grpc
             ./grpc-install
-          key: grpc-cpp-v${{ matrix.grpc-version }}
-      - name: Compile from source gRPC
-        if: steps.cache-grpc-cpp-restore.outputs.cache-hit != 'true'
+          # Cache the hash of the build script for the CMAKE flags
+          key: grpc-cpp-v${{ matrix.grpc-version }}-${{ hashFiles('astarte-device-sdk-cpp/.github/scripts/build-grpc.sh') }}
+      - name: Setup gRPC for build
         run: |
-          mkdir ./grpc/cmake/build
-          pushd ./grpc/cmake/build
-          cmake -DgRPC_INSTALL=ON \
-                -DgRPC_BUILD_TESTS=OFF \
-                -DCMAKE_CXX_STANDARD=17 \
-                -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
-                ../..
-          make -j $(nproc)
-          make install
-          popd
-      - name: Cache the gRPC build directory
-        if: steps.cache-grpc-cpp-restore.outputs.cache-hit != 'true'
-        id: cache-grpc-cpp-save
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ./grpc/cmake
-            ./grpc-install
-          key: ${{ steps.cache-grpc-cpp-restore.outputs.cache-primary-key }}
+          ./astarte-device-sdk-cpp/.github/scripts/setup-grpc.sh '${{ matrix.grpc-version }}'
+      - name: Compile gRPC from source
+        run: |
+          ./astarte-device-sdk-cpp/.github/scripts/build-grpc.sh
       - name: Checkout message hub
         uses: actions/checkout@v4
         with:
