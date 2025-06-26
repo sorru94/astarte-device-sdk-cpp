@@ -54,7 +54,7 @@ if(ASTARTE_MESSAGE_HUB_PROTO_DIR)
     add_subdirectory(${ASTARTE_MESSAGE_HUB_PROTO_DIR} astarte_msghub_proto)
 else()
     set(MSGHUB_PROTO_GITHUB_URL https://github.com/astarte-platform/astarte-message-hub-proto.git)
-    set(MSGHUB_PROTO_GIT_TAG release-0.8)
+    set(MSGHUB_PROTO_GIT_TAG v0.8.2)
     FetchContent_Declare(
         astarte_msghub_proto
         GIT_REPOSITORY ${MSGHUB_PROTO_GITHUB_URL}
