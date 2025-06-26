@@ -10,6 +10,7 @@
  * @brief Astarte message class and its related methods.
  */
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -61,6 +62,18 @@ class AstarteMessage {
   template <typename T>
   [[nodiscard]] auto into() const -> const T& {
     return std::get<T>(data_);
+  }
+  /**
+   * @brief Return the content of the message if it's of the correct type.
+   * @return The value contained in the message or nullopt.
+   */
+  template <typename T>
+  [[nodiscard]] auto try_into() const -> std::optional<T> {
+    if (std::holds_alternative<T>(data_)) {
+      return std::move(std::get<T>(data_));
+    }
+
+    return std::nullopt;
   }
   /**
    * @brief Return the raw data contained in this class instance.
