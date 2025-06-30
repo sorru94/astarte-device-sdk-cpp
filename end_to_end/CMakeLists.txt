@@ -33,7 +33,6 @@ target_include_directories(end_to_end_runner PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
 # Link the library created in the root directory
 target_link_libraries(end_to_end_runner
     PRIVATE astarte_device_sdk
-    PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>
     PRIVATE cpr::cpr
     PRIVATE nlohmann_json::nlohmann_json
     PRIVATE tomlplusplus::tomlplusplus)
