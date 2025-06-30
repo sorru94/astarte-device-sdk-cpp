@@ -89,13 +89,12 @@ void AstarteDevice::AstarteDeviceImpl::add_interface_from_json(
 
 void AstarteDevice::AstarteDeviceImpl::add_interface_from_str(std::string json) {
   spdlog::debug("Adding interface");
-
   interfaces_bins_.push_back(json);
-
   spdlog::trace("Added interface: \n{}", json);
 }
 
 void AstarteDevice::AstarteDeviceImpl::connect() {
+  spdlog::info("Connection requested.");
   if (connection_thread_.joinable()) {
     spdlog::warn("Connection process is already running.");
     return;
@@ -114,7 +113,7 @@ auto AstarteDevice::AstarteDeviceImpl::is_connected(std::chrono::milliseconds ti
 }
 
 void AstarteDevice::AstarteDeviceImpl::disconnect() {
-  spdlog::info("Disconnecting from the message hub");
+  spdlog::info("Disconnection requested.");
 
   // If the device is still attempting to connect request a stop.
   if (connection_thread_.joinable()) {
@@ -258,7 +257,7 @@ void AstarteDevice::AstarteDeviceImpl::connection_attempt() {
     spdlog::warn("Device is already connected.");
     return;
   }
-  spdlog::info("Attempting to connect to the message hub at {}", server_addr_);
+  spdlog::debug("Attempting to connect to the message hub at {}", server_addr_);
 
   // Create a new channel and initialize the gRPC stub
   const grpc::ChannelArguments args;
@@ -327,6 +326,7 @@ void AstarteDevice::AstarteDeviceImpl::handle_events(
 
 auto AstarteDevice::AstarteDeviceImpl::parse_message_hub_event(const gRPCMessageHubEvent &event)
     -> std::optional<AstarteMessage> {
+  spdlog::trace("Parsing message hub event.");
   std::optional<AstarteMessage> res = std::nullopt;
   if (event.has_message()) {
     const gRPCAstarteMessage &astarteMessage = event.message();
@@ -346,6 +346,7 @@ auto AstarteDevice::AstarteDeviceImpl::parse_message_hub_event(const gRPCMessage
 }
 
 void AstarteDevice::AstarteDeviceImpl::connection_loop() {
+  spdlog::trace("Connection loop started.");
   ExponentialBackoff backoff(std::chrono::seconds(2), std::chrono::minutes(1));
 
   // The loop now checks if a stop has been requested.
