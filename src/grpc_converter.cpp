@@ -47,35 +47,35 @@ auto GrpcConverterTo::operator()(int32_t value) -> std::unique_ptr<gRPCAstarteDa
   spdlog::trace("Converting integer to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_integer(value);
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(int64_t value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting long integer to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_long_integer(value);
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(double value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting double to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_double_(value);
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(bool value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting boolean to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_boolean(value);
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::string &value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting string to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_string(value);
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<uint8_t> &value)
@@ -84,7 +84,7 @@ auto GrpcConverterTo::operator()(const std::vector<uint8_t> &value)
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   std::string str_vector(value.begin(), value.end());
   grpc_data->set_binary_blob(str_vector);
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(std::chrono::system_clock::time_point value)
@@ -98,7 +98,7 @@ auto GrpcConverterTo::operator()(std::chrono::system_clock::time_point value)
   timestamp->set_seconds(static_cast<int64_t>(sec.count()));
   timestamp->set_nanos(static_cast<int32_t>(nano.count()));
   grpc_data->set_allocated_date_time(timestamp.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<int32_t> &values)
@@ -110,7 +110,7 @@ auto GrpcConverterTo::operator()(const std::vector<int32_t> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_integer_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<int64_t> &values)
@@ -122,7 +122,7 @@ auto GrpcConverterTo::operator()(const std::vector<int64_t> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_long_integer_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<double> &values)
@@ -134,7 +134,7 @@ auto GrpcConverterTo::operator()(const std::vector<double> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_double_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<bool> &values)
@@ -146,7 +146,7 @@ auto GrpcConverterTo::operator()(const std::vector<bool> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_boolean_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::string> &values)
@@ -158,7 +158,7 @@ auto GrpcConverterTo::operator()(const std::vector<std::string> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_string_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::vector<uint8_t>> &values)
@@ -171,7 +171,7 @@ auto GrpcConverterTo::operator()(const std::vector<std::vector<uint8_t>> &values
     grpc_array->add_values(str_value);
   }
   grpc_data->set_allocated_binary_blob_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::chrono::system_clock::time_point> &values)
@@ -190,7 +190,7 @@ auto GrpcConverterTo::operator()(const std::vector<std::chrono::system_clock::ti
     timestamp->set_nanos(static_cast<int32_t>(nano.count()));
   }
   grpc_data->set_allocated_date_time_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC: {}", grpc_data->DebugString());
+  spdlog::trace("AstarteData converted to gRPC");
   return grpc_data;
 }
 

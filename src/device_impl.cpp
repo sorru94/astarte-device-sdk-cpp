@@ -159,7 +159,6 @@ void AstarteDevice::AstarteDeviceImpl::send_individual(
   ClientContext context;
   google::protobuf::Empty response;
   spdlog::trace("Sending data: {} {}", interface_name, path);
-  spdlog::trace("Content: \n{}", message.DebugString());
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
@@ -187,7 +186,6 @@ void AstarteDevice::AstarteDeviceImpl::send_object(
   ClientContext context;
   google::protobuf::Empty response;
   spdlog::trace("Sending data: {} {}", interface_name, path);
-  spdlog::trace("Content: \n{}", message.DebugString());
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
@@ -215,7 +213,6 @@ void AstarteDevice::AstarteDeviceImpl::set_property(const std::string &interface
   ClientContext context;
   google::protobuf::Empty response;
   spdlog::trace("Sending data: {} {}", interface_name, path);
-  spdlog::trace("Content: \n{}", message.DebugString());
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
