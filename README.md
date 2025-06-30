@@ -33,6 +33,14 @@ interact with the Astarte REST APIs during developement.
 
 The option to enable this feature is: `ASTARTE_ENABLE_FORMAT`.
 
+### Public spdlog dependency
+
+The spdlog libary is the logger used by the Astarte device library.
+By the default it's a private dependency, checked our with fetch content. However, the user can
+choose to link the library as a public dependency using the dedicated option.
+
+The option to enable this feature is: `ASTARTE_PUBLIC_SPDLOG_DEP`.
+
 ### Public message hub proto dependency
 
 The [Astarte message hub proto](https://github.com/astarte-platform/astarte-message-hub-proto) is a
