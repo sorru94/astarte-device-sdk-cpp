@@ -10,6 +10,7 @@
 #include "orchestrator.hpp"
 #include "testcases/device_aggregate.hpp"
 #include "testcases/device_datastream.hpp"
+#include "testcases/device_property.hpp"
 #include "testcases/device_reconnection.hpp"
 #include "testcases/device_status.hpp"
 #include "testcases/server_datastream.hpp"
@@ -27,9 +28,14 @@ int main() {
       {.server_addr = config["server_addr"].value<std::string>().value(),
        .node_id = config["node_id"].value<std::string>().value(),
        .interfaces =
-           {astarte_interfaces::DeviceDatastream::FILE, astarte_interfaces::ServerDatastream::FILE,
-            astarte_interfaces::DeviceAggregate::FILE, astarte_interfaces::ServerAggregate::FILE,
-            astarte_interfaces::DeviceProperty::FILE, astarte_interfaces::ServerProperty::FILE}},
+           {
+               astarte_interfaces::DeviceDatastream::FILE,
+               astarte_interfaces::ServerDatastream::FILE,
+               astarte_interfaces::DeviceAggregate::FILE,
+               astarte_interfaces::ServerAggregate::FILE,
+               astarte_interfaces::DeviceProperty::FILE,
+               astarte_interfaces::ServerProperty::FILE,
+           }},
       {.appengine_url = config["appengine_url"].value<std::string>().value(),
        .appengine_token = config["appengine_token"].value<std::string>().value(),
        .realm = config["realm"].value<std::string>().value(),
@@ -40,6 +46,7 @@ int main() {
   orchestrator.add_test_case(testcases::device_datastream());
   orchestrator.add_test_case(testcases::server_datastream());
   orchestrator.add_test_case(testcases::device_aggregate());
+  orchestrator.add_test_case(testcases::device_property());
 
   // Execute all test cases
   orchestrator.execute_all();

@@ -206,8 +206,15 @@ class TestActionTransmitMQTTData : public TestAction {
         const auto& data(message_.into<AstarteDatastreamObject>());
         device_->send_object(message_.get_interface(), message_.get_path(), data, timestamp_.get());
       }
-    } else {
-      // TODO: Handle properties
+    } else {  // handle properties
+      const auto& data(message_.into<AstartePropertyIndividual>());
+
+      if (data.get_value().has_value()) {
+        device_->set_property(message_.get_interface(), message_.get_path(),
+                              data.get_value().value());
+      } else {  // Unsetting property
+        device_->unset_property(message_.get_interface(), message_.get_path());
+      }
     }
   }
 
@@ -307,68 +314,38 @@ class TestActionFetchRESTData : public TestAction {
 
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Fetching REST data...", case_name);
+
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
                               "/interfaces/" + message_.get_interface();
-    spdlog::debug("HTTP GET: {}", request_url);
     cpr::Response get_response =
         cpr::Get(cpr::Url{request_url}, cpr::Header{{"Content-Type", "application/json"}},
                  cpr::Header{{"Authorization", "Bearer " + appengine_token_}});
+
     if (get_response.status_code != 200) {
       spdlog::error("HTTP GET failed, status code: {}", get_response.status_code);
       throw EndToEndHTTPException("Fetching data through REST API failed.");
     }
+
     json response_json = json::parse(get_response.text)["data"];
-    if (!response_json.contains(message_.get_path())) {
-      spdlog::error("Missing entry '{}' in REST data.", message_.get_path());
-      spdlog::info("Fetched data: {}", response_json.dump());
-      throw EndToEndHTTPException("Fetching of data through REST API failed.");
-    }
 
     if (message_.is_datastream()) {
       if (message_.is_individual()) {
-        const auto& expected_data(message_.into<AstarteDatastreamIndividual>());
-        json expected_data_json = json::parse(expected_data.format());
-        json fetched_data = response_json[message_.get_path()]["value"];
-
-        if (expected_data_json != fetched_data) {
-          spdlog::error("Expected data: {}", expected_data_json.dump());
-          spdlog::error("Fetched data: {}", fetched_data.dump());
-          throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
-        }
-
-        // TODO: check timestamp correctness
-        // std::string expected_timestamp = time_point_to_utc(timestamp_.get());
-        // std::string fetched_timestamp = response_json[message_.get_path()]["timestamp"];
-        // if (expected_timestamp != fetched_timestamp) {
-        //   spdlog::error("{}", response_json[message_.get_path()].dump());
-        //   spdlog::error("Expected timestamp: {}", expected_timestamp);
-        //   spdlog::error("Fetched timestamp: {}", fetched_timestamp);
-        //   throw EndToEndMismatchException("Fetched REST API timestamp differs from expected
-        //   data.");
-        // }
+        spdlog::debug("fetching datastream individual");
+        check_datastream_individual(response_json);
       } else {
-        const auto& expected_data(message_.into<AstarteDatastreamObject>());
-
-        json expected_data_json = json::parse(expected_data.format());
-
-        // Every time the test is repeated, the object size increases by one, because
-        // it retrieves every object data tha has been sent to that interface up to that point.
-        // We only take the last object (i.e., the most recent)
-        size_t last = response_json[message_.get_path()].size() - 1;
-        json fetched_data = response_json[message_.get_path()][last];
-
-        // TODO: check timestamp correctness
-        // expected_data_json.push_back({"timestamp", time_point_to_utc(timestamp_.get())});
-        fetched_data.erase("timestamp");
-
-        if (expected_data_json != fetched_data) {
-          spdlog::error("Fetched data: {}", fetched_data.dump());
-          spdlog::error("Expected data: {}", expected_data_json.dump());
-          throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
-        }
+        spdlog::debug("fetching datastream aggregate");
+        check_datastream_aggregate(response_json);
       }
     } else {
-      // TODO: Parse properties
+      const auto expected_data(message_.into<AstartePropertyIndividual>());
+
+      if (expected_data.get_value().has_value()) {
+        spdlog::debug("fetching property");
+        check_individual_property(response_json, expected_data);
+      } else {
+        spdlog::debug("checking unset");
+        check_property_unset(response_json);
+      }
     }
   }
 
@@ -379,6 +356,92 @@ class TestActionFetchRESTData : public TestAction {
                           const std::chrono::system_clock::time_point timestamp)
       : message_(message),
         timestamp_(std::make_unique<std::chrono::system_clock::time_point>(timestamp)) {}
+
+  void check_datastream_individual(json response_json) const {
+    if (!response_json.contains(message_.get_path())) {
+      spdlog::error("Missing entry '{}' in REST data.", message_.get_path());
+      spdlog::info("Fetched data: {}", response_json.dump());
+      throw EndToEndHTTPException("Fetching of data through REST API failed.");
+    }
+
+    const auto& expected_data(message_.into<AstarteDatastreamIndividual>());
+    json expected_data_json = json::parse(expected_data.format());
+    json fetched_data = response_json[message_.get_path()]["value"];
+
+    if (expected_data_json != fetched_data) {
+      spdlog::error("Expected data: {}", expected_data_json.dump());
+      spdlog::error("Fetched data: {}", fetched_data.dump());
+      throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
+    }
+
+    // TODO: check timestamp correctness
+    // std::string expected_timestamp = time_point_to_utc(timestamp_.get());
+    // std::string fetched_timestamp = response_json[message_.get_path()]["timestamp"];
+    // if (expected_timestamp != fetched_timestamp) {
+    //   spdlog::error("{}", response_json[message_.get_path()].dump());
+    //   spdlog::error("Expected timestamp: {}", expected_timestamp);
+    //   spdlog::error("Fetched timestamp: {}", fetched_timestamp);
+    //   throw EndToEndMismatchException("Fetched REST API timestamp differs from expected
+    //   data.");
+    // }
+  }
+
+  void check_datastream_aggregate(json response_json) const {
+    if (!response_json.contains(message_.get_path())) {
+      spdlog::error("Missing entry '{}' in REST data.", message_.get_path());
+      spdlog::info("Fetched data: {}", response_json.dump());
+      throw EndToEndHTTPException("Fetching of data through REST API failed.");
+    }
+
+    const auto& expected_data(message_.into<AstarteDatastreamObject>());
+
+    json expected_data_json = json::parse(expected_data.format());
+
+    // Every time the test is repeated, the object size increases by one, because
+    // it retrieves every object data tha has been sent to that interface up to that point.
+    // We only take the last object (i.e., the most recent)
+    size_t last = response_json[message_.get_path()].size() - 1;
+    json fetched_data = response_json[message_.get_path()][last];
+
+    // TODO: check timestamp correctness
+    // expected_data_json.push_back({"timestamp", time_point_to_utc(timestamp_.get())});
+    fetched_data.erase("timestamp");
+
+    if (expected_data_json != fetched_data) {
+      spdlog::error("Fetched data: {}", fetched_data.dump());
+      spdlog::error("Expected data: {}", expected_data_json.dump());
+      throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
+    }
+  }
+
+  void check_individual_property(json response_json,
+                                 AstarteDeviceSdk::AstartePropertyIndividual expected_data) const {
+    if (!response_json.contains(message_.get_path())) {
+      spdlog::error("Missing entry '{}' in REST data.", message_.get_path());
+      spdlog::info("Fetched data: {}", response_json.dump());
+      throw EndToEndHTTPException("Fetching of data through REST API failed.");
+    }
+
+    json expected_data_json = json::parse(expected_data.format());
+    // unlike the device datastream, the fetched property does not contain the `value` field
+    json fetched_data = response_json[message_.get_path()];
+
+    if (expected_data_json != fetched_data) {
+      spdlog::error("Expected data: {}", expected_data_json.dump());
+      spdlog::error("Fetched data: {}", fetched_data.dump());
+      throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
+    }
+  }
+
+  void check_property_unset(json response_json) const {
+    // unlike the device datastream, the fetched property does not contain the `value` field
+    json fetched_data = response_json[message_.get_path()];
+
+    if (!fetched_data.is_null()) {
+      spdlog::error("Fetched data: {}", fetched_data.dump());
+      throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
+    }
+  }
 
   AstarteMessage message_;
   std::unique_ptr<std::chrono::system_clock::time_point> timestamp_;
