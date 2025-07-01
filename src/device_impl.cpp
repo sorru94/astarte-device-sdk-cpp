@@ -63,8 +63,8 @@ using gRPCNode = astarteplatform::msghub::Node;
 AstarteDevice::AstarteDeviceImpl::AstarteDeviceImpl(std::string server_addr, std::string node_uuid)
     : server_addr_(std::move(server_addr)),
       node_uuid_(std::move(node_uuid)),
-      connection_stop_flag_(std::make_shared<std::atomic_bool>(false)),
-      grpc_stream_error_(std::make_shared<std::atomic_bool>(false)) {}
+      connection_stop_flag_(std::atomic_bool(false)),
+      grpc_stream_error_(false) {}
 
 AstarteDevice::AstarteDeviceImpl::~AstarteDeviceImpl() { disconnect(); }
 
@@ -114,14 +114,14 @@ void AstarteDevice::AstarteDeviceImpl::disconnect() {
 
   // If the device is still attempting to connect request a stop.
   if (connection_thread_.joinable()) {
-    connection_stop_flag_->store(true);
+    connection_stop_flag_.store(true);
   }
 
   // If the device is connected (an event_handler_ exists) call the detach function.
   // Additionally if the stream error flag is set at this point it means the gRPC stream has seen
   // an error but no Detach has been called since. For consistency we always call a detach in this
   // situation. This might not always be the desired behaviour and might change in the future.
-  if (event_handler_.joinable() || grpc_stream_error_->load()) {
+  if (event_handler_.joinable() || grpc_stream_error_.load()) {
     ClientContext context;
     google::protobuf::Empty response;
     const Status status = stub_->Detach(&context, google::protobuf::Empty(), &response);
@@ -129,7 +129,7 @@ void AstarteDevice::AstarteDeviceImpl::disconnect() {
       spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
     }
     // Reset the stream error flag
-    grpc_stream_error_->store(false);
+    grpc_stream_error_.store(false);
   }
 
   // Wait for the connection thread to stop.
@@ -138,7 +138,7 @@ void AstarteDevice::AstarteDeviceImpl::disconnect() {
   }
 
   // Reset the stop flag for a future reconnection
-  connection_stop_flag_->store(false);
+  connection_stop_flag_.store(false);
 }
 
 void AstarteDevice::AstarteDeviceImpl::send_individual(
@@ -290,7 +290,7 @@ void AstarteDevice::AstarteDeviceImpl::connection_attempt() {
                                std::move(reader));
 
   // Reset the stream error flag
-  grpc_stream_error_->store(false);
+  grpc_stream_error_.store(false);
 
   // Wait for the event stream to finish.
   // N.B. This makes this function blocking!
@@ -322,7 +322,7 @@ void AstarteDevice::AstarteDeviceImpl::handle_events(
   // Log an error if it the stream has been stopped due to a failure.
   const Status status = reader->Finish();
   if (!status.ok()) {
-    grpc_stream_error_->store(true);
+    grpc_stream_error_.store(true);
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
   }
 }
@@ -353,7 +353,7 @@ void AstarteDevice::AstarteDeviceImpl::connection_loop() {
   ExponentialBackoff backoff(std::chrono::seconds(2), std::chrono::minutes(1));
 
   // The loop now checks if a stop has been requested.
-  while (!connection_stop_flag_->load()) {
+  while (!connection_stop_flag_.load()) {
     try {
       // This is a blocking function.
       // It will return only if the connection fails or the device is disconnected.
@@ -362,7 +362,7 @@ void AstarteDevice::AstarteDeviceImpl::connection_loop() {
       spdlog::error("Connection failed: {}", e.what());
     }
 
-    if (connection_stop_flag_->load()) {
+    if (connection_stop_flag_.load()) {
       spdlog::info("Stop requested, will not attempt to reconnect.");
       break;
     }
