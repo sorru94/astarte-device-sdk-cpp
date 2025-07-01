@@ -63,13 +63,10 @@ using gRPCNode = astarteplatform::msghub::Node;
 AstarteDevice::AstarteDeviceImpl::AstarteDeviceImpl(std::string server_addr, std::string node_uuid)
     : server_addr_(std::move(server_addr)),
       node_uuid_(std::move(node_uuid)),
-      connection_stop_flag_(std::make_shared<std::atomic_bool>(false)) {}
+      connection_stop_flag_(std::make_shared<std::atomic_bool>(false)),
+      grpc_stream_error_(std::make_shared<std::atomic_bool>(false)) {}
 
-AstarteDevice::AstarteDeviceImpl::~AstarteDeviceImpl() {
-  if (connection_thread_.joinable() || event_handler_.joinable()) {
-    disconnect();
-  }
-}
+AstarteDevice::AstarteDeviceImpl::~AstarteDeviceImpl() { disconnect(); }
 
 void AstarteDevice::AstarteDeviceImpl::add_interface_from_json(
     const std::filesystem::path &json_file) {
@@ -121,13 +118,18 @@ void AstarteDevice::AstarteDeviceImpl::disconnect() {
   }
 
   // If the device is connected (an event_handler_ exists) call the detach function.
-  if (event_handler_.joinable()) {
+  // Additionally if the stream error flag is set at this point it means the gRPC stream has seen
+  // an error but no Detach has been called since. For consistency we always call a detach in this
+  // situation. This might not always be the desired behaviour and might change in the future.
+  if (event_handler_.joinable() || grpc_stream_error_->load()) {
     ClientContext context;
     google::protobuf::Empty response;
     const Status status = stub_->Detach(&context, google::protobuf::Empty(), &response);
     if (!status.ok()) {
       spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
     }
+    // Reset the stream error flag
+    grpc_stream_error_->store(false);
   }
 
   // Wait for the connection thread to stop.
@@ -287,6 +289,9 @@ void AstarteDevice::AstarteDeviceImpl::connection_attempt() {
   event_handler_ = std::thread(&AstarteDeviceImpl::handle_events, this, std::move(client_context),
                                std::move(reader));
 
+  // Reset the stream error flag
+  grpc_stream_error_->store(false);
+
   // Wait for the event stream to finish.
   // N.B. This makes this function blocking!
   if (event_handler_.joinable()) {
@@ -317,6 +322,7 @@ void AstarteDevice::AstarteDeviceImpl::handle_events(
   // Log an error if it the stream has been stopped due to a failure.
   const Status status = reader->Finish();
   if (!status.ok()) {
+    grpc_stream_error_->store(true);
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
   }
 }
