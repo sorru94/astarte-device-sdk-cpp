@@ -134,8 +134,8 @@ struct AstarteDevice::AstarteDeviceImpl {
   std::unique_ptr<gRPCMessageHub::Stub> stub_;
   std::vector<std::string> interfaces_bins_;
   std::thread connection_thread_;
-  std::shared_ptr<std::atomic_bool> connection_stop_flag_;
-  std::shared_ptr<std::atomic_bool> grpc_stream_error_;
+  std::atomic_bool connection_stop_flag_;
+  std::atomic_bool grpc_stream_error_;
   std::thread event_handler_;
   SharedQueue<AstarteMessage> rcv_queue_;
 };
