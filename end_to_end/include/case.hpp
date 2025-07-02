@@ -65,13 +65,12 @@ class TestCase {
 
   void reception_handler() {
     while (!(*kill_reception_)) {
-      auto incoming = device_->poll_incoming();
+      auto incoming = device_->poll_incoming(std::chrono::milliseconds(100));
       if (incoming.has_value()) {
         AstarteMessage msg(incoming.value());
         spdlog::debug("Handler received message: {}", msg.format());
         rx_queue_->push(msg);
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   }
 };

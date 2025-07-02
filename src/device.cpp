@@ -38,7 +38,7 @@ void AstarteDevice::add_interface_from_str(const std::string_view json) {
 
 void AstarteDevice::connect() { astarte_device_impl_->connect(); }
 
-auto AstarteDevice::is_connected(std::chrono::milliseconds timeout) -> bool {
+auto AstarteDevice::is_connected(const std::chrono::milliseconds &timeout) -> bool {
   return astarte_device_impl_->is_connected(timeout);
 }
 
@@ -65,8 +65,9 @@ void AstarteDevice::unset_property(const std::string &interface_name, const std:
   astarte_device_impl_->unset_property(interface_name, path);
 }
 
-auto AstarteDevice::poll_incoming() -> std::optional<AstarteMessage> {
-  return astarte_device_impl_->poll_incoming();
+auto AstarteDevice::poll_incoming(const std::chrono::milliseconds &timeout)
+    -> std::optional<AstarteMessage> {
+  return astarte_device_impl_->poll_incoming(timeout);
 }
 
 }  // namespace AstarteDeviceSdk

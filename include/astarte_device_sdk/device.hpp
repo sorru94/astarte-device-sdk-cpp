@@ -77,7 +77,7 @@ class AstarteDevice {
    * @return True if the device is connected to the message hub, false otherwise.
    */
   // NOLINTNEXTLINE(misc-include-cleaner)
-  auto is_connected(std::chrono::milliseconds timeout = 100ms) -> bool;
+  auto is_connected(const std::chrono::milliseconds &timeout = 100ms) -> bool;
   /** @brief Disconnect from Astarte. */
   void disconnect();
   /**
@@ -116,9 +116,11 @@ class AstarteDevice {
   void unset_property(const std::string &interface_name, const std::string &path);
   /**
    * @brief Poll incoming messages.
+   * @param timeout Will block for this timeout if no message is present.
    * @return The received message when present, std::nullopt otherwise.
    */
-  auto poll_incoming() -> std::optional<AstarteMessage>;
+  auto poll_incoming(const std::chrono::milliseconds &timeout = 100ms)
+      -> std::optional<AstarteMessage>;
 
  private:
   struct AstarteDeviceImpl;
