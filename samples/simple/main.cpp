@@ -21,7 +21,7 @@ using AstarteDeviceSdk::AstartePropertyIndividual;
 
 void reception_handler(std::shared_ptr<AstarteDevice> msghub_client) {
   while (true) {
-    auto incoming = msghub_client->poll_incoming();
+    auto incoming = msghub_client->poll_incoming(std::chrono::milliseconds(100));
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
       spdlog::info("Received message.");
@@ -43,7 +43,6 @@ void reception_handler(std::shared_ptr<AstarteDevice> msghub_client) {
         spdlog::info("Value: {}", data.format());
       }
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }
 

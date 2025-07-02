@@ -71,7 +71,7 @@ struct AstarteDevice::AstarteDeviceImpl {
    * @param timeout This is the maximum timeout used to check if the device is connected.
    * @return True if the device is connected to the message hub, false otherwise.
    */
-  auto is_connected(std::chrono::milliseconds timeout) -> bool;
+  auto is_connected(const std::chrono::milliseconds& timeout) -> bool;
   /**
    * @brief Disconnect from the Astarte message hub.
    * @details Gracefully terminates the connection by sending a Detach message.
@@ -114,12 +114,12 @@ struct AstarteDevice::AstarteDeviceImpl {
   void unset_property(const std::string& interface_name, const std::string& path);
   /**
    * @brief Poll for a new message received from the message hub.
-   * @details This method checks an internal queue for parsed messages from the server. It is
-   * non-blocking.
+   * @details This method checks an internal queue for parsed messages from the server.
+   * @param timeout Will block for this timeout if no message is present.
    * @return An std::optional containing an AstarteMessage if one was available, otherwise
    * std::nullopt.
    */
-  auto poll_incoming() -> std::optional<AstarteMessage>;
+  auto poll_incoming(const std::chrono::milliseconds& timeout) -> std::optional<AstarteMessage>;
 
  private:
   void connection_attempt();

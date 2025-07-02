@@ -99,7 +99,8 @@ void AstarteDevice::AstarteDeviceImpl::connect() {
   connection_thread_ = std::thread([this]() { this->connection_loop(); });
 }
 
-auto AstarteDevice::AstarteDeviceImpl::is_connected(std::chrono::milliseconds timeout) -> bool {
+auto AstarteDevice::AstarteDeviceImpl::is_connected(const std::chrono::milliseconds &timeout)
+    -> bool {
   // The event handler is started when a connection attempt is performed.
   // If a connection cannot be established it will exit quickly.
   if (!event_handler_.joinable()) {
@@ -247,8 +248,9 @@ void AstarteDevice::AstarteDeviceImpl::unset_property(const std::string &interfa
   }
 }
 
-auto AstarteDevice::AstarteDeviceImpl::poll_incoming() -> std::optional<AstarteMessage> {
-  return rcv_queue_.pop();
+auto AstarteDevice::AstarteDeviceImpl::poll_incoming(const std::chrono::milliseconds &timeout)
+    -> std::optional<AstarteMessage> {
+  return rcv_queue_.pop(timeout);
 }
 
 void AstarteDevice::AstarteDeviceImpl::connection_attempt() {
