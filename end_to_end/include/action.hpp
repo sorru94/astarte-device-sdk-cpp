@@ -274,6 +274,9 @@ class TestActionTransmitRESTData : public TestAction {
     spdlog::info("[{}] Transmitting REST data...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
                               "/interfaces/" + message_.get_interface() + message_.get_path();
+
+    spdlog::info("REQUEST: {}", request_url);
+
     if (message_.is_datastream()) {
       if (message_.is_individual()) {
         const auto& data(message_.into<AstarteDatastreamIndividual>());
@@ -290,8 +293,33 @@ class TestActionTransmitRESTData : public TestAction {
       } else {
         // TODO: Encode an object
       }
-    } else {
-      // TODO: Encode properties
+    } else {  // Encode properties
+      const auto data(message_.into<AstartePropertyIndividual>());
+
+      if (data.get_value().has_value()) {
+        spdlog::debug("sending server property");
+        std::string payload = "{\"data\":" + data.format() + "}";
+        spdlog::debug("HTTP POST: {} {}", request_url, payload);
+        cpr::Response post_response =
+            cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
+                      cpr::Header{{"Content-Type", "application/json"}},
+                      cpr::Header{{"Authorization", "Bearer " + appengine_token_}});
+
+        if (post_response.status_code != 200) {
+          spdlog::error("HTTP POST failed, status code: {}", post_response.status_code);
+          throw EndToEndHTTPException("Transmission of data through REST API failed.");
+        }
+      } else {
+        spdlog::debug("unset server property");
+        cpr::Response delete_response = cpr::Delete(
+            cpr::Url{request_url}, cpr::Body{}, cpr::Header{{"Content-Type", "application/json"}},
+            cpr::Header{{"Authorization", "Bearer " + appengine_token_}});
+
+        if (delete_response.status_code != 204) {
+          spdlog::error("HTTP DELETE failed, status code: {}", delete_response.status_code);
+          throw EndToEndHTTPException("Transmission of data through REST API failed.");
+        }
+      }
     }
   }
 
