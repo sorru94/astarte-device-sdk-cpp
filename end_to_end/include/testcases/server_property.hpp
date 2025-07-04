@@ -218,4 +218,51 @@ TestCase server_property() {
           TestActionSleep::Create(std::chrono::seconds(1)), TestActionDisconnect::Create(),
           TestActionSleep::Create(std::chrono::seconds(1))});
 }
+
+// check if server properties are received after a device connection to Astarte
+//
+// NOTE: we don't check all of the properties since it is not the purpose of this
+// testcase. Look `server_property()` TestCase to check all interface mappings.
+TestCase server_property_on_new_device() {
+  return TestCase(
+      "Server property to a new Device",
+      std::vector<std::shared_ptr<TestAction>>{
+          TestActionSleep::Create(std::chrono::seconds(1)), TestActionConnect::Create(),
+          TestActionSleep::Create(std::chrono::seconds(1)),
+
+          // set server properties
+          TestActionTransmitRESTData::Create(AstarteMessage(
+              astarte_interfaces::ServerProperty::INTERFACE, "/sensor1/integer_endpoint",
+              AstartePropertyIndividual(AstarteData(43)))),
+          TestActionTransmitRESTData::Create(AstarteMessage(
+              astarte_interfaces::ServerProperty::INTERFACE, "/sensor1/longinteger_endpoint",
+              AstartePropertyIndividual(AstarteData(17179869184)))),
+
+          // disconnect and reconnect the device to check if the server prop are received them upon
+          // connecting
+          TestActionSleep::Create(std::chrono::seconds(1)), TestActionDisconnect::Create(),
+          TestActionSleep::Create(std::chrono::seconds(1)), TestActionConnect::Create(),
+          TestActionSleep::Create(std::chrono::seconds(1)),
+
+          // check if server property have been received
+          TestActionReadReceivedMQTTData::Create(AstarteMessage(
+              astarte_interfaces::ServerProperty::INTERFACE, "/sensor1/integer_endpoint",
+              AstartePropertyIndividual(AstarteData(43)))),
+          TestActionReadReceivedMQTTData::Create(AstarteMessage(
+              astarte_interfaces::ServerProperty::INTERFACE, "/sensor1/longinteger_endpoint",
+              AstartePropertyIndividual(AstarteData(17179869184)))),
+
+          TestActionSleep::Create(std::chrono::seconds(1)),
+
+          // unset the properties to clean up the state
+          TestActionTransmitRESTData::Create(
+              AstarteMessage(astarte_interfaces::ServerProperty::INTERFACE,
+                             "/sensor1/integer_endpoint", AstartePropertyIndividual(std::nullopt))),
+          TestActionTransmitRESTData::Create(AstarteMessage(
+              astarte_interfaces::ServerProperty::INTERFACE, "/sensor1/longinteger_endpoint",
+              AstartePropertyIndividual(std::nullopt))),
+
+          TestActionSleep::Create(std::chrono::seconds(1)), TestActionDisconnect::Create(),
+          TestActionSleep::Create(std::chrono::seconds(1))});
+}
 }  // namespace testcases
