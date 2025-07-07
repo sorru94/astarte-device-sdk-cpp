@@ -99,7 +99,7 @@ void AstarteDevice::AstarteDeviceImpl::connect() {
   connection_thread_ = std::thread([this]() { this->connection_loop(); });
 }
 
-auto AstarteDevice::AstarteDeviceImpl::is_connected(const std::chrono::milliseconds &timeout)
+auto AstarteDevice::AstarteDeviceImpl::is_connected(const std::chrono::milliseconds &timeout) const
     -> bool {
   // The event handler is started when a connection attempt is performed.
   // If a connection cannot be established it will exit quickly.

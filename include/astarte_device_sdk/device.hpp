@@ -77,7 +77,7 @@ class AstarteDevice {
    * @return True if the device is connected to the message hub, false otherwise.
    */
   // NOLINTNEXTLINE(misc-include-cleaner)
-  auto is_connected(const std::chrono::milliseconds &timeout = 100ms) -> bool;
+  [[nodiscard]] auto is_connected(const std::chrono::milliseconds &timeout = 100ms) const -> bool;
   /** @brief Disconnect from Astarte. */
   void disconnect();
   /**

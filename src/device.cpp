@@ -38,7 +38,7 @@ void AstarteDevice::add_interface_from_str(const std::string_view json) {
 
 void AstarteDevice::connect() { astarte_device_impl_->connect(); }
 
-auto AstarteDevice::is_connected(const std::chrono::milliseconds &timeout) -> bool {
+auto AstarteDevice::is_connected(const std::chrono::milliseconds &timeout) const -> bool {
   return astarte_device_impl_->is_connected(timeout);
 }
 
