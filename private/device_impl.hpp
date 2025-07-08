@@ -71,7 +71,7 @@ struct AstarteDevice::AstarteDeviceImpl {
    * @param timeout This is the maximum timeout used to check if the device is connected.
    * @return True if the device is connected to the message hub, false otherwise.
    */
-  auto is_connected(const std::chrono::milliseconds& timeout) -> bool;
+  [[nodiscard]] auto is_connected(const std::chrono::milliseconds& timeout) const -> bool;
   /**
    * @brief Disconnect from the Astarte message hub.
    * @details Gracefully terminates the connection by sending a Detach message.
