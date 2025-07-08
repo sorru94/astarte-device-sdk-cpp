@@ -13,6 +13,7 @@
 #include "testcases/device_property.hpp"
 #include "testcases/device_reconnection.hpp"
 #include "testcases/device_status.hpp"
+#include "testcases/server_aggregate.hpp"
 #include "testcases/server_datastream.hpp"
 #include "testcases/server_property.hpp"
 
@@ -47,6 +48,7 @@ int main() {
   orchestrator.add_test_case(testcases::device_datastream());
   orchestrator.add_test_case(testcases::server_datastream());
   orchestrator.add_test_case(testcases::device_aggregate());
+  orchestrator.add_test_case(testcases::server_aggregate());
   orchestrator.add_test_case(testcases::device_property());
   orchestrator.add_test_case(testcases::server_property());
   orchestrator.add_test_case(testcases::server_property_on_new_device());

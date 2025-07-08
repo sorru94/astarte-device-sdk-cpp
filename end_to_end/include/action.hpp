@@ -291,7 +291,17 @@ class TestActionTransmitRESTData : public TestAction {
           throw EndToEndHTTPException("Transmission of data through REST API failed.");
         }
       } else {
-        // TODO: Encode an object
+        const auto& data(message_.into<AstarteDatastreamObject>());
+        std::string payload = "{\"data\":" + data.format() + "}";
+        spdlog::debug("HTTP POST: {} {}", request_url, payload);
+        cpr::Response post_response =
+            cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
+                      cpr::Header{{"Content-Type", "application/json"}},
+                      cpr::Header{{"Authorization", "Bearer " + appengine_token_}});
+        if (post_response.status_code != 200) {
+          spdlog::error("HTTP POST failed, status code: {}", post_response.status_code);
+          throw EndToEndHTTPException("Transmission of data through REST API failed.");
+        }
       }
     } else {  // Encode properties
       const auto data(message_.into<AstartePropertyIndividual>());
