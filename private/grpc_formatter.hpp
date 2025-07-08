@@ -5,9 +5,9 @@
 #ifndef GRPC_FORMATTER_H
 #define GRPC_FORMATTER_H
 
-#include <spdlog/fmt/fmt.h>
-#include <google/protobuf/text_format.h>
 #include <google/protobuf/message.h>
+#include <google/protobuf/text_format.h>
+#include <spdlog/fmt/fmt.h>
 
 #if __cplusplus >= 202002L
 #include <type_traits>
@@ -31,9 +31,7 @@ struct fmt::formatter<T> {
 };
 #else   // __cplusplus >= 202002L
 template <typename T>
-struct fmt::formatter<
-    T,
-    std::enable_if_t<std::is_base_of<google::protobuf::Message, T>::value>> {
+struct fmt::formatter<T, std::enable_if_t<std::is_base_of<google::protobuf::Message, T>::value> > {
   template <typename ParseContext>
   constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
