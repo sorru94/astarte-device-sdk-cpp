@@ -11,7 +11,7 @@
 #include <nlohmann/json.hpp>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/device.hpp"
+#include "astarte_device_sdk/device_grpc.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 #include "exceptions.hpp"
@@ -22,14 +22,14 @@ using json = nlohmann::json;
 using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteDatastreamIndividual;
 using AstarteDeviceSdk::AstarteDatastreamObject;
-using AstarteDeviceSdk::AstarteDevice;
+using AstarteDeviceSdk::AstarteDeviceGRPC;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstartePropertyIndividual;
 
 class TestAction {
  public:
   virtual void execute(const std::string& case_name) const = 0;
-  void attach_device(const std::shared_ptr<AstarteDevice>& device,
+  void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device,
                      const std::shared_ptr<SharedQueue<AstarteMessage>>& rx_queue,
                      const std::shared_ptr<std::atomic_bool>& kill_reception) {
     device_ = device;
@@ -45,7 +45,7 @@ class TestAction {
   }
 
  protected:
-  std::shared_ptr<AstarteDevice> device_;
+  std::shared_ptr<AstarteDeviceGRPC> device_;
   std::shared_ptr<SharedQueue<AstarteMessage>> rx_queue_;
   std::shared_ptr<std::atomic_bool> kill_reception_;
   std::string appengine_url_;
@@ -89,7 +89,7 @@ class TestActionConnect : public TestAction {
     device_->connect();
     do {
       std::this_thread::sleep_for(std::chrono::seconds(1));
-    } while (!device_->is_connected());
+    } while (!device_->is_connected(std::chrono::milliseconds(100)));
   }
 
  private:

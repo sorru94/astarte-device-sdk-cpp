@@ -194,19 +194,19 @@ A couple of assumptions have been made:
 #include <thread>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/device.hpp"
+#include "astarte_device_sdk/device_grpc.hpp"
 #include "astarte_device_sdk/msg.hpp"
 
 using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteDatastreamIndividual;
 using AstarteDeviceSdk::AstarteDatastreamObject;
-using AstarteDeviceSdk::AstarteDevice;
+using AstarteDeviceSdk::AstarteDeviceGRPC;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstartePropertyIndividual;
 
-void reception_handler(std::shared_ptr<AstarteDevice> device) {
+void reception_handler(std::shared_ptr<AstarteDeviceGRPC> device) {
   while (true) {
-    auto incoming = device->poll_incoming();
+    auto incoming = device->poll_incoming(std::chrono::milliseconds(100));
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
       std::cout << "Received message." << std::endl;
@@ -232,7 +232,7 @@ void reception_handler(std::shared_ptr<AstarteDevice> device) {
 int main(int argc, char **argv) {
   std::string server_addr = "localhost:50051";
   std::string node_id("aa04dade-9401-4c37-8c6a-d8da15b083ae");
-  std::shared_ptr<AstarteDevice> device = std::make_shared<AstarteDevice>(server_addr, node_id);
+  std::shared_ptr<AstarteDeviceGRPC> device = std::make_shared<AstarteDeviceGRPC>(server_addr, node_id);
 
   // Se these paths based on your project structure.
   std::filesystem::path device_individual_interface_file_path =
@@ -250,7 +250,7 @@ int main(int argc, char **argv) {
 
   do {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-  } while (!device->is_connected());
+  } while (!device->is_connected(std::chrono::milliseconds(100)));
 
   auto reception_thread = std::thread(reception_handler, device);
 

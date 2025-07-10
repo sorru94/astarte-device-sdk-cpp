@@ -7,12 +7,11 @@
 
 /**
  * @file astarte_device_sdk/device.hpp
- * @brief Astarte device object and its related methods.
+ * @brief Abstract Astarte device object and its related methods.
  */
 
 #include <chrono>
 #include <filesystem>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -24,107 +23,115 @@
 /** @brief Umbrella namespace for the Astarte device SDK */
 namespace AstarteDeviceSdk {
 
-/** @brief Namespace containing chrono literals such as ms */
-using namespace std::chrono_literals;
-
 /**
- * @brief Class for the Astarte devices.
- * @details This class should be instantiated once and then used to communicate with Astarte.
+ * @brief Interface for an Astarte device.
+ * @details This class defines a transport independent abstract class to be used by derived
+ * classes to implement transport dependent device classes.
  */
 class AstarteDevice {
  public:
   /**
-   * @brief Constructor for the Astarte device class.
-   * @param server_addr The gRPC server address of the Astarte message hub.
-   * @param node_uuid The UUID identifier for this device with the Astarte message hub.
+   * @brief Virtual destructor.
+   * @details Ensures proper cleanup of derived classes through a base pointer.
    */
-  AstarteDevice(const std::string &server_addr, const std::string &node_uuid);
-  /** @brief Destructor for the Astarte device class. */
-  ~AstarteDevice();
+  virtual ~AstarteDevice() = default;
   /** @brief Copy constructor for the Astarte device class. */
-  AstarteDevice(AstarteDevice &other) = delete;
+  AstarteDevice(const AstarteDevice &other) = delete;
   /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(AstarteDevice &other) -> AstarteDevice & = delete;
-  /** @brief Move constructor for the Astarte device class. */
-  AstarteDevice(AstarteDevice &&other) = delete;
-  /** @brief Move assignment operator for the Astarte device class. */
-  auto operator=(AstarteDevice &&other) -> AstarteDevice & = delete;
+  auto operator=(const AstarteDevice &other) -> AstarteDevice & = delete;
+  /**
+   * @brief Move constructor for the Astarte device class.
+   * @param other Object to move.
+   */
+  AstarteDevice(AstarteDevice &&other) = default;
+  /**
+   * @brief Move assignment operator for the Astarte device class.
+   * @param other Object to move.
+   * @return Moved object.
+   */
+  auto operator=(AstarteDevice &&other) -> AstarteDevice & = default;
 
   /**
-   * @brief Add an interface for the device from a json file.
+   * @brief Add an interface for the device from a JSON file.
    * @param json_file The path to the .json interface file.
    */
-  void add_interface_from_json(const std::filesystem::path &json_file);
+  virtual void add_interface_from_json(const std::filesystem::path &json_file) = 0;
   /**
-   * @brief Add an interface for the device from a json string.
-   * @param json The interface to add.
+   * @brief Add an interface for the device from a JSON string.
+   * @param json The interface definition as a JSON string.
    */
-  void add_interface_from_str(std::string json);
+  virtual void add_interface_from_str(std::string json) = 0;
   /**
-   * @brief Add an interface for the device from a json file.
-   * @param json The interface to add.
+   * @brief Add an interface for the device from a JSON string view.
+   * @param json The interface definition as a JSON string view.
    */
-  void add_interface_from_str(std::string_view json);
+  virtual void add_interface_from_str(std::string_view json) = 0;
   /**
    * @brief Connect the device to Astarte.
-   * @details This is an asynchronous funciton. It will start a management thread that will
-   * manage the device connectivity.
+   * @details This is an asynchronous function. It starts a management process that will handle
+   * the device's connectivity in the background.
    */
-  void connect();
+  virtual void connect() = 0;
   /**
-   * @brief Check if the device is connected.
-   * @param timeout This is the maximum timeout used to check if the device is connected.
-   * @return True if the device is connected to the message hub, false otherwise.
+   * @brief Check if the device is connected to the Astarte message hub.
+   * @param timeout The maximum time to wait for a connection confirmation.
+   * @return True if the device is connected, false otherwise.
    */
-  // NOLINTNEXTLINE(misc-include-cleaner)
-  [[nodiscard]] auto is_connected(const std::chrono::milliseconds &timeout = 100ms) const -> bool;
-  /** @brief Disconnect from Astarte. */
-  void disconnect();
+  [[nodiscard]] virtual auto is_connected(const std::chrono::milliseconds &timeout) const
+      -> bool = 0;
   /**
-   * @brief Send individual data to Astarte.
-   * @param interface_name The name of the interface on which to send the data.
-   * @param path The path to the interface endpoint to use for sending.
-   * @param data The data to send.
-   * @param timestamp The timestamp for the data, this might be a nullptr.
+   * @brief Disconnect the device from Astarte.
    */
-  void send_individual(const std::string &interface_name, const std::string &path,
-                       const AstarteData &data,
-                       const std::chrono::system_clock::time_point *timestamp);
+  virtual void disconnect() = 0;
   /**
-   * @brief Send object data to Astarte.
-   * @param interface_name The name of the interface on which to send the data.
-   * @param path The common path to the interface endpoint to use for sending.
-   * @param object The data to send.
-   * @param timestamp The timestamp for the data, this might be a nullptr.
+   * @brief Send an individual data payload to Astarte.
+   * @param interface_name The name of the target interface.
+   * @param path The specific endpoint path within the interface.
+   * @param data The data payload to send.
+   * @param timestamp An optional timestamp for the data point. If nullptr, Astarte will assign one.
    */
-  void send_object(const std::string &interface_name, const std::string &path,
-                   const AstarteDatastreamObject &object,
-                   const std::chrono::system_clock::time_point *timestamp);
+  virtual void send_individual(const std::string &interface_name, const std::string &path,
+                               const AstarteData &data,
+                               const std::chrono::system_clock::time_point *timestamp) = 0;
   /**
-   * @brief Set a device property.
-   * @param interface_name The name of the interface for the property.
-   * @param path The property full path.
-   * @param data The property data.
+   * @brief Send an aggregate object data payload to Astarte.
+   * @param interface_name The name of the target interface.
+   * @param path The common base path for the data object.
+   * @param object The aggregate data object to send.
+   * @param timestamp An optional timestamp for the data. If nullptr, Astarte will assign one.
    */
-  void set_property(const std::string &interface_name, const std::string &path,
-                    const AstarteData &data);
+  virtual void send_object(const std::string &interface_name, const std::string &path,
+                           const AstarteDatastreamObject &object,
+                           const std::chrono::system_clock::time_point *timestamp) = 0;
   /**
-   * @brief Unset a device property.
-   * @param interface_name The name of the interface for the property.
-   * @param path The property full path.
+   * @brief Set a device property on Astarte.
+   * @param interface_name The name of the interface containing the property.
+   * @param path The full path to the property.
+   * @param data The value to set for the property.
    */
-  void unset_property(const std::string &interface_name, const std::string &path);
+  virtual void set_property(const std::string &interface_name, const std::string &path,
+                            const AstarteData &data) = 0;
   /**
-   * @brief Poll incoming messages.
-   * @param timeout Will block for this timeout if no message is present.
-   * @return The received message when present, std::nullopt otherwise.
+   * @brief Unset a device property on Astarte.
+   * @param interface_name The name of the interface containing the property.
+   * @param path The full path to the property to unset.
    */
-  auto poll_incoming(const std::chrono::milliseconds &timeout = 100ms)
-      -> std::optional<AstarteMessage>;
+  virtual void unset_property(const std::string &interface_name, const std::string &path) = 0;
+  /**
+   * @brief Poll for incoming messages from Astarte.
+   * @param timeout The maximum time to block waiting for a message.
+   * @return An std::optional containing the received AstarteMessage if one was available,
+   * or std::nullopt if the timeout was reached.
+   */
+  virtual auto poll_incoming(const std::chrono::milliseconds &timeout)
+      -> std::optional<AstarteMessage> = 0;
 
- private:
-  struct AstarteDeviceImpl;
-  std::shared_ptr<AstarteDeviceImpl> astarte_device_impl_;
+ protected:
+  /**
+   * @brief Protected default constructor.
+   * @details Prevents direct instantiation of the interface.
+   */
+  AstarteDevice() = default;
 };
 
 }  // namespace AstarteDeviceSdk

@@ -10,7 +10,7 @@
 #include <memory>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/device.hpp"
+#include "astarte_device_sdk/device_grpc.hpp"
 #include "astarte_device_sdk/msg.hpp"
 
 using namespace AstarteDeviceSdk;
@@ -22,7 +22,7 @@ class AstarteWorker : public QObject {
   AstarteWorker(QObject *parent = nullptr) : QObject(parent) {
     QString server_addr = "localhost:50051";
     QString node_id = "aa04dade-9401-4c37-8c6a-d8da15b083ae";
-    device = std::make_shared<AstarteDevice>(server_addr.toStdString(), node_id.toStdString());
+    device = std::make_shared<AstarteDeviceGRPC>(server_addr.toStdString(), node_id.toStdString());
 
     addInterfaces();
     device->connect();
@@ -132,7 +132,7 @@ class AstarteWorker : public QObject {
   }
 
  private:
-  std::shared_ptr<AstarteDevice> device;
+  std::shared_ptr<AstarteDeviceGRPC> device;
   QTimer *pollingTimer;
 
   void addInterfaces() {
