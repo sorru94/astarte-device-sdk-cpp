@@ -9,17 +9,17 @@
 #include <thread>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/device.hpp"
+#include "astarte_device_sdk/device_grpc.hpp"
 #include "astarte_device_sdk/msg.hpp"
 
 using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteDatastreamIndividual;
 using AstarteDeviceSdk::AstarteDatastreamObject;
-using AstarteDeviceSdk::AstarteDevice;
+using AstarteDeviceSdk::AstarteDeviceGRPC;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstartePropertyIndividual;
 
-void reception_handler(std::shared_ptr<AstarteDevice> msghub_client) {
+void reception_handler(std::shared_ptr<AstarteDeviceGRPC> msghub_client) {
   while (true) {
     auto incoming = msghub_client->poll_incoming(std::chrono::milliseconds(100));
     if (incoming.has_value()) {
@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
   spdlog::set_level(spdlog::level::debug);
   std::string server_addr = "localhost:50051";
   std::string node_id("aa04dade-9401-4c37-8c6a-d8da15b083ae");
-  std::shared_ptr<AstarteDevice> msghub_client =
-      std::make_shared<AstarteDevice>(server_addr, node_id);
+  std::shared_ptr<AstarteDeviceGRPC> msghub_client =
+      std::make_shared<AstarteDeviceGRPC>(server_addr, node_id);
 
   // Those paths assume the user is calling the Astarte executable from the root of this project.
   std::filesystem::path device_individual_interface_file_path =

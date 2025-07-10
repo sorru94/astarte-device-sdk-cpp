@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef DEVICE_IMPL_H
-#define DEVICE_IMPL_H
+#ifndef DEVICE_GRPC_IMPL_H
+#define DEVICE_GRPC_IMPL_H
 
 #include <astarteplatform/msghub/astarte_message.pb.h>
 #include <astarteplatform/msghub/message_hub_service.grpc.pb.h>
@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/device.hpp"
+#include "astarte_device_sdk/device_grpc.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 #include "shared_queue.hpp"
@@ -30,24 +30,24 @@ namespace AstarteDeviceSdk {
 using gRPCMessageHub = astarteplatform::msghub::MessageHub;
 using gRPCMessageHubEvent = astarteplatform::msghub::MessageHubEvent;
 
-struct AstarteDevice::AstarteDeviceImpl {
+struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
  public:
   /**
-   * @brief Construct an AstarteDeviceImpl instance.
+   * @brief Construct an AstarteDeviceGRPCImpl instance.
    * @param server_addr The gRPC server address for the Astarte message hub.
    * @param node_uuid The unique identifier for the device connection.
    */
-  AstarteDeviceImpl(std::string server_addr, std::string node_uuid);
+  AstarteDeviceGRPCImpl(std::string server_addr, std::string node_uuid);
   /** @brief Destructor for the Astarte device class. */
-  ~AstarteDeviceImpl();
+  ~AstarteDeviceGRPCImpl();
   /** @brief Copy constructor for the Astarte device class. */
-  AstarteDeviceImpl(AstarteDeviceImpl& other) = delete;
+  AstarteDeviceGRPCImpl(AstarteDeviceGRPCImpl& other) = delete;
   /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceImpl& other) -> AstarteDeviceImpl& = delete;
+  auto operator=(AstarteDeviceGRPCImpl& other) -> AstarteDeviceGRPCImpl& = delete;
   /** @brief Move constructor for the Astarte device class. */
-  AstarteDeviceImpl(AstarteDeviceImpl&& other) = delete;
+  AstarteDeviceGRPCImpl(AstarteDeviceGRPCImpl&& other) = delete;
   /** @brief Move assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceImpl&& other) -> AstarteDeviceImpl& = delete;
+  auto operator=(AstarteDeviceGRPCImpl&& other) -> AstarteDeviceGRPCImpl& = delete;
 
   /**
    * @brief Parse an interface definition from a JSON file and adds it to the device.
@@ -142,4 +142,4 @@ struct AstarteDevice::AstarteDeviceImpl {
 
 }  // namespace AstarteDeviceSdk
 
-#endif  // DEVICE_IMPL_H
+#endif  // DEVICE_GRPC_IMPL_H

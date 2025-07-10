@@ -2,12 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef ASTARTE_DEVICE_SDK_DEVICE_H
-#define ASTARTE_DEVICE_SDK_DEVICE_H
+#ifndef ASTARTE_DEVICE_SDK_DEVICE_GRPC_H
+#define ASTARTE_DEVICE_SDK_DEVICE_GRPC_H
 
 /**
- * @file astarte_device_sdk/device.hpp
- * @brief Astarte device object and its related methods.
+ * @file astarte_device_sdk/device_grpc.hpp
+ * @brief Astarte device object and its related methods for the gRPC transport layer.
  */
 
 #include <chrono>
@@ -31,24 +31,24 @@ using namespace std::chrono_literals;
  * @brief Class for the Astarte devices.
  * @details This class should be instantiated once and then used to communicate with Astarte.
  */
-class AstarteDevice {
+class AstarteDeviceGRPC {
  public:
   /**
    * @brief Constructor for the Astarte device class.
    * @param server_addr The gRPC server address of the Astarte message hub.
    * @param node_uuid The UUID identifier for this device with the Astarte message hub.
    */
-  AstarteDevice(const std::string &server_addr, const std::string &node_uuid);
+  AstarteDeviceGRPC(const std::string &server_addr, const std::string &node_uuid);
   /** @brief Destructor for the Astarte device class. */
-  ~AstarteDevice();
+  ~AstarteDeviceGRPC();
   /** @brief Copy constructor for the Astarte device class. */
-  AstarteDevice(AstarteDevice &other) = delete;
+  AstarteDeviceGRPC(AstarteDeviceGRPC &other) = delete;
   /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(AstarteDevice &other) -> AstarteDevice & = delete;
+  auto operator=(AstarteDeviceGRPC &other) -> AstarteDeviceGRPC & = delete;
   /** @brief Move constructor for the Astarte device class. */
-  AstarteDevice(AstarteDevice &&other) = delete;
+  AstarteDeviceGRPC(AstarteDeviceGRPC &&other) = delete;
   /** @brief Move assignment operator for the Astarte device class. */
-  auto operator=(AstarteDevice &&other) -> AstarteDevice & = delete;
+  auto operator=(AstarteDeviceGRPC &&other) -> AstarteDeviceGRPC & = delete;
 
   /**
    * @brief Add an interface for the device from a json file.
@@ -123,10 +123,10 @@ class AstarteDevice {
       -> std::optional<AstarteMessage>;
 
  private:
-  struct AstarteDeviceImpl;
-  std::shared_ptr<AstarteDeviceImpl> astarte_device_impl_;
+  struct AstarteDeviceGRPCImpl;
+  std::shared_ptr<AstarteDeviceGRPCImpl> astarte_device_impl_;
 };
 
 }  // namespace AstarteDeviceSdk
 
-#endif  // ASTARTE_DEVICE_SDK_DEVICE_H
+#endif  // ASTARTE_DEVICE_SDK_DEVICE_GRPC_H
