@@ -89,7 +89,7 @@ class TestActionConnect : public TestAction {
     device_->connect();
     do {
       std::this_thread::sleep_for(std::chrono::seconds(1));
-    } while (!device_->is_connected());
+    } while (!device_->is_connected(std::chrono::milliseconds(100)));
   }
 
  private:

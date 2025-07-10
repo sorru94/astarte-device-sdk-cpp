@@ -206,7 +206,7 @@ using AstarteDeviceSdk::AstartePropertyIndividual;
 
 void reception_handler(std::shared_ptr<AstarteDeviceGRPC> device) {
   while (true) {
-    auto incoming = device->poll_incoming();
+    auto incoming = device->poll_incoming(std::chrono::milliseconds(100));
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
       std::cout << "Received message." << std::endl;
@@ -250,7 +250,7 @@ int main(int argc, char **argv) {
 
   do {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-  } while (!device->is_connected());
+  } while (!device->is_connected(std::chrono::milliseconds(100)));
 
   auto reception_thread = std::thread(reception_handler, device);
 

@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
 
   do {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-  } while (!msghub_client->is_connected());
+  } while (!msghub_client->is_connected(std::chrono::milliseconds(100)));
 
   // Start a reception thread for the Astarte device
   auto reception_thread = std::thread(reception_handler, msghub_client);

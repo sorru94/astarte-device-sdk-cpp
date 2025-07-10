@@ -18,20 +18,18 @@
 #include <string_view>
 
 #include "astarte_device_sdk/data.hpp"
+#include "astarte_device_sdk/device.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 
 /** @brief Umbrella namespace for the Astarte device SDK */
 namespace AstarteDeviceSdk {
 
-/** @brief Namespace containing chrono literals such as ms */
-using namespace std::chrono_literals;
-
 /**
  * @brief Class for the Astarte devices.
  * @details This class should be instantiated once and then used to communicate with Astarte.
  */
-class AstarteDeviceGRPC {
+class AstarteDeviceGRPC : public AstarteDevice {
  public:
   /**
    * @brief Constructor for the Astarte device class.
@@ -40,7 +38,7 @@ class AstarteDeviceGRPC {
    */
   AstarteDeviceGRPC(const std::string &server_addr, const std::string &node_uuid);
   /** @brief Destructor for the Astarte device class. */
-  ~AstarteDeviceGRPC();
+  ~AstarteDeviceGRPC() override;
   /** @brief Copy constructor for the Astarte device class. */
   AstarteDeviceGRPC(AstarteDeviceGRPC &other) = delete;
   /** @brief Copy assignment operator for the Astarte device class. */
@@ -54,32 +52,32 @@ class AstarteDeviceGRPC {
    * @brief Add an interface for the device from a json file.
    * @param json_file The path to the .json interface file.
    */
-  void add_interface_from_json(const std::filesystem::path &json_file);
+  void add_interface_from_json(const std::filesystem::path &json_file) override;
   /**
    * @brief Add an interface for the device from a json string.
    * @param json The interface to add.
    */
-  void add_interface_from_str(std::string json);
+  void add_interface_from_str(std::string json) override;
   /**
    * @brief Add an interface for the device from a json file.
    * @param json The interface to add.
    */
-  void add_interface_from_str(std::string_view json);
+  void add_interface_from_str(std::string_view json) override;
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will
    * manage the device connectivity.
    */
-  void connect();
+  void connect() override;
   /**
    * @brief Check if the device is connected.
    * @param timeout This is the maximum timeout used to check if the device is connected.
    * @return True if the device is connected to the message hub, false otherwise.
    */
   // NOLINTNEXTLINE(misc-include-cleaner)
-  [[nodiscard]] auto is_connected(const std::chrono::milliseconds &timeout = 100ms) const -> bool;
+  [[nodiscard]] auto is_connected(const std::chrono::milliseconds &timeout) const -> bool override;
   /** @brief Disconnect from Astarte. */
-  void disconnect();
+  void disconnect() override;
   /**
    * @brief Send individual data to Astarte.
    * @param interface_name The name of the interface on which to send the data.
@@ -89,7 +87,7 @@ class AstarteDeviceGRPC {
    */
   void send_individual(const std::string &interface_name, const std::string &path,
                        const AstarteData &data,
-                       const std::chrono::system_clock::time_point *timestamp);
+                       const std::chrono::system_clock::time_point *timestamp) override;
   /**
    * @brief Send object data to Astarte.
    * @param interface_name The name of the interface on which to send the data.
@@ -99,7 +97,7 @@ class AstarteDeviceGRPC {
    */
   void send_object(const std::string &interface_name, const std::string &path,
                    const AstarteDatastreamObject &object,
-                   const std::chrono::system_clock::time_point *timestamp);
+                   const std::chrono::system_clock::time_point *timestamp) override;
   /**
    * @brief Set a device property.
    * @param interface_name The name of the interface for the property.
@@ -107,20 +105,20 @@ class AstarteDeviceGRPC {
    * @param data The property data.
    */
   void set_property(const std::string &interface_name, const std::string &path,
-                    const AstarteData &data);
+                    const AstarteData &data) override;
   /**
    * @brief Unset a device property.
    * @param interface_name The name of the interface for the property.
    * @param path The property full path.
    */
-  void unset_property(const std::string &interface_name, const std::string &path);
+  void unset_property(const std::string &interface_name, const std::string &path) override;
   /**
    * @brief Poll incoming messages.
    * @param timeout Will block for this timeout if no message is present.
    * @return The received message when present, std::nullopt otherwise.
    */
-  auto poll_incoming(const std::chrono::milliseconds &timeout = 100ms)
-      -> std::optional<AstarteMessage>;
+  auto poll_incoming(const std::chrono::milliseconds &timeout)
+      -> std::optional<AstarteMessage> override;
 
  private:
   struct AstarteDeviceGRPCImpl;
