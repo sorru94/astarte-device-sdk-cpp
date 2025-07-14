@@ -19,6 +19,7 @@
 #include <format>
 #else  // (__cplusplus >= 202002L) && (__has_include(<format>))
 #include <iomanip>
+#include <sstream>
 #endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
 #endif
 
@@ -92,9 +93,14 @@ void format_timestamp(OutputIt &out, const std::chrono::system_clock::time_point
       out, "{}",
       std::format("{0:%F}T{0:%T}Z", std::chrono::time_point_cast<std::chrono::milliseconds>(data)));
 #else   // (__cplusplus >= 202002L) && (__has_include(<format>))
+  // const std::time_t time = std::chrono::system_clock::to_time_t(data);
+  // const std::tm utc_tm = *std::gmtime(&time);
+  // out = fmt::format_to(out, "{}", std::put_time(&utc_tm, "%FT%T.000Z"));
   const std::time_t time = std::chrono::system_clock::to_time_t(data);
   const std::tm utc_tm = *std::gmtime(&time);
-  out = fmt::format_to(out, "{}", std::put_time(&utc_tm, "%FT%T.000Z"));
+  std::stringstream ss;
+  ss << std::put_time(&utc_tm, "%FT%T.000Z");
+  out = fmt::format_to(out, "{}", ss.str());
 #endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
   out = fmt::format_to(out, "\"");
 }
