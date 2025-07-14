@@ -130,7 +130,9 @@ TEST(AstarteTestData, FormatDatetime) {
   dtm.tm_hour = 10;
   dtm.tm_min = 15;
   dtm.tm_sec = 0;
-  std::time_t time = std::mktime(&dtm);
+  // Use timegm to interpret the tm struct as UTC, not local time. This considers eventual timezones
+  // differences
+  std::time_t time = timegm(&dtm);
   std::chrono::system_clock::time_point value = std::chrono::system_clock::from_time_t(time);
 #endif  // __cplusplus >= 202002L
   auto data = AstarteData(value);
@@ -235,7 +237,7 @@ TEST(AstarteTestData, InstantiationDatetimeArray) {
   tm0.tm_hour = 10;
   tm0.tm_min = 15;
   tm0.tm_sec = 0;
-  std::time_t time0 = std::mktime(&tm0);
+  std::time_t time0 = timegm(&tm0);
   std::tm tm1 = {};
   tm1.tm_year = 1984 - 1900;
   tm1.tm_mon = 5 - 1;
@@ -243,7 +245,7 @@ TEST(AstarteTestData, InstantiationDatetimeArray) {
   tm1.tm_hour = 10;
   tm1.tm_min = 15;
   tm1.tm_sec = 0;
-  std::time_t time1 = std::mktime(&tm1);
+  std::time_t time1 = timegm(&tm1);
   std::vector<std::chrono::system_clock::time_point> value{
       std::chrono::system_clock::from_time_t(time0), std::chrono::system_clock::from_time_t(time1)};
 #endif  // __cplusplus >= 202002L
@@ -270,7 +272,7 @@ TEST(AstarteTestData, FormatDatetimeArray) {
   tm0.tm_hour = 10;
   tm0.tm_min = 15;
   tm0.tm_sec = 0;
-  std::time_t time0 = std::mktime(&tm0);
+  std::time_t time0 = timegm(&tm0);
   std::tm tm1 = {};
   tm1.tm_year = 1984 - 1900;
   tm1.tm_mon = 5 - 1;
@@ -278,7 +280,7 @@ TEST(AstarteTestData, FormatDatetimeArray) {
   tm1.tm_hour = 10;
   tm1.tm_min = 15;
   tm1.tm_sec = 0;
-  std::time_t time1 = std::mktime(&tm1);
+  std::time_t time1 = timegm(&tm1);
   std::vector<std::chrono::system_clock::time_point> value{
       std::chrono::system_clock::from_time_t(time0), std::chrono::system_clock::from_time_t(time1)};
 #endif  // __cplusplus >= 202002L

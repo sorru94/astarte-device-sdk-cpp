@@ -5,14 +5,8 @@
 #ifndef ASTARTE_FORMATTER_H
 #define ASTARTE_FORMATTER_H
 
-#include <spdlog/fmt/fmt.h>
-
 #include <chrono>
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <variant>
-#include <vector>
+#include <cstddef>
 
 #if defined(ASTARTE_FORMAT_ENABLED)
 #if (__cplusplus >= 202002L) && (__has_include(<format>))

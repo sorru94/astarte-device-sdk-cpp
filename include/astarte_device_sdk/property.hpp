@@ -11,7 +11,6 @@
  */
 
 #include <optional>
-#include <string>
 
 #include "astarte_device_sdk/data.hpp"
 

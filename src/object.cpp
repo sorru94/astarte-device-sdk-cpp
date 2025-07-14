@@ -5,9 +5,7 @@
 #include "astarte_device_sdk/object.hpp"
 
 #include <initializer_list>
-#include <sstream>
 #include <string>
-#include <utility>
 
 #include "astarte_device_sdk/data.hpp"
 

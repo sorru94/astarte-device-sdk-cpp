@@ -4,8 +4,6 @@
 
 #include "astarte_device_sdk/individual.hpp"
 
-#include <sstream>
-#include <string>
 #include <utility>
 
 #include "astarte_device_sdk/data.hpp"

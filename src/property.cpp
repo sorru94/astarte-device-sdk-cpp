@@ -5,8 +5,6 @@
 #include "astarte_device_sdk/property.hpp"
 
 #include <optional>
-#include <sstream>
-#include <string>
 
 #include "astarte_device_sdk/data.hpp"
 

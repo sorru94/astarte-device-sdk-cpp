@@ -10,8 +10,6 @@
  * @brief Astarte individual datastream class and its related methods.
  */
 
-#include <string>
-
 #include "astarte_device_sdk/data.hpp"
 
 namespace AstarteDeviceSdk {

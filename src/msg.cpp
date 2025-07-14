@@ -4,7 +4,6 @@
 
 #include "astarte_device_sdk/msg.hpp"
 
-#include <sstream>
 #include <string>
 #include <variant>
 
