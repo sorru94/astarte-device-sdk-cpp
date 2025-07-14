@@ -412,7 +412,10 @@ class TestActionFetchRESTData : public TestAction {
       throw EndToEndMismatchException("Fetched REST API data differs from expected data.");
     }
 
-    // TODO: check timestamp correctness
+    // FIXME: check timestamp correctness
+    // Once issue [#938](https://github.com/astarte-platform/astarte/issues/938) of astarte is
+    // solved, it should be possible to check the timestamp value (thus, decommenting the lines
+    // below). In the meantime, we skip this check.
     // std::string expected_timestamp = time_point_to_utc(timestamp_.get());
     // std::string fetched_timestamp = response_json[message_.get_path()]["timestamp"];
     // if (expected_timestamp != fetched_timestamp) {
@@ -441,7 +444,10 @@ class TestActionFetchRESTData : public TestAction {
     size_t last = response_json[message_.get_path()].size() - 1;
     json fetched_data = response_json[message_.get_path()][last];
 
-    // TODO: check timestamp correctness
+    // FIXME: check timestamp correctness
+    // Once issue [#938](https://github.com/astarte-platform/astarte/issues/938) of astarte is
+    // solved, it should be possible to check the timestamp value (thus, decommenting the line
+    // below). In the meantime, we skip this check.
     // expected_data_json.push_back({"timestamp", time_point_to_utc(timestamp_.get())});
     fetched_data.erase("timestamp");
 
