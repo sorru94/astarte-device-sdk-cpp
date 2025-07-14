@@ -1,7 +1,7 @@
 {
     "interface_name": "org.astarte-platform.cpp.end-to-end.DeviceAggregate",
     "version_major": 0,
-    "version_minor": 2,
+    "version_minor": 1,
     "type": "datastream",
     "aggregation": "object",
     "ownership": "device",

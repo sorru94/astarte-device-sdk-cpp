@@ -150,7 +150,7 @@ class TestActionCheckDeviceStatus : public TestAction {
   void execute(const std::string& case_name) const override {
     spdlog::info("[{}] Checking device status...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_;
-    spdlog::debug("HTTP GET: {}", request_url);
+    spdlog::trace("HTTP GET: {}", request_url);
     cpr::Response get_response =
         cpr::Get(cpr::Url{request_url}, cpr::Header{{"Content-Type", "application/json"}},
                  cpr::Header{{"Authorization", "Bearer " + appengine_token_}});
@@ -281,7 +281,7 @@ class TestActionTransmitRESTData : public TestAction {
       if (message_.is_individual()) {
         const auto& data(message_.into<AstarteDatastreamIndividual>());
         std::string payload = "{\"data\":" + data.format() + "}";
-        spdlog::debug("HTTP POST: {} {}", request_url, payload);
+        spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
                       cpr::Header{{"Content-Type", "application/json"}},
@@ -293,7 +293,7 @@ class TestActionTransmitRESTData : public TestAction {
       } else {
         const auto& data(message_.into<AstarteDatastreamObject>());
         std::string payload = "{\"data\":" + data.format() + "}";
-        spdlog::debug("HTTP POST: {} {}", request_url, payload);
+        spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
                       cpr::Header{{"Content-Type", "application/json"}},
@@ -309,7 +309,7 @@ class TestActionTransmitRESTData : public TestAction {
       if (data.get_value().has_value()) {
         spdlog::debug("sending server property");
         std::string payload = "{\"data\":" + data.format() + "}";
-        spdlog::debug("HTTP POST: {} {}", request_url, payload);
+        spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
                       cpr::Header{{"Content-Type", "application/json"}},
