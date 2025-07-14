@@ -28,10 +28,19 @@
 #include "astarte_device_sdk/property.hpp"
 #include "astarte_device_sdk/type.hpp"
 
+/**
+ * @brief Contains utility functions for formatting data.
+ */
 namespace utils {
 // These functions are only used for pretty printing
 // NOLINTBEGIN(concurrency-mt-unsafe)
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+/**
+ * @brief Formats a vector of bytes into a Base64 string literal.
+ * @tparam OutputIt The type of the output iterator.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The vector of bytes to format.
+ */
 template <typename OutputIt>
 void format_base64(OutputIt &out, const std::vector<uint8_t> &data) {
   static constexpr std::string_view base64_chars =
@@ -69,6 +78,12 @@ void format_base64(OutputIt &out, const std::vector<uint8_t> &data) {
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
+/**
+ * @brief Formats a timestamp into an ISO 8601 string literal.
+ * @tparam OutputIt The type of the output iterator.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The time_point to format.
+ */
 template <typename OutputIt>
 void format_timestamp(OutputIt &out, const std::chrono::system_clock::time_point &data) {
   out = fmt::format_to(out, "\"");
@@ -84,6 +99,13 @@ void format_timestamp(OutputIt &out, const std::chrono::system_clock::time_point
   out = fmt::format_to(out, "\"");
 }
 
+/**
+ * @brief Formats a generic vector into a comma-separated list in brackets.
+ * @tparam OutputIt The type of the output iterator.
+ * @tparam T The type of elements in the vector.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The vector to format.
+ */
 template <typename OutputIt, typename T>
 void format_vector(OutputIt &out, const std::vector<T> &data) {
   out = fmt::format_to(out, "[");
@@ -96,6 +118,12 @@ void format_vector(OutputIt &out, const std::vector<T> &data) {
   out = fmt::format_to(out, "]");
 }
 
+/**
+ * @brief Formats a vector of booleans into a list of "true" or "false".
+ * @tparam OutputIt The type of the output iterator.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The vector of booleans to format.
+ */
 template <typename OutputIt>
 void format_vector_bool(OutputIt &out, const std::vector<bool> &data) {
   out = fmt::format_to(out, "[");
@@ -108,6 +136,12 @@ void format_vector_bool(OutputIt &out, const std::vector<bool> &data) {
   out = fmt::format_to(out, "]");
 }
 
+/**
+ * @brief Formats a vector of strings into a list of quoted strings.
+ * @tparam OutputIt The type of the output iterator.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The vector of strings to format.
+ */
 template <typename OutputIt>
 void format_vector_string(OutputIt &out, const std::vector<std::string> &data) {
   out = fmt::format_to(out, "[");
@@ -120,6 +154,12 @@ void format_vector_string(OutputIt &out, const std::vector<std::string> &data) {
   out = fmt::format_to(out, "]");
 }
 
+/**
+ * @brief Formats a vector of byte vectors into a list of Base64 literals.
+ * @tparam OutputIt The type of the output iterator.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The vector of byte vectors to format.
+ */
 template <typename OutputIt>
 void format_vector_binaryblob(OutputIt &out, const std::vector<std::vector<uint8_t>> &data) {
   out = fmt::format_to(out, "[");
@@ -132,6 +172,12 @@ void format_vector_binaryblob(OutputIt &out, const std::vector<std::vector<uint8
   out = fmt::format_to(out, "]");
 }
 
+/**
+ * @brief Formats a vector of timestamps into a list of ISO 8601 string literals.
+ * @tparam OutputIt The type of the output iterator.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The vector of timestamps to format.
+ */
 template <typename OutputIt>
 void format_vector_timestamp(OutputIt &out,
                              const std::vector<std::chrono::system_clock::time_point> &data) {
@@ -148,14 +194,29 @@ void format_vector_timestamp(OutputIt &out,
 
 }  // namespace utils
 
+/// @cond Doxygen should skip checking fmt::formatter due to internal inconsistency parsing
+
+/**
+ * @brief fmt::formatter specialization for AstarteDeviceSdk::AstarteMessage.
+ */
 template <>
 struct fmt::formatter<AstarteDeviceSdk::AstarteMessage> : fmt::formatter<std::string_view> {
-  // The parse function is fine as it is.
+  /**
+   * @brief Parses the format string. Default implementation.
+   * @param ctx The parse context.
+   * @return An iterator to the end of the parsed range.
+   */
   template <typename ParseContext>
   constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
   }
 
+  /**
+   * @brief Formats the AstarteMessage object.
+   * @param msg The AstarteMessage to format.
+   * @param ctx The format context.
+   * @return An iterator to the end of the output.
+   */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteMessage &msg, FormatContext &ctx) const {
     auto out = ctx.out();
@@ -173,30 +234,56 @@ struct fmt::formatter<AstarteDeviceSdk::AstarteMessage> : fmt::formatter<std::st
   }
 };
 
+/**
+ * @brief fmt::formatter specialization for AstarteDeviceSdk::AstarteDatastreamIndividual.
+ */
 template <>
 struct fmt::formatter<AstarteDeviceSdk::AstarteDatastreamIndividual>
     : fmt::formatter<std::string_view> {
-  // The parse function is fine as it is.
+  /**
+   * @brief Parses the format string. Default implementation.
+   * @param ctx The parse context.
+   * @return An iterator to the end of the parsed range.
+   */
   template <typename ParseContext>
   constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
   }
 
+  /**
+   * @brief Formats the AstarteDatastreamIndividual object.
+   * @param data The AstarteDatastreamIndividual to format.
+   * @param ctx The format context.
+   * @return An iterator to the end of the output.
+   */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteDatastreamIndividual &data, FormatContext &ctx) const {
     return fmt::format_to(ctx.out(), "{}", data.get_value());
   }
 };
 
+/**
+ * @brief fmt::formatter specialization for AstarteDeviceSdk::AstarteDatastreamObject.
+ */
 template <>
 struct fmt::formatter<AstarteDeviceSdk::AstarteDatastreamObject>
     : fmt::formatter<std::string_view> {
-  // The parse function is fine as it is.
+  /**
+   * @brief Parses the format string. Default implementation.
+   * @param ctx The parse context.
+   * @return An iterator to the end of the parsed range.
+   */
   template <typename ParseContext>
   constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
   }
 
+  /**
+   * @brief Formats the AstarteDatastreamObject object as a key-value map.
+   * @param data The AstarteDatastreamObject to format.
+   * @param ctx The format context.
+   * @return An iterator to the end of the output.
+   */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteDatastreamObject &data, FormatContext &ctx) const {
     auto out = ctx.out();
@@ -217,15 +304,28 @@ struct fmt::formatter<AstarteDeviceSdk::AstarteDatastreamObject>
   }
 };
 
+/**
+ * @brief fmt::formatter specialization for AstarteDeviceSdk::AstartePropertyIndividual.
+ */
 template <>
 struct fmt::formatter<AstarteDeviceSdk::AstartePropertyIndividual>
     : fmt::formatter<std::string_view> {
-  // The parse function is fine as it is.
+  /**
+   * @brief Parses the format string. Default implementation.
+   * @param ctx The parse context.
+   * @return An iterator to the end of the parsed range.
+   */
   template <typename ParseContext>
   constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
   }
 
+  /**
+   * @brief Formats the AstartePropertyIndividual object.
+   * @param data The AstartePropertyIndividual to format.
+   * @param ctx The format context.
+   * @return An iterator to the end of the output.
+   */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstartePropertyIndividual &data, FormatContext &ctx) const {
     auto out = ctx.out();
@@ -238,14 +338,27 @@ struct fmt::formatter<AstarteDeviceSdk::AstartePropertyIndividual>
   }
 };
 
+/**
+ * @brief fmt::formatter specialization for AstarteDeviceSdk::AstarteType.
+ */
 template <>
 struct fmt::formatter<AstarteDeviceSdk::AstarteType> : fmt::formatter<std::string_view> {
-  // The parse function is fine as it is.
+  /**
+   * @brief Parses the format string. Default implementation.
+   * @param ctx The parse context.
+   * @return An iterator to the end of the parsed range.
+   */
   template <typename ParseContext>
   constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
   }
 
+  /**
+   * @brief Formats the AstarteType enum to its string representation.
+   * @param typ The AstarteType to format.
+   * @param ctx The format context.
+   * @return An iterator to the end of the output.
+   */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteType &typ, FormatContext &ctx) const {
     std::string_view name = "Unknown Type";
@@ -299,14 +412,27 @@ struct fmt::formatter<AstarteDeviceSdk::AstarteType> : fmt::formatter<std::strin
   }
 };
 
+/**
+ * @brief fmt::formatter specialization for AstarteDeviceSdk::AstarteData.
+ */
 template <>
 struct fmt::formatter<AstarteDeviceSdk::AstarteData> : fmt::formatter<std::string_view> {
-  // The parse function is fine as it is.
+  /**
+   * @brief Parses the format string. Default implementation.
+   * @param ctx The parse context.
+   * @return An iterator to the end of the parsed range.
+   */
   template <typename ParseContext>
   constexpr auto parse(ParseContext &ctx) {
     return ctx.begin();
   }
 
+  /**
+   * @brief Formats the AstarteData variant-like object by dispatching to the correct formatter.
+   * @param data The AstarteData to format.
+   * @param ctx The format context.
+   * @return An iterator to the end of the output.
+   */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteData &data, FormatContext &ctx) const {
     auto out = ctx.out();
@@ -349,5 +475,7 @@ struct fmt::formatter<AstarteDeviceSdk::AstarteData> : fmt::formatter<std::strin
     return out;
   }
 };
+
+/// @endcond
 
 #endif  // ASTARTE_FORMATTER_H
