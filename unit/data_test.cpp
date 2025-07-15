@@ -26,7 +26,7 @@ TEST(AstarteTestData, InstantiationInteger) {
 TEST(AstarteTestData, FormatInteger) {
   int32_t value = 52;
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "52");
 }
 
@@ -39,7 +39,7 @@ TEST(AstarteTestData, InstantiationLongInteger) {
 TEST(AstarteTestData, FormatLongInteger) {
   int64_t value = 52;
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "52");
 }
 
@@ -52,7 +52,7 @@ TEST(AstarteTestData, InstantiationDouble) {
 TEST(AstarteTestData, FormatDouble) {
   double value = 43.5;
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "43.5");
 }
 
@@ -65,7 +65,7 @@ TEST(AstarteTestData, InstantiationBoolean) {
 TEST(AstarteTestData, FormatBoolean) {
   bool value = true;
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "true");
 }
 
@@ -78,7 +78,7 @@ TEST(AstarteTestData, InstantiationString) {
 TEST(AstarteTestData, FormatString) {
   std::string value = "Test string";
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "\"Test string\"");
 }
 
@@ -91,7 +91,7 @@ TEST(AstarteTestData, InstantiationBinaryBlob) {
 TEST(AstarteTestData, FormatBinaryBlob) {
   std::vector<uint8_t> value = {0x12U, 0x22U, 0x42};
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "\"EiJC\"");
 }
 
@@ -136,7 +136,7 @@ TEST(AstarteTestData, FormatDatetime) {
   std::chrono::system_clock::time_point value = std::chrono::system_clock::from_time_t(time);
 #endif  // __cplusplus >= 202002L
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "\"1994-04-12T10:15:00.000Z\"");
 }
 
@@ -149,7 +149,7 @@ TEST(AstarteTestData, InstantiationIntegerArray) {
 TEST(AstarteTestData, FormatIntegerArray) {
   std::vector<int32_t> value{12, 43, 11, 0};
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "[12, 43, 11, 0]");
 }
 
@@ -162,7 +162,7 @@ TEST(AstarteTestData, InstantiationLongIntegerArray) {
 TEST(AstarteTestData, FormatLongIntegerArray) {
   std::vector<int64_t> value{0, 8589934592, 11};
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "[0, 8589934592, 11]");
 }
 
@@ -175,7 +175,7 @@ TEST(AstarteTestData, InstantiationDoubleArray) {
 TEST(AstarteTestData, FormatDoubleArray) {
   std::vector<double> value{0.0, 43.2};
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "[0, 43.2]");
 }
 
@@ -188,7 +188,7 @@ TEST(AstarteTestData, InstantiationBooleanArray) {
 TEST(AstarteTestData, FormatBooleanArray) {
   std::vector<bool> value{true, false, false};
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "[true, false, false]");
 }
 
@@ -201,7 +201,7 @@ TEST(AstarteTestData, InstantiationStringArray) {
 TEST(AstarteTestData, FormatStringArray) {
   std::vector<std::string> value{"Hello", "C++"};
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "[\"Hello\", \"C++\"]");
 }
 
@@ -214,7 +214,7 @@ TEST(AstarteTestData, InstantiationBinaryBlobArray) {
 TEST(AstarteTestData, FormatBinaryBlobArray) {
   std::vector<std::vector<uint8_t>> value{{0x12U, 0x22U, 0x42}, {0x10U, 0x8FU}};
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "[\"EiJC\", \"EI8=\"]");
 }
 
@@ -286,7 +286,7 @@ TEST(AstarteTestData, FormatDatetimeArray) {
 #endif  // __cplusplus >= 202002L
 
   auto data = AstarteData(value);
-  auto str = fmt::format("{}", data);
+  auto str = NS_FORMAT::format("{}", data);
   EXPECT_STREQ(str.c_str(), "[\"1994-04-12T10:15:00.000Z\", \"1984-05-02T10:15:00.000Z\"]");
 }
 

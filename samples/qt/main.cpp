@@ -41,7 +41,7 @@ class AstarteWorker : public QObject {
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
 #if defined(ASTARTE_FORMAT_ENABLED)
-      qDebug() << "Received:" << QString::fromStdString(fmt::format("{}", msg));
+      qDebug() << "Received:" << QString::fromStdString(NS_FORMAT::format("{}", msg));
 #endif
     }
   }

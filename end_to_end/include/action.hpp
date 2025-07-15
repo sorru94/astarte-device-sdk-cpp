@@ -281,7 +281,7 @@ class TestActionTransmitRESTData : public TestAction {
     if (message_.is_datastream()) {
       if (message_.is_individual()) {
         const auto& data(message_.into<AstarteDatastreamIndividual>());
-        std::string payload = fmt::format("{{\"data\":{}}}", data);
+        std::string payload = NS_FORMAT::format("{{\"data\":{}}}", data);
         spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
@@ -293,7 +293,7 @@ class TestActionTransmitRESTData : public TestAction {
         }
       } else {
         const auto& data(message_.into<AstarteDatastreamObject>());
-        std::string payload = fmt::format("{{\"data\":{}}}", data);
+        std::string payload = NS_FORMAT::format("{{\"data\":{}}}", data);
         spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
@@ -309,7 +309,7 @@ class TestActionTransmitRESTData : public TestAction {
 
       if (data.get_value().has_value()) {
         spdlog::debug("sending server property");
-        std::string payload = fmt::format("{{\"data\":{}}}", data);
+        std::string payload = NS_FORMAT::format("{{\"data\":{}}}", data);
         spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
@@ -404,7 +404,7 @@ class TestActionFetchRESTData : public TestAction {
     }
 
     const auto& expected_data(message_.into<AstarteDatastreamIndividual>());
-    json expected_data_json = json::parse(fmt::format("{}", expected_data));
+    json expected_data_json = json::parse(NS_FORMAT::format("{}", expected_data));
     json fetched_data = response_json[message_.get_path()]["value"];
 
     if (expected_data_json != fetched_data) {
@@ -437,7 +437,7 @@ class TestActionFetchRESTData : public TestAction {
 
     const auto& expected_data(message_.into<AstarteDatastreamObject>());
 
-    json expected_data_json = json::parse(fmt::format("{}", expected_data));
+    json expected_data_json = json::parse(NS_FORMAT::format("{}", expected_data));
 
     // Every time the test is repeated, the object size increases by one, because
     // it retrieves every object data tha has been sent to that interface up to that point.
@@ -467,7 +467,7 @@ class TestActionFetchRESTData : public TestAction {
       throw EndToEndHTTPException("Fetching of data through REST API failed.");
     }
 
-    json expected_data_json = json::parse(fmt::format("{}", expected_data));
+    json expected_data_json = json::parse(NS_FORMAT::format("{}", expected_data));
     // unlike the device datastream, the fetched property does not contain the `value` field
     json fetched_data = response_json[message_.get_path()];
 
