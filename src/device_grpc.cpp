@@ -28,12 +28,8 @@ void AstarteDeviceGRPC::add_interface_from_json(const std::filesystem::path &jso
   astarte_device_impl_->add_interface_from_json(json_file);
 }
 
-void AstarteDeviceGRPC::add_interface_from_str(std::string json) {
-  astarte_device_impl_->add_interface_from_str(std::move(json));
-}
-
-void AstarteDeviceGRPC::add_interface_from_str(const std::string_view json) {
-  astarte_device_impl_->add_interface_from_str(std::string(json));
+void AstarteDeviceGRPC::add_interface_from_str(std::string_view json) {
+  astarte_device_impl_->add_interface_from_str(json);
 }
 
 void AstarteDeviceGRPC::connect() { astarte_device_impl_->connect(); }
@@ -44,24 +40,24 @@ auto AstarteDeviceGRPC::is_connected(const std::chrono::milliseconds &timeout) c
 
 void AstarteDeviceGRPC::disconnect() { astarte_device_impl_->disconnect(); }
 
-void AstarteDeviceGRPC::send_individual(const std::string &interface_name, const std::string &path,
+void AstarteDeviceGRPC::send_individual(std::string_view interface_name, std::string_view path,
                                         const AstarteData &data,
                                         const std::chrono::system_clock::time_point *timestamp) {
   astarte_device_impl_->send_individual(interface_name, path, data, timestamp);
 }
 
-void AstarteDeviceGRPC::send_object(const std::string &interface_name, const std::string &path,
+void AstarteDeviceGRPC::send_object(std::string_view interface_name, std::string_view path,
                                     const AstarteDatastreamObject &object,
                                     const std::chrono::system_clock::time_point *timestamp) {
   astarte_device_impl_->send_object(interface_name, path, object, timestamp);
 }
 
-void AstarteDeviceGRPC::set_property(const std::string &interface_name, const std::string &path,
+void AstarteDeviceGRPC::set_property(std::string_view interface_name, std::string_view path,
                                      const AstarteData &data) {
   astarte_device_impl_->set_property(interface_name, path, data);
 }
 
-void AstarteDeviceGRPC::unset_property(const std::string &interface_name, const std::string &path) {
+void AstarteDeviceGRPC::unset_property(std::string_view interface_name, std::string_view path) {
   astarte_device_impl_->unset_property(interface_name, path);
 }
 

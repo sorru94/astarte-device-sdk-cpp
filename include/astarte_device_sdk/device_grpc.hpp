@@ -54,11 +54,6 @@ class AstarteDeviceGRPC : public AstarteDevice {
    */
   void add_interface_from_json(const std::filesystem::path &json_file) override;
   /**
-   * @brief Add an interface for the device from a json string.
-   * @param json The interface to add.
-   */
-  void add_interface_from_str(std::string json) override;
-  /**
    * @brief Add an interface for the device from a json file.
    * @param json The interface to add.
    */
@@ -85,7 +80,7 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param data The data to send.
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
-  void send_individual(const std::string &interface_name, const std::string &path,
+  void send_individual(std::string_view interface_name, std::string_view path,
                        const AstarteData &data,
                        const std::chrono::system_clock::time_point *timestamp) override;
   /**
@@ -95,7 +90,7 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param object The data to send.
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
-  void send_object(const std::string &interface_name, const std::string &path,
+  void send_object(std::string_view interface_name, std::string_view path,
                    const AstarteDatastreamObject &object,
                    const std::chrono::system_clock::time_point *timestamp) override;
   /**
@@ -104,14 +99,14 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param path The property full path.
    * @param data The property data.
    */
-  void set_property(const std::string &interface_name, const std::string &path,
+  void set_property(std::string_view interface_name, std::string_view path,
                     const AstarteData &data) override;
   /**
    * @brief Unset a device property.
    * @param interface_name The name of the interface for the property.
    * @param path The property full path.
    */
-  void unset_property(const std::string &interface_name, const std::string &path) override;
+  void unset_property(std::string_view interface_name, std::string_view path) override;
   /**
    * @brief Poll incoming messages.
    * @param timeout Will block for this timeout if no message is present.
