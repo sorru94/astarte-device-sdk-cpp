@@ -4,9 +4,6 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 project(
   AstarteDeviceSDKcpp
   VERSION 0.5.99
@@ -55,7 +52,7 @@ if(ASTARTE_MESSAGE_HUB_PROTO_DIR)
     add_subdirectory(${ASTARTE_MESSAGE_HUB_PROTO_DIR} astarte_msghub_proto)
 else()
     set(MSGHUB_PROTO_GITHUB_URL https://github.com/astarte-platform/astarte-message-hub-proto.git)
-    set(MSGHUB_PROTO_GIT_TAG v0.8.2)
+    set(MSGHUB_PROTO_GIT_TAG v0.8.4)
     FetchContent_Declare(
         astarte_msghub_proto
         GIT_REPOSITORY ${MSGHUB_PROTO_GITHUB_URL}
@@ -68,6 +65,7 @@ endif()
 
 # Create a library from the source code
 add_library(astarte_device_sdk)
+target_compile_features(astarte_device_sdk PUBLIC cxx_std_17)
 target_include_directories(astarte_device_sdk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(astarte_device_sdk PRIVATE ${CMAKE_CURRENT_LIST_DIR}/private)
 file(GLOB astarte_sdk_src "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
