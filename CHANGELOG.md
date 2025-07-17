@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   guide.
 
 ### Changed
-- Bump the Astarte message hub proto definitions to v0.8.2.
+- Reference version of the Astarte message hub is v0.8.0
+- Bump the Astarte message hub proto definitions to v0.8.4.
 - The `USE_SYSTEM_GRPC` option has been moved to the Astarte message hub proto and prefixed with
   `ASTARTE_`.
 - The `grpc` sample has been renamed to `simple`.

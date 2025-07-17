@@ -22,9 +22,7 @@ jobs:
       cancel-in-progress: true
     strategy:
       matrix:
-        # TODO: we use the commit hash of the message hub master branch.
-        # This should be replaced with a proper version tag once message hub v0.8.0 is released.
-        msghub-version: ["b97fc84ccc5f4f2a1b9f211170d672dd7be69ce0"]
+        msghub-version: ["v0.8.0"]
         grpc-version: ["1.69.0"]
     steps:
       - name: Checkout C++ client
