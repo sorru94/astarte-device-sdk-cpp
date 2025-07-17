@@ -22,6 +22,16 @@ enum AstarteOwnership : int8_t {
   kServer
 };
 
+static constexpr std::string_view ownership_as_str(AstarteOwnership ownership) {
+  switch (ownership) {
+    case AstarteOwnership::kDevice:
+      return "device";
+    case AstarteOwnership::kServer:
+      return "server";
+  }
+  return "unknown";
+}
+
 }  // namespace AstarteDeviceSdk
 
 #endif  // ASTARTE_DEVICE_SDK_OWNERSHIP_H

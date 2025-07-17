@@ -273,8 +273,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::poll_incoming(
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_all_properties(
     const std::optional<AstarteOwnership> &ownership) -> std::list<AstarteStoredProperty> {
   if (ownership.has_value()) {
-    spdlog::debug("Getting all stored properties for owner {}.",
-                  (ownership == AstarteOwnership::kDevice) ? "device" : "server");
+    spdlog::debug("Getting all stored properties {} owned.", ownership_as_str(ownership.value()));
   } else {
     spdlog::debug("Getting all stored properties for all owners.");
   }
