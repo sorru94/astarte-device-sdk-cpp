@@ -6,8 +6,8 @@
 #define ASTARTE_DEVICE_SDK_STORED_PROPERTY_H
 
 /**
- * @file astarte_device_sdk/individual.hpp
- * @brief Astarte individual datastream class and its related methods.
+ * @file astarte_device_sdk/stored_property.hpp
+ * @brief Astarte stored property class and its related methods.
  */
 
 #include <cstdint>
@@ -19,7 +19,7 @@
 
 namespace AstarteDeviceSdk {
 
-/** @brief Representing the Astarte individual datastream data. */
+/** @brief Representing data for a stored property. */
 class AstarteStoredProperty {
  public:
   /**

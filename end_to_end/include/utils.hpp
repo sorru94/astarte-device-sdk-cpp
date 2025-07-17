@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <list>
 #include <sstream>
 #include <string>
@@ -25,15 +26,5 @@ bool compare_lists(const std::list<T>& list1, const std::list<T>& list2) {
     return false;
   }
 
-  auto temp_list2 = list2;
-  for (const auto& item1 : list1) {
-    auto it = std::find(temp_list2.begin(), temp_list2.end(), item1);
-    if (it != temp_list2.end()) {
-      temp_list2.erase(it);
-    } else {
-      return false;
-    }
-  }
-
-  return true;
+  return std::is_permutation(list1.begin(), list1.end(), list2.begin());
 }
