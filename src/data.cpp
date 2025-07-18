@@ -5,7 +5,6 @@
 #include "astarte_device_sdk/data.hpp"
 
 #if defined(ASTARTE_FORMAT_ENABLED)
-#include <libbase64.h>
 #if (__cplusplus >= 202002L) && (__has_include(<format>))
 #include <format>
 #else  // (__cplusplus >= 202002L) && (__has_include(<format>))
@@ -18,6 +17,7 @@
 #include <ctime>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -116,18 +116,47 @@ auto format_vector_string(const std::vector<std::string> &data) -> std::string {
   return oss.str();
 }
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 auto format_base64(const std::vector<uint8_t> &data) -> std::string {
+  static constexpr std::string_view base64_chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "abcdefghijklmnopqrstuvwxyz"
+      "0123456789+/";
+  std::string encoded_string;
+  encoded_string.reserve(((data.size() + 2) / 3) * 4);
+
+  size_t idx = 0;
+  const size_t len = data.size();
+
+  while (idx + 2 < len) {
+    const uint32_t chunk = (data[idx] << 16) | (data[idx + 1] << 8) | data[idx + 2];
+    encoded_string += base64_chars[(chunk >> 18) & 0x3F];
+    encoded_string += base64_chars[(chunk >> 12) & 0x3F];
+    encoded_string += base64_chars[(chunk >> 6) & 0x3F];
+    encoded_string += base64_chars[chunk & 0x3F];
+    idx += 3;
+  }
+
+  if (idx < len) {
+    uint32_t chunk = data[idx] << 16;
+    if (idx + 1 < len) {
+      chunk |= data[idx + 1] << 8;
+    }
+    encoded_string += base64_chars[(chunk >> 18) & 0x3F];
+    encoded_string += base64_chars[(chunk >> 12) & 0x3F];
+    if (idx + 1 < len) {
+      encoded_string += base64_chars[(chunk >> 6) & 0x3F];
+      encoded_string += '=';
+    } else {
+      encoded_string += "==";
+    }
+  }
+
   std::ostringstream oss;
-  const size_t input_size = data.size();
-  size_t output_size = (input_size + 2) / 3 * 4;  // The +2 accounts for sizes non multiple of 3
-  std::vector<char> out_str(output_size + 1);
-  // Reinterpret cast is fine here as we go from `const unsigned char *` to `const char *`
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  base64_encode(reinterpret_cast<const char *>(data.data()), input_size, out_str.data(),
-                &output_size, 0);
-  oss << "\"" << out_str.data() << "\"";
+  oss << "\"" << encoded_string << "\"";
   return oss.str();
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
 auto format_vector_binaryblob(const std::vector<std::vector<uint8_t>> &data) -> std::string {
   std::ostringstream oss;
