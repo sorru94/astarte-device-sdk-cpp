@@ -23,6 +23,14 @@ option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
 set(ASTARTE_MESSAGE_HUB_PROTO_DIR CACHE PATH "Directory to an already downloaded astarte-message-hub-proto repository")
 
+message(STATUS "--------------------------------------------------")
+message(STATUS "Astarte SDK Configuration:")
+message(STATUS "  ASTARTE_ENABLE_FORMAT:           ${ASTARTE_ENABLE_FORMAT}")
+message(STATUS "  ASTARTE_PUBLIC_SPDLOG_DEP:       ${ASTARTE_PUBLIC_SPDLOG_DEP}")
+message(STATUS "  ASTARTE_PUBLIC_PROTO_DEP:        ${ASTARTE_PUBLIC_PROTO_DEP}")
+message(STATUS "  ASTARTE_MESSAGE_HUB_PROTO_DIR:   ${ASTARTE_MESSAGE_HUB_PROTO_DIR}")
+message(STATUS "--------------------------------------------------")
+
 # Logging library
 set(SPDLOG_GITHUB_URL https://github.com/gabime/spdlog.git)
 set(SPDLOG_GIT_TAG v1.15.1)
