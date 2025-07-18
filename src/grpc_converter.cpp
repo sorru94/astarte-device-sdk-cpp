@@ -23,6 +23,7 @@
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 #include "astarte_device_sdk/property.hpp"
+#include "grpc_formatter.hpp"  // NOLINT
 
 namespace AstarteDeviceSdk {
 
@@ -47,35 +48,35 @@ auto GrpcConverterTo::operator()(int32_t value) -> std::unique_ptr<gRPCAstarteDa
   spdlog::trace("Converting integer to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_integer(value);
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(int64_t value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting long integer to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_long_integer(value);
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(double value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting double to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_double_(value);
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(bool value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting boolean to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_boolean(value);
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::string &value) -> std::unique_ptr<gRPCAstarteData> {
   spdlog::trace("Converting string to gRPC Astarte data.");
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   grpc_data->set_string(value);
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<uint8_t> &value)
@@ -84,7 +85,7 @@ auto GrpcConverterTo::operator()(const std::vector<uint8_t> &value)
   auto grpc_data = std::make_unique<gRPCAstarteData>();
   std::string str_vector(value.begin(), value.end());
   grpc_data->set_binary_blob(str_vector);
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(std::chrono::system_clock::time_point value)
@@ -98,7 +99,7 @@ auto GrpcConverterTo::operator()(std::chrono::system_clock::time_point value)
   timestamp->set_seconds(static_cast<int64_t>(sec.count()));
   timestamp->set_nanos(static_cast<int32_t>(nano.count()));
   grpc_data->set_allocated_date_time(timestamp.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<int32_t> &values)
@@ -110,7 +111,7 @@ auto GrpcConverterTo::operator()(const std::vector<int32_t> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_integer_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<int64_t> &values)
@@ -122,7 +123,7 @@ auto GrpcConverterTo::operator()(const std::vector<int64_t> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_long_integer_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<double> &values)
@@ -134,7 +135,7 @@ auto GrpcConverterTo::operator()(const std::vector<double> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_double_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<bool> &values)
@@ -146,7 +147,7 @@ auto GrpcConverterTo::operator()(const std::vector<bool> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_boolean_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::string> &values)
@@ -158,7 +159,7 @@ auto GrpcConverterTo::operator()(const std::vector<std::string> &values)
     grpc_array->add_values(value);
   }
   grpc_data->set_allocated_string_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::vector<uint8_t>> &values)
@@ -171,7 +172,7 @@ auto GrpcConverterTo::operator()(const std::vector<std::vector<uint8_t>> &values
     grpc_array->add_values(str_value);
   }
   grpc_data->set_allocated_binary_blob_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 auto GrpcConverterTo::operator()(const std::vector<std::chrono::system_clock::time_point> &values)
@@ -190,7 +191,7 @@ auto GrpcConverterTo::operator()(const std::vector<std::chrono::system_clock::ti
     timestamp->set_nanos(static_cast<int32_t>(nano.count()));
   }
   grpc_data->set_allocated_date_time_array(grpc_array.release());
-  spdlog::trace("AstarteData converted to gRPC");
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_data);
   return grpc_data;
 }
 
@@ -215,6 +216,7 @@ auto GrpcConverterTo::operator()(const AstarteData &value,
 
   std::unique_ptr<gRPCAstarteData> grpc_data = std::visit(GrpcConverterTo(), value.get_raw_data());
   grpc_individual->set_allocated_data(grpc_data.release());
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_individual);
   return grpc_individual;
 }
 // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
@@ -250,6 +252,7 @@ auto GrpcConverterTo::operator()(const AstarteDatastreamObject &value,
     // As a consequence ownership of this grpc_data is not released.
     (*grpc_map)[path] = *grpc_data;
   }
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_object);
   return grpc_object;
 }
 // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
@@ -263,12 +266,13 @@ auto GrpcConverterTo::operator()(const std::optional<AstarteData> &value)
     std::unique_ptr<gRPCAstarteData> grpc_data = std::visit(GrpcConverterTo(), data.get_raw_data());
     grpc_property->set_allocated_data(grpc_data.release());
   }
+  spdlog::trace("Resulting gRPC message: \n{}", *grpc_property);
   return grpc_property;
 }
 
 // NOLINTBEGIN(readability-function-size)
 auto GrpcConverterFrom::operator()(const gRPCAstarteData &value) -> AstarteData {
-  spdlog::trace("Converting Astarte data from gRPC.");
+  spdlog::trace("Converting Astarte data from gRPC, message: \n{}", value);
   switch (value.astarte_data_case()) {
     case gRPCAstarteData::kDouble:
       spdlog::trace("Case kDouble");
@@ -342,14 +346,14 @@ auto GrpcConverterFrom::operator()(const gRPCAstarteData &value) -> AstarteData 
 
 auto GrpcConverterFrom::operator()(const gRPCAstarteDatastreamIndividual &value)
     -> AstarteDatastreamIndividual {
-  spdlog::trace("Converting Astarte datastream individual from gRPC.");
+  spdlog::trace("Converting Astarte datastream individual from gRPC, message: \n{}", value);
   const gRPCAstarteData &grpc_data(value.data());
   return AstarteDatastreamIndividual((*this)(grpc_data));
 }
 
 auto GrpcConverterFrom::operator()(const gRPCAstarteDatastreamObject &value)
     -> AstarteDatastreamObject {
-  spdlog::trace("Converting Astarte datastream object from gRPC.");
+  spdlog::trace("Converting Astarte datastream object from gRPC, message: \n{}", value);
   AstarteDatastreamObject object;
   const google::protobuf::Map<std::string, gRPCAstarteData> &grpc_data = value.data();
   for (const auto &[key, data] : grpc_data) {
@@ -360,7 +364,7 @@ auto GrpcConverterFrom::operator()(const gRPCAstarteDatastreamObject &value)
 
 auto GrpcConverterFrom::operator()(const gRPCAstartePropertyIndividual &value)
     -> AstartePropertyIndividual {
-  spdlog::trace("Converting Astarte property individual from gRPC.");
+  spdlog::trace("Converting Astarte property individual from gRPC, message: \n{}", value);
   if (value.has_data()) {
     const gRPCAstarteData &grpc_data(value.data());
     return AstartePropertyIndividual((*this)(grpc_data));
@@ -369,7 +373,7 @@ auto GrpcConverterFrom::operator()(const gRPCAstartePropertyIndividual &value)
 }
 
 auto GrpcConverterFrom::operator()(const gRPCAstarteMessage &value) -> AstarteMessage {
-  spdlog::trace("Converting Astarte message from gRPC.");
+  spdlog::trace("Converting Astarte message from gRPC, message: \n{}", value);
   if (value.has_datastream_individual()) {
     const gRPCAstarteDatastreamIndividual &grpc_datastream_individual =
         value.datastream_individual();
