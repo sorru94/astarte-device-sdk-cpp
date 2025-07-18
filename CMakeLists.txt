@@ -42,19 +42,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
-if(ASTARTE_ENABLE_FORMAT)
-  # Base 64 library
-  set(BASE64_GITHUB_URL https://github.com/aklomp/base64.git)
-  set(BASE64_GIT_TAG v0.5.2)
-  FetchContent_Declare(
-    base64
-    GIT_REPOSITORY ${BASE64_GITHUB_URL}
-    GIT_TAG        ${BASE64_GIT_TAG}
-    SYSTEM
-  )
-  FetchContent_MakeAvailable(base64)
-endif()
-
 # Astarte message hub protos
 if(ASTARTE_MESSAGE_HUB_PROTO_DIR)
     add_subdirectory(${ASTARTE_MESSAGE_HUB_PROTO_DIR} astarte_msghub_proto)
@@ -90,7 +77,6 @@ target_link_libraries(astarte_device_sdk
 # Link the dependencies within the library
 if(ASTARTE_ENABLE_FORMAT)
     target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_FORMAT_ENABLED)
-    target_link_libraries(astarte_device_sdk PRIVATE base64)
 endif()
 if(ASTARTE_PUBLIC_SPDLOG_DEP)
     target_link_libraries(astarte_device_sdk PUBLIC spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)

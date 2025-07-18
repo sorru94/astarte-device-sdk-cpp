@@ -85,13 +85,6 @@ the library.
 This library uses [spdlog](https://github.com/gabime/spdlog) to log information.
 The logging utility is imported using FetchContent and is an essential component of this library.
 
-### base64
-
-The optional dependency [base64](https://github.com/aklomp/base64.git) is only required when
-formatting of Astarte data is enabled using `ASTARTE_ENABLE_FORMAT`.
-It is fetched directly with fetch content and no option is currently available to use a system
-version of this library.
-
 ## Get started with the samples
 
 Various samples have been added in the `samples` folder of this project.
