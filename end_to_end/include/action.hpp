@@ -567,13 +567,13 @@ class TestActionGetDeviceProperties : public TestAction {
   std::list<AstarteStoredProperty> properties_;
 };
 
-class TestActionGetAllDeviceProperties : public TestAction {
+class TestActionGetAllFilteredProperties : public TestAction {
  public:
-  static std::shared_ptr<TestActionGetAllDeviceProperties> Create(
+  static std::shared_ptr<TestActionGetAllFilteredProperties> Create(
       const std::optional<AstarteOwnership>& ownership,
       const std::list<AstarteStoredProperty>& properties) {
-    return std::shared_ptr<TestActionGetAllDeviceProperties>(
-        new TestActionGetAllDeviceProperties(ownership, properties));
+    return std::shared_ptr<TestActionGetAllFilteredProperties>(
+        new TestActionGetAllFilteredProperties(ownership, properties));
   }
 
   void execute(const std::string& case_name) const override {
@@ -589,8 +589,8 @@ class TestActionGetAllDeviceProperties : public TestAction {
   }
 
  private:
-  TestActionGetAllDeviceProperties(const std::optional<AstarteOwnership>& ownership,
-                                   const std::list<AstarteStoredProperty>& properties)
+  TestActionGetAllFilteredProperties(const std::optional<AstarteOwnership>& ownership,
+                                     const std::list<AstarteStoredProperty>& properties)
       : ownership_(ownership), properties_(properties) {}
 
   std::optional<AstarteOwnership> ownership_;
