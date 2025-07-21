@@ -298,8 +298,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_all_properties(
     throw AstarteInvalidInputException(status.error_message());
   }
 
-  GrpcConverterFrom converter;
-  return converter(response);
+  return GrpcConverterFrom{}(response);
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_properties(std::string_view interface_name)
@@ -322,8 +321,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_properties(std::string_view i
     throw AstarteInvalidInputException(status.error_message());
   }
 
-  GrpcConverterFrom converter;
-  return converter(response);
+  return GrpcConverterFrom{}(response);
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_property(std::string_view interface_name,
@@ -348,8 +346,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_property(std::string_view int
     throw AstarteInvalidInputException(status.error_message());
   }
 
-  GrpcConverterFrom converter;
-  return converter(response);
+  return GrpcConverterFrom{}(response);
 }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connection_attempt() {
@@ -434,8 +431,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::parse_message_hub_event(
   std::optional<AstarteMessage> res = std::nullopt;
   if (event.has_message()) {
     const gRPCAstarteMessage &astarteMessage = event.message();
-    GrpcConverterFrom converter;
-    res = converter(astarteMessage);
+    res = GrpcConverterFrom{}(astarteMessage);
   } else if (event.has_error()) {
     const gRPCMessageHubError &error = event.error();
     spdlog::error("Message hub error: {}", error.description());
