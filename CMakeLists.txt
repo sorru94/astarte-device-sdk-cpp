@@ -4,11 +4,6 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-# TODO: remove once the minimum required C++ standard becomes C++20
-if(CMAKE_CXX_STANDARD GREATER 17)
-    set(SPDLOG_USE_STD_FORMAT true)
-endif()
-
 project(
   AstarteDeviceSDKcpp
   VERSION 0.6.0
@@ -23,10 +18,42 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
 # Configuration options for this library
-option(ASTARTE_ENABLE_FORMAT "Enable formatting of Astarte device data" OFF)
 option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
 set(ASTARTE_MESSAGE_HUB_PROTO_DIR CACHE PATH "Directory to an already downloaded astarte-message-hub-proto repository")
+
+# Set formatting option
+# case 1: C++20 (or greater) + compiler with <format> library. Use std format. (default case)
+# case 2: C++20 (or greater) + compiler without <format> library. Use fmtlib
+# case 3: C++17. Use fmtlib
+option(ASTARTE_ENABLE_FORMAT "Enable formatting of Astarte device data" OFF)
+if(CMAKE_CXX_STANDARD LESS 20)
+# case 3
+    set(ASTARTE_ENABLE_FORMAT ON)
+else()
+    # check if std::format is actually supported.
+    include(CheckCXXSourceCompiles)
+    check_cxx_source_compiles(
+        "
+        #include <format>
+        int main() {
+            auto s = std::format(\"Hello {}\", 42);
+            return 0;
+        }
+        "
+        HAS_STD_FORMAT
+    )
+
+    if(NOT HAS_STD_FORMAT)
+        # case 2
+        set(ASTARTE_ENABLE_FORMAT ON)
+    else()
+        # C++20 with <format> available to compiler requires to enable the follwoing spdlog feature
+        # TODO: remove once the minimum required C++ standard becomes C++20
+        set(SPDLOG_USE_STD_FORMAT true)
+    endif()
+endif()
+
 
 message(STATUS "--------------------------------------------------")
 message(STATUS "Astarte SDK Configuration:")

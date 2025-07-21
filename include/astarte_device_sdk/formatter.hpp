@@ -15,16 +15,11 @@
 #else                        // (__cplusplus >= 202002L) && (__has_include(<format>))
 #include <spdlog/fmt/fmt.h>  // NOLINT: avoid clang-tidy warning regarding fmt library not used directly
 #define NS_FORMAT fmt
-#endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
-
 #if defined(ASTARTE_FORMAT_ENABLED)
-#if (__cplusplus >= 202002L) && (__has_include(<format>))
-#include <format>
-#else  // (__cplusplus >= 202002L) && (__has_include(<format>))
 #include <iomanip>
 #include <sstream>
-#endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
 #endif
+#endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
 
 #include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
@@ -60,8 +55,8 @@ void format_base64(OutputIt &out, const std::vector<uint8_t> &data) {
   while (idx + 2 < len) {
     const uint32_t chunk = (data[idx] << 16) | (data[idx + 1] << 8) | data[idx + 2];
     out = NS_FORMAT::format_to(out, "{}{}{}{}", base64_chars[(chunk >> 18) & 0x3F],
-                         base64_chars[(chunk >> 12) & 0x3F], base64_chars[(chunk >> 6) & 0x3F],
-                         base64_chars[chunk & 0x3F]);
+                               base64_chars[(chunk >> 12) & 0x3F],
+                               base64_chars[(chunk >> 6) & 0x3F], base64_chars[chunk & 0x3F]);
     idx += 3;
   }
 
@@ -71,7 +66,8 @@ void format_base64(OutputIt &out, const std::vector<uint8_t> &data) {
       chunk |= data[idx + 1] << 8;
     }
 
-    out = NS_FORMAT::format_to(out, "{}{}", base64_chars[(chunk >> 18) & 0x3F], base64_chars[(chunk >> 12) & 0x3F]);
+    out = NS_FORMAT::format_to(out, "{}{}", base64_chars[(chunk >> 18) & 0x3F],
+                               base64_chars[(chunk >> 12) & 0x3F]);
     if (idx + 1 < len) {
       out = NS_FORMAT::format_to(out, "{}=", base64_chars[(chunk >> 6) & 0x3F]);
     } else {
@@ -187,8 +183,7 @@ void format_vector(OutputIt &out, const std::vector<std::vector<uint8_t>> &data)
  * @param data The vector of timestamps to format.
  */
 template <typename OutputIt>
-void format_vector(OutputIt &out,
-                             const std::vector<std::chrono::system_clock::time_point> &data) {
+void format_vector(OutputIt &out, const std::vector<std::chrono::system_clock::time_point> &data) {
   out = NS_FORMAT::format_to(out, "[");
   for (size_t i = 0; i < data.size(); ++i) {
     format_timestamp(out, data[i]);
@@ -256,8 +251,7 @@ struct NS_FORMAT::formatter<AstarteDeviceSdk::AstarteData> {
     } else if (std::holds_alternative<std::vector<std::string>>(data.get_raw_data())) {
       utils::format_vector(out, std::get<std::vector<std::string>>(data.get_raw_data()));
     } else if (std::holds_alternative<std::vector<std::vector<uint8_t>>>(data.get_raw_data())) {
-      utils::format_vector(
-          out, std::get<std::vector<std::vector<uint8_t>>>(data.get_raw_data()));
+      utils::format_vector(out, std::get<std::vector<std::vector<uint8_t>>>(data.get_raw_data()));
     } else if (std::holds_alternative<std::vector<std::chrono::system_clock::time_point>>(
                    data.get_raw_data())) {
       utils::format_vector(
