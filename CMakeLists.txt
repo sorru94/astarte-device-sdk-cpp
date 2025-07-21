@@ -22,42 +22,28 @@ option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
 set(ASTARTE_MESSAGE_HUB_PROTO_DIR CACHE PATH "Directory to an already downloaded astarte-message-hub-proto repository")
 
-# Set formatting option
-# case 1: C++20 (or greater) + compiler with <format> library. Use std format. (default case)
-# case 2: C++20 (or greater) + compiler without <format> library. Use fmtlib
-# case 3: C++17. Use fmtlib
-option(ASTARTE_ENABLE_FORMAT "Enable formatting of Astarte device data" OFF)
-if(CMAKE_CXX_STANDARD LESS 20)
-# case 3
-    set(ASTARTE_ENABLE_FORMAT ON)
-else()
-    # check if std::format is actually supported.
-    include(CheckCXXSourceCompiles)
-    check_cxx_source_compiles(
-        "
-        #include <format>
-        int main() {
-            auto s = std::format(\"Hello {}\", 42);
-            return 0;
-        }
-        "
-        HAS_STD_FORMAT
-    )
+# check if std::format is actually supported.
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(
+    "
+    #include <format>
+    int main() {
+        auto s = std::format(\"Hello {}\", 42);
+        return 0;
+    }
+    "
+    HAS_STD_FORMAT
+)
 
-    if(NOT HAS_STD_FORMAT)
-        # case 2
-        set(ASTARTE_ENABLE_FORMAT ON)
-    else()
-        # C++20 with <format> available to compiler requires to enable the follwoing spdlog feature
-        # TODO: remove once the minimum required C++ standard becomes C++20
-        set(SPDLOG_USE_STD_FORMAT true)
-    endif()
+if(HAS_STD_FORMAT)
+    # C++20 with <format> available to compiler requires to enable the follwoing spdlog feature
+    # TODO: remove once the minimum required C++ standard becomes C++20
+    set(SPDLOG_USE_STD_FORMAT true)
 endif()
 
-
 message(STATUS "--------------------------------------------------")
+message(STATUS "C++ VERSION: ${CMAKE_CXX_STANDARD}")
 message(STATUS "Astarte SDK Configuration:")
-message(STATUS "  ASTARTE_ENABLE_FORMAT:           ${ASTARTE_ENABLE_FORMAT}")
 message(STATUS "  ASTARTE_PUBLIC_SPDLOG_DEP:       ${ASTARTE_PUBLIC_SPDLOG_DEP}")
 message(STATUS "  ASTARTE_PUBLIC_PROTO_DEP:        ${ASTARTE_PUBLIC_PROTO_DEP}")
 message(STATUS "  ASTARTE_MESSAGE_HUB_PROTO_DIR:   ${ASTARTE_MESSAGE_HUB_PROTO_DIR}")
@@ -67,10 +53,10 @@ message(STATUS "--------------------------------------------------")
 set(SPDLOG_GITHUB_URL https://github.com/gabime/spdlog.git)
 set(SPDLOG_GIT_TAG v1.15.1)
 FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY ${SPDLOG_GITHUB_URL}
-  GIT_TAG        ${SPDLOG_GIT_TAG}
-  SYSTEM
+    spdlog
+    GIT_REPOSITORY ${SPDLOG_GITHUB_URL}
+    GIT_TAG ${SPDLOG_GIT_TAG}
+    SYSTEM
 )
 FetchContent_MakeAvailable(spdlog)
 
@@ -83,9 +69,9 @@ else()
     FetchContent_Declare(
         astarte_msghub_proto
         GIT_REPOSITORY ${MSGHUB_PROTO_GITHUB_URL}
-        GIT_TAG        ${MSGHUB_PROTO_GIT_TAG}
-        GIT_SHALLOW    TRUE
-        GIT_PROGRESS   TRUE
+        GIT_TAG ${MSGHUB_PROTO_GIT_TAG}
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
     )
     FetchContent_MakeAvailable(astarte_msghub_proto)
 endif()
@@ -101,15 +87,11 @@ target_sources(astarte_device_sdk PRIVATE ${astarte_sdk_src})
 # Link with the msghub grpc
 target_link_libraries(astarte_device_sdk
     PRIVATE
-        ${_GRPC_CPP}
-        ${_REFLECTION}
-        ${_PROTOBUF_LIBPROTOBUF}
+    ${_GRPC_CPP}
+    ${_REFLECTION}
+    ${_PROTOBUF_LIBPROTOBUF}
 )
 
-# Link the dependencies within the library
-if(ASTARTE_ENABLE_FORMAT)
-    target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_FORMAT_ENABLED)
-endif()
 if(ASTARTE_PUBLIC_SPDLOG_DEP)
     target_link_libraries(astarte_device_sdk PUBLIC spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
 else()
@@ -126,8 +108,8 @@ file(GLOB_RECURSE SDK_PUBLIC_HEADERS "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp")
 
 set_target_properties(astarte_device_sdk
     PROPERTIES
-        PUBLIC_HEADER "${SDK_PUBLIC_HEADERS}"
-        POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+    PUBLIC_HEADER "${SDK_PUBLIC_HEADERS}"
+    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
 )
 
 include(GNUInstallDirs)
@@ -136,13 +118,13 @@ install(
     TARGETS astarte_device_sdk
     EXPORT astarte_device_sdk
     LIBRARY
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
     PUBLIC_HEADER
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/astarte_device_sdk
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/astarte_device_sdk
 )
 
 
@@ -160,4 +142,4 @@ configure_file(
     @ONLY
 )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/astarte_device_sdk.pc  DESTINATION lib/pkgconfig)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/astarte_device_sdk.pc DESTINATION lib/pkgconfig)

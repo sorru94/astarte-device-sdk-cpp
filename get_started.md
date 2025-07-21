@@ -155,7 +155,6 @@ project(GetStarted)
 include(FetchContent)
 
 # Import the Astarte device for C++
-set(ASTARTE_ENABLE_FORMAT ON CACHE BOOL "Enable pretty printing of Astarte data")
 set(ASTARTE_GRPC_VERSION "1.57.1" CACHE STRING "Set gRPC version")
 FetchContent_Declare(astarte_device_sdk
   GIT_REPOSITORY git@github.com:astarte-platform/astarte-device-sdk-cpp.git

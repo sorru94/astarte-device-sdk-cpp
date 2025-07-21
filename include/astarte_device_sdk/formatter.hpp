@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <type_traits>
 
 // TODO(rgallor): stop using spdlog formatter once C++20 will become the minimu required version
 #if (__cplusplus >= 202002L) && (__has_include(<format>))
@@ -14,11 +15,10 @@
 #define NS_FORMAT std
 #else                        // (__cplusplus >= 202002L) && (__has_include(<format>))
 #include <spdlog/fmt/fmt.h>  // NOLINT: avoid clang-tidy warning regarding fmt library not used directly
-#define NS_FORMAT fmt
-#if defined(ASTARTE_FORMAT_ENABLED)
+
 #include <iomanip>
 #include <sstream>
-#endif
+#define NS_FORMAT fmt
 #endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
 
 #include "astarte_device_sdk/individual.hpp"
@@ -104,6 +104,28 @@ void format_timestamp(OutputIt &out, const std::chrono::system_clock::time_point
 }
 
 /**
+ * @brief Formats a generic data type into an output iterator.
+ * @tparam OutputIt The type of the output iterator.
+ * @tparam T The type of the element.
+ * @param out Reference to the output iterator where the result is written.
+ * @param data The element to format.
+ */
+template <typename OutputIt, typename T>
+void format_data(OutputIt &out, const T &data) {
+  if constexpr (std::is_same_v<T, bool>) {
+    NS_FORMAT::format_to(out, "{}", (data ? "true" : "false"));
+  } else if constexpr (std::is_same_v<T, std::string>) {
+    NS_FORMAT::format_to(out, "\"{}\"", data);
+  } else if constexpr (std::is_same_v<T, std::vector<uint8_t>>) {
+    format_base64(out, data);
+  } else if constexpr (std::is_same_v<T, std::chrono::system_clock::time_point>) {
+    format_timestamp(out, data);
+  } else {  // default format case
+    NS_FORMAT::format_to(out, "{}", data);
+  }
+}
+
+/**
  * @brief Formats a generic vector into a comma-separated list in brackets.
  * @tparam OutputIt The type of the output iterator.
  * @tparam T The type of elements in the vector.
@@ -114,79 +136,7 @@ template <typename OutputIt, typename T>
 void format_vector(OutputIt &out, const std::vector<T> &data) {
   out = NS_FORMAT::format_to(out, "[");
   for (size_t i = 0; i < data.size(); ++i) {
-    out = NS_FORMAT::format_to(out, "{}", data[i]);
-    if (i != data.size() - 1) {
-      out = NS_FORMAT::format_to(out, ", ");
-    }
-  }
-  out = NS_FORMAT::format_to(out, "]");
-}
-
-/**
- * @brief Formats a vector of booleans into a list of "true" or "false".
- * @tparam OutputIt The type of the output iterator.
- * @param out Reference to the output iterator where the result is written.
- * @param data The vector of booleans to format.
- */
-template <typename OutputIt>
-void format_vector(OutputIt &out, const std::vector<bool> &data) {
-  out = NS_FORMAT::format_to(out, "[");
-  for (size_t i = 0; i < data.size(); ++i) {
-    out = NS_FORMAT::format_to(out, "{}", (data[i] ? "true" : "false"));
-    if (i != data.size() - 1) {
-      out = NS_FORMAT::format_to(out, ", ");
-    }
-  }
-  out = NS_FORMAT::format_to(out, "]");
-}
-
-/**
- * @brief Formats a vector of strings into a list of quoted strings.
- * @tparam OutputIt The type of the output iterator.
- * @param out Reference to the output iterator where the result is written.
- * @param data The vector of strings to format.
- */
-template <typename OutputIt>
-void format_vector(OutputIt &out, const std::vector<std::string> &data) {
-  out = NS_FORMAT::format_to(out, "[");
-  for (size_t i = 0; i < data.size(); ++i) {
-    out = NS_FORMAT::format_to(out, "\"{}\"", data[i]);
-    if (i != data.size() - 1) {
-      out = NS_FORMAT::format_to(out, ", ");
-    }
-  }
-  out = NS_FORMAT::format_to(out, "]");
-}
-
-/**
- * @brief Formats a vector of byte vectors into a list of Base64 literals.
- * @tparam OutputIt The type of the output iterator.
- * @param out Reference to the output iterator where the result is written.
- * @param data The vector of byte vectors to format.
- */
-template <typename OutputIt>
-void format_vector(OutputIt &out, const std::vector<std::vector<uint8_t>> &data) {
-  out = NS_FORMAT::format_to(out, "[");
-  for (size_t i = 0; i < data.size(); ++i) {
-    format_base64(out, data[i]);
-    if (i != data.size() - 1) {
-      out = NS_FORMAT::format_to(out, ", ");
-    }
-  }
-  out = NS_FORMAT::format_to(out, "]");
-}
-
-/**
- * @brief Formats a vector of timestamps into a list of ISO 8601 string literals.
- * @tparam OutputIt The type of the output iterator.
- * @param out Reference to the output iterator where the result is written.
- * @param data The vector of timestamps to format.
- */
-template <typename OutputIt>
-void format_vector(OutputIt &out, const std::vector<std::chrono::system_clock::time_point> &data) {
-  out = NS_FORMAT::format_to(out, "[");
-  for (size_t i = 0; i < data.size(); ++i) {
-    format_timestamp(out, data[i]);
+    format_data(out, data[i]);
     if (i != data.size() - 1) {
       out = NS_FORMAT::format_to(out, ", ");
     }
