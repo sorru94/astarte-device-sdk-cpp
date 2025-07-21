@@ -135,7 +135,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
   /**
    * @brief Get stored propertied matching the interface.
    * @param interface_name The name of the interface for the property.
-   * @return TODO
+   * @return A list of stored properties, as returned by the message hub.
    */
   auto get_properties(std::string_view interface_name) -> std::list<AstarteStoredProperty>;
   /**
