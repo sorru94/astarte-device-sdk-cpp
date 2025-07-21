@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -59,7 +60,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @brief Parse an interface definition from a JSON string and adds it to the device.
    * @param json The interface to add.
    */
-  void add_interface_from_str(std::string json);
+  void add_interface_from_str(std::string_view json);
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will
@@ -84,7 +85,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @param data The data point to send.
    * @param timestamp An optional timestamp for the data point.
    */
-  void send_individual(const std::string& interface_name, const std::string& path,
+  void send_individual(std::string_view interface_name, std::string_view path,
                        const AstarteData& data,
                        const std::chrono::system_clock::time_point* timestamp);
   /**
@@ -94,7 +95,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @param object The key-value map representing the object to send.
    * @param timestamp An optional timestamp for the data.
    */
-  void send_object(const std::string& interface_name, const std::string& path,
+  void send_object(std::string_view interface_name, std::string_view path,
                    const AstarteDatastreamObject& object,
                    const std::chrono::system_clock::time_point* timestamp);
   /**
@@ -103,7 +104,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @param path The path of the property to set.
    * @param data The value to set for the property.
    */
-  void set_property(const std::string& interface_name, const std::string& path,
+  void set_property(std::string_view interface_name, std::string_view path,
                     const AstarteData& data);
   /**
    * @brief Unset a device property on an interface.
@@ -111,7 +112,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @param interface_name The name of the interface where the property is defined.
    * @param path The path of the property to unset.
    */
-  void unset_property(const std::string& interface_name, const std::string& path);
+  void unset_property(std::string_view interface_name, std::string_view path);
   /**
    * @brief Poll for a new message received from the message hub.
    * @details This method checks an internal queue for parsed messages from the server.
