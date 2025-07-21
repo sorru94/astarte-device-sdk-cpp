@@ -46,6 +46,7 @@ auto AstarteStoredProperty::operator!=(const AstarteStoredProperty &other) const
   return !(*this == other);
 }
 
+#if defined(ASTARTE_FORMAT_ENABLED)
 auto AstarteStoredProperty::format() const -> std::string {
   std::ostringstream stream;
   stream << "Interface: " << interface_name_ << " v" << version_major_ << ", Path: " << path_
@@ -53,5 +54,6 @@ auto AstarteStoredProperty::format() const -> std::string {
          << ", Value: " << data_.format();
   return stream.str();
 }
+#endif
 
 }  // namespace AstarteDeviceSdk
