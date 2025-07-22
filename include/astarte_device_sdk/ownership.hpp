@@ -11,6 +11,7 @@
  */
 
 #include <cstdint>
+#include <string_view>
 
 namespace AstarteDeviceSdk {
 
@@ -22,7 +23,7 @@ enum AstarteOwnership : int8_t {
   kServer
 };
 
-static constexpr std::string_view ownership_as_str(AstarteOwnership ownership) {
+static constexpr auto ownership_as_str(AstarteOwnership ownership) -> std::string_view {
   switch (ownership) {
     case AstarteOwnership::kDevice:
       return "device";
