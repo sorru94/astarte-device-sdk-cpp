@@ -12,17 +12,17 @@
 
 namespace AstarteDeviceSdk {
 
-AstartePropertyIndividual::AstartePropertyIndividual(const std::optional<AstarteData> &data)
+AstartePropertyIndividual::AstartePropertyIndividual(const std::optional<AstarteData>& data)
     : data_(data) {}
 
-auto AstartePropertyIndividual::get_value() const -> const std::optional<AstarteData> & {
+auto AstartePropertyIndividual::get_value() const -> const std::optional<AstarteData>& {
   return data_;
 }
 
-auto AstartePropertyIndividual::operator==(const AstartePropertyIndividual &other) const -> bool {
+auto AstartePropertyIndividual::operator==(const AstartePropertyIndividual& other) const -> bool {
   return this->get_value() == other.get_value();
 }
-auto AstartePropertyIndividual::operator!=(const AstartePropertyIndividual &other) const -> bool {
+auto AstartePropertyIndividual::operator!=(const AstartePropertyIndividual& other) const -> bool {
   return this->get_value() != other.get_value();
 }
 #if defined(ASTARTE_FORMAT_ENABLED)

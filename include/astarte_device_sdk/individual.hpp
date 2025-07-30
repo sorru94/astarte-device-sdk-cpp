@@ -28,19 +28,19 @@ class AstarteDatastreamIndividual {
    * @brief Get the value contained within the object.
    * @return A constant reference to the data.
    */
-  [[nodiscard]] auto get_value() const -> const AstarteData &;
+  [[nodiscard]] auto get_value() const -> const AstarteData&;
   /**
    * @brief Overloader for the comparison operator ==.
    * @param other The object to compare to.
    * @return True when equal, false otherwise.
    */
-  [[nodiscard]] auto operator==(const AstarteDatastreamIndividual &other) const -> bool;
+  [[nodiscard]] auto operator==(const AstarteDatastreamIndividual& other) const -> bool;
   /**
    * @brief Overloader for the comparison operator !=.
    * @param other The object to compare to.
    * @return True when different, false otherwise.
    */
-  [[nodiscard]] auto operator!=(const AstarteDatastreamIndividual &other) const -> bool;
+  [[nodiscard]] auto operator!=(const AstarteDatastreamIndividual& other) const -> bool;
 #if defined(ASTARTE_FORMAT_ENABLED)
   /**
    * @brief Pretty format the Astarte individual datastream.
