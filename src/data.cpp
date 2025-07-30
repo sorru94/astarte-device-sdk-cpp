@@ -27,30 +27,28 @@ namespace AstarteDeviceSdk {
 
 auto AstarteData::get_type() const -> AstarteType {
   struct Visitor {
-    auto operator()(const int32_t & /*unused*/) -> AstarteType { return kInteger; }
-    auto operator()(const int64_t & /*unused*/) -> AstarteType { return kLongInteger; }
-    auto operator()(const double & /*unused*/) -> AstarteType { return kDouble; }
-    auto operator()(const bool & /*unused*/) -> AstarteType { return kBoolean; }
-    auto operator()(const std::string & /*unused*/) -> AstarteType { return kString; }
-    auto operator()(const std::vector<uint8_t> & /*unused*/) -> AstarteType { return kBinaryBlob; }
-    auto operator()(const std::chrono::system_clock::time_point & /*unused*/) -> AstarteType {
+    auto operator()(const int32_t& /*unused*/) -> AstarteType { return kInteger; }
+    auto operator()(const int64_t& /*unused*/) -> AstarteType { return kLongInteger; }
+    auto operator()(const double& /*unused*/) -> AstarteType { return kDouble; }
+    auto operator()(const bool& /*unused*/) -> AstarteType { return kBoolean; }
+    auto operator()(const std::string& /*unused*/) -> AstarteType { return kString; }
+    auto operator()(const std::vector<uint8_t>& /*unused*/) -> AstarteType { return kBinaryBlob; }
+    auto operator()(const std::chrono::system_clock::time_point& /*unused*/) -> AstarteType {
       return kDatetime;
     }
-    auto operator()(const std::vector<int32_t> & /*unused*/) -> AstarteType {
-      return kIntegerArray;
-    }
-    auto operator()(const std::vector<int64_t> & /*unused*/) -> AstarteType {
+    auto operator()(const std::vector<int32_t>& /*unused*/) -> AstarteType { return kIntegerArray; }
+    auto operator()(const std::vector<int64_t>& /*unused*/) -> AstarteType {
       return kLongIntegerArray;
     }
-    auto operator()(const std::vector<double> & /*unused*/) -> AstarteType { return kDoubleArray; }
-    auto operator()(const std::vector<bool> & /*unused*/) -> AstarteType { return kBooleanArray; }
-    auto operator()(const std::vector<std::string> & /*unused*/) -> AstarteType {
+    auto operator()(const std::vector<double>& /*unused*/) -> AstarteType { return kDoubleArray; }
+    auto operator()(const std::vector<bool>& /*unused*/) -> AstarteType { return kBooleanArray; }
+    auto operator()(const std::vector<std::string>& /*unused*/) -> AstarteType {
       return kStringArray;
     }
-    auto operator()(const std::vector<std::vector<uint8_t>> & /*unused*/) -> AstarteType {
+    auto operator()(const std::vector<std::vector<uint8_t>>& /*unused*/) -> AstarteType {
       return kBinaryBlobArray;
     }
-    auto operator()(const std::vector<std::chrono::system_clock::time_point> & /*unused*/)
+    auto operator()(const std::vector<std::chrono::system_clock::time_point>& /*unused*/)
         -> AstarteType {
       return kDatetimeArray;
     }
@@ -63,21 +61,21 @@ auto AstarteData::get_raw_data() const
                           std::chrono::system_clock::time_point, std::vector<int32_t>,
                           std::vector<int64_t>, std::vector<double>, std::vector<bool>,
                           std::vector<std::string>, std::vector<std::vector<uint8_t>>,
-                          std::vector<std::chrono::system_clock::time_point>> & {
+                          std::vector<std::chrono::system_clock::time_point>>& {
   return this->data_;
 }
 
-auto AstarteData::operator==(const AstarteData &other) const -> bool {
+auto AstarteData::operator==(const AstarteData& other) const -> bool {
   return this->data_ == other.get_raw_data();
 }
-auto AstarteData::operator!=(const AstarteData &other) const -> bool {
+auto AstarteData::operator!=(const AstarteData& other) const -> bool {
   return this->data_ != other.get_raw_data();
 }
 
 #if defined(ASTARTE_FORMAT_ENABLED)
 namespace {
 template <typename T>
-auto format_vector(const std::vector<T> &data) -> std::string {
+auto format_vector(const std::vector<T>& data) -> std::string {
   std::ostringstream oss;
   oss << "[";
   for (size_t i = 0; i < data.size(); ++i) {
@@ -90,7 +88,7 @@ auto format_vector(const std::vector<T> &data) -> std::string {
   return oss.str();
 }
 
-auto format_vector_bool(const std::vector<bool> &data) -> std::string {
+auto format_vector_bool(const std::vector<bool>& data) -> std::string {
   std::ostringstream oss;
   oss << "[";
   for (size_t i = 0; i < data.size(); ++i) {
@@ -103,7 +101,7 @@ auto format_vector_bool(const std::vector<bool> &data) -> std::string {
   return oss.str();
 }
 
-auto format_vector_string(const std::vector<std::string> &data) -> std::string {
+auto format_vector_string(const std::vector<std::string>& data) -> std::string {
   std::ostringstream oss;
   oss << "[";
   for (size_t i = 0; i < data.size(); ++i) {
@@ -117,7 +115,7 @@ auto format_vector_string(const std::vector<std::string> &data) -> std::string {
 }
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-auto format_base64(const std::vector<uint8_t> &data) -> std::string {
+auto format_base64(const std::vector<uint8_t>& data) -> std::string {
   static constexpr std::string_view base64_chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
       "abcdefghijklmnopqrstuvwxyz"
@@ -158,7 +156,7 @@ auto format_base64(const std::vector<uint8_t> &data) -> std::string {
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
-auto format_vector_binaryblob(const std::vector<std::vector<uint8_t>> &data) -> std::string {
+auto format_vector_binaryblob(const std::vector<std::vector<uint8_t>>& data) -> std::string {
   std::ostringstream oss;
   oss << "[";
   for (size_t i = 0; i < data.size(); ++i) {
@@ -173,7 +171,7 @@ auto format_vector_binaryblob(const std::vector<std::vector<uint8_t>> &data) -> 
 
 // This function is only used for pretty printing
 // NOLINTBEGIN(concurrency-mt-unsafe)
-auto format_timestamp(const std::chrono::system_clock::time_point &data) -> std::string {
+auto format_timestamp(const std::chrono::system_clock::time_point& data) -> std::string {
   std::ostringstream oss;
 #if (__cplusplus >= 202002L) && (__has_include(<format>))
   oss << std::format("{0:%F}T{0:%T}Z",
@@ -187,7 +185,7 @@ auto format_timestamp(const std::chrono::system_clock::time_point &data) -> std:
 }
 // NOLINTEND(concurrency-mt-unsafe)
 
-auto format_vector_timestamp(const std::vector<std::chrono::system_clock::time_point> &data)
+auto format_vector_timestamp(const std::vector<std::chrono::system_clock::time_point>& data)
     -> std::string {
   std::ostringstream oss;
   oss << "[";

@@ -19,7 +19,7 @@ class AstarteWorker : public QObject {
   Q_OBJECT
 
  public:
-  AstarteWorker(QObject *parent = nullptr) : QObject(parent) {
+  AstarteWorker(QObject* parent = nullptr) : QObject(parent) {
     QString server_addr = "localhost:50051";
     QString node_id = "aa04dade-9401-4c37-8c6a-d8da15b083ae";
     device = std::make_shared<AstarteDeviceGRPC>(server_addr.toStdString(), node_id.toStdString());
@@ -135,7 +135,7 @@ class AstarteWorker : public QObject {
 
  private:
   std::shared_ptr<AstarteDeviceGRPC> device;
-  QTimer *pollingTimer;
+  QTimer* pollingTimer;
 
   void addInterfaces() {
     // Those paths assume the user is calling the Astarte executable from the root of this project.
@@ -161,7 +161,7 @@ class AstarteWorker : public QObject {
   }
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
 
   AstarteWorker worker;

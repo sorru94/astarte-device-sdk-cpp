@@ -15,13 +15,13 @@ namespace AstarteDeviceSdk {
 AstarteDatastreamIndividual::AstarteDatastreamIndividual(AstarteData data)
     : data_(std::move(data)) {}
 
-auto AstarteDatastreamIndividual::get_value() const -> const AstarteData & { return data_; }
+auto AstarteDatastreamIndividual::get_value() const -> const AstarteData& { return data_; }
 
-auto AstarteDatastreamIndividual::operator==(const AstarteDatastreamIndividual &other) const
+auto AstarteDatastreamIndividual::operator==(const AstarteDatastreamIndividual& other) const
     -> bool {
   return this->get_value() == other.get_value();
 }
-auto AstarteDatastreamIndividual::operator!=(const AstarteDatastreamIndividual &other) const
+auto AstarteDatastreamIndividual::operator!=(const AstarteDatastreamIndividual& other) const
     -> bool {
   return this->get_value() != other.get_value();
 }

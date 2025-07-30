@@ -20,12 +20,12 @@ concept ProtobufMessage = std::is_base_of_v<google::protobuf::Message, T>;
 template <ProtobufMessage T>
 struct fmt::formatter<T> {  // NOLINT
   template <typename ParseContext>
-  constexpr auto parse(ParseContext &ctx) {
+  constexpr auto parse(ParseContext& ctx) {
     return ctx.begin();
   }
 
   template <typename FormatContext>
-  auto format(const T &obj, FormatContext &ctx) const {
+  auto format(const T& obj, FormatContext& ctx) const {
     std::string obj_str;
     google::protobuf::TextFormat::PrintToString(obj, &obj_str);
     return fmt::format_to(ctx.out(), "{}", obj_str);
@@ -38,12 +38,12 @@ using enable_if_protobuf = std::enable_if_t<std::is_base_of_v<google::protobuf::
 template <typename T>
 struct fmt::formatter<T, char, enable_if_protobuf<T> > {  // NOLINT
   template <typename ParseContext>
-  constexpr auto parse(ParseContext &ctx) {
+  constexpr auto parse(ParseContext& ctx) {
     return ctx.begin();
   }
 
   template <typename FormatContext>
-  auto format(const T &obj, FormatContext &ctx) const {
+  auto format(const T& obj, FormatContext& ctx) const {
     std::string obj_str;
     google::protobuf::TextFormat::PrintToString(obj, &obj_str);
     return fmt::format_to(ctx.out(), "{}", obj_str);
