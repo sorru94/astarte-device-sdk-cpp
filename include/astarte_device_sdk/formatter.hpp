@@ -313,6 +313,12 @@ struct NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamIndividual> {
   }
 };
 
+std::ostream &operator<<(std::ostream &out,
+                         const AstarteDeviceSdk::AstarteDatastreamIndividual data) {
+  out << NS_FORMAT::format("{}", data);
+  return out;
+}
+
 /**
  * @brief NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteDatastreamObject.
  */
@@ -353,6 +359,11 @@ struct NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamObject> {
   }
 };
 
+std::ostream &operator<<(std::ostream &out, const AstarteDeviceSdk::AstarteDatastreamObject data) {
+  out << NS_FORMAT::format("{}", data);
+  return out;
+}
+
 /**
  * @brief NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstartePropertyIndividual.
  */
@@ -383,6 +394,12 @@ struct NS_FORMAT::formatter<AstarteDeviceSdk::AstartePropertyIndividual> {
     return ctx.out();
   }
 };
+
+std::ostream &operator<<(std::ostream &out,
+                         const AstarteDeviceSdk::AstartePropertyIndividual data) {
+  out << NS_FORMAT::format("{}", data);
+  return out;
+}
 
 /**
  * @brief NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteMessage.
