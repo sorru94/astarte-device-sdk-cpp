@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-ColumnLimit:     100
+ColumnLimit: 100
 BasedOnStyle: Google
+DerivePointerAlignment: false
 ...
