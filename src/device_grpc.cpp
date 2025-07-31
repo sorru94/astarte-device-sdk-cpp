@@ -6,15 +6,18 @@
 
 #include <chrono>
 #include <filesystem>
+#include <list>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
+#include "astarte_device_sdk/ownership.hpp"
+#include "astarte_device_sdk/property.hpp"
+#include "astarte_device_sdk/stored_property.hpp"
 #include "device_grpc_impl.hpp"
 
 namespace AstarteDeviceSdk {
@@ -64,6 +67,21 @@ void AstarteDeviceGRPC::unset_property(std::string_view interface_name, std::str
 auto AstarteDeviceGRPC::poll_incoming(const std::chrono::milliseconds &timeout)
     -> std::optional<AstarteMessage> {
   return astarte_device_impl_->poll_incoming(timeout);
+}
+
+auto AstarteDeviceGRPC::get_all_properties(const std::optional<AstarteOwnership> &ownership)
+    -> std::list<AstarteStoredProperty> {
+  return astarte_device_impl_->get_all_properties(ownership);
+}
+
+auto AstarteDeviceGRPC::get_properties(std::string_view interface_name)
+    -> std::list<AstarteStoredProperty> {
+  return astarte_device_impl_->get_properties(interface_name);
+}
+
+auto AstarteDeviceGRPC::get_property(std::string_view interface_name, std::string_view path)
+    -> AstartePropertyIndividual {
+  return astarte_device_impl_->get_property(interface_name, path);
 }
 
 }  // namespace AstarteDeviceSdk
