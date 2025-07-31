@@ -10,10 +10,16 @@
 #include <chrono>
 #include <vector>
 
+#include "astarte_device_sdk/formatter.hpp"
+
 using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteType;
 
 using testing::ContainerEq;
+
+bool CompareAstarteData(AstarteData data, const char* value) {
+  return ASTARTE_NS_FORMAT::format("{}", data) == value;
+}
 
 TEST(AstarteTestData, InstantiationInteger) {
   int32_t value = 52;
@@ -24,8 +30,7 @@ TEST(AstarteTestData, InstantiationInteger) {
 TEST(AstarteTestData, FormatInteger) {
   int32_t value = 52;
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "52");
+  EXPECT_PRED2(CompareAstarteData, data, "52");
 }
 
 TEST(AstarteTestData, InstantiationLongInteger) {
@@ -37,8 +42,7 @@ TEST(AstarteTestData, InstantiationLongInteger) {
 TEST(AstarteTestData, FormatLongInteger) {
   int64_t value = 52;
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "52");
+  EXPECT_PRED2(CompareAstarteData, data, "52");
 }
 
 TEST(AstarteTestData, InstantiationDouble) {
@@ -50,8 +54,7 @@ TEST(AstarteTestData, InstantiationDouble) {
 TEST(AstarteTestData, FormatDouble) {
   double value = 43.5;
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "43.5");
+  EXPECT_PRED2(CompareAstarteData, data, "43.5");
 }
 
 TEST(AstarteTestData, InstantiationBoolean) {
@@ -63,8 +66,7 @@ TEST(AstarteTestData, InstantiationBoolean) {
 TEST(AstarteTestData, FormatBoolean) {
   bool value = true;
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "true");
+  EXPECT_PRED2(CompareAstarteData, data, "true");
 }
 
 TEST(AstarteTestData, InstantiationString) {
@@ -76,8 +78,7 @@ TEST(AstarteTestData, InstantiationString) {
 TEST(AstarteTestData, FormatString) {
   std::string value = "Test string";
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "\"Test string\"");
+  EXPECT_PRED2(CompareAstarteData, data, "\"Test string\"");
 }
 
 TEST(AstarteTestData, InstantiationBinaryBlob) {
@@ -89,8 +90,7 @@ TEST(AstarteTestData, InstantiationBinaryBlob) {
 TEST(AstarteTestData, FormatBinaryBlob) {
   std::vector<uint8_t> value = {0x12U, 0x22U, 0x42};
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "\"EiJC\"");
+  EXPECT_PRED2(CompareAstarteData, data, "\"EiJC\"");
 }
 
 TEST(AstarteTestData, InstantiationDatetime) {
@@ -128,12 +128,13 @@ TEST(AstarteTestData, FormatDatetime) {
   dtm.tm_hour = 10;
   dtm.tm_min = 15;
   dtm.tm_sec = 0;
-  std::time_t time = std::mktime(&dtm);
+  // Use timegm to interpret the tm struct as UTC, not local time. This considers eventual timezones
+  // differences
+  std::time_t time = timegm(&dtm);
   std::chrono::system_clock::time_point value = std::chrono::system_clock::from_time_t(time);
 #endif  // __cplusplus >= 202002L
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "\"1994-04-12T10:15:00.000Z\"");
+  EXPECT_PRED2(CompareAstarteData, data, "\"1994-04-12T10:15:00.000Z\"");
 }
 
 TEST(AstarteTestData, InstantiationIntegerArray) {
@@ -145,8 +146,7 @@ TEST(AstarteTestData, InstantiationIntegerArray) {
 TEST(AstarteTestData, FormatIntegerArray) {
   std::vector<int32_t> value{12, 43, 11, 0};
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "[12, 43, 11, 0]");
+  EXPECT_PRED2(CompareAstarteData, data, "[12, 43, 11, 0]");
 }
 
 TEST(AstarteTestData, InstantiationLongIntegerArray) {
@@ -158,8 +158,7 @@ TEST(AstarteTestData, InstantiationLongIntegerArray) {
 TEST(AstarteTestData, FormatLongIntegerArray) {
   std::vector<int64_t> value{0, 8589934592, 11};
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "[0, 8589934592, 11]");
+  EXPECT_PRED2(CompareAstarteData, data, "[0, 8589934592, 11]");
 }
 
 TEST(AstarteTestData, InstantiationDoubleArray) {
@@ -171,8 +170,7 @@ TEST(AstarteTestData, InstantiationDoubleArray) {
 TEST(AstarteTestData, FormatDoubleArray) {
   std::vector<double> value{0.0, 43.2};
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "[0, 43.2]");
+  EXPECT_PRED2(CompareAstarteData, data, "[0, 43.2]");
 }
 
 TEST(AstarteTestData, InstantiationBooleanArray) {
@@ -184,8 +182,7 @@ TEST(AstarteTestData, InstantiationBooleanArray) {
 TEST(AstarteTestData, FormatBooleanArray) {
   std::vector<bool> value{true, false, false};
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "[true, false, false]");
+  EXPECT_PRED2(CompareAstarteData, data, "[true, false, false]");
 }
 
 TEST(AstarteTestData, InstantiationStringArray) {
@@ -197,8 +194,7 @@ TEST(AstarteTestData, InstantiationStringArray) {
 TEST(AstarteTestData, FormatStringArray) {
   std::vector<std::string> value{"Hello", "C++"};
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "[\"Hello\", \"C++\"]");
+  EXPECT_PRED2(CompareAstarteData, data, "[\"Hello\", \"C++\"]");
 }
 
 TEST(AstarteTestData, InstantiationBinaryBlobArray) {
@@ -210,8 +206,7 @@ TEST(AstarteTestData, InstantiationBinaryBlobArray) {
 TEST(AstarteTestData, FormatBinaryBlobArray) {
   std::vector<std::vector<uint8_t>> value{{0x12U, 0x22U, 0x42}, {0x10U, 0x8FU}};
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "[\"EiJC\", \"EI8=\"]");
+  EXPECT_PRED2(CompareAstarteData, data, "[\"EiJC\", \"EI8=\"]");
 }
 
 TEST(AstarteTestData, InstantiationDatetimeArray) {
@@ -233,7 +228,7 @@ TEST(AstarteTestData, InstantiationDatetimeArray) {
   tm0.tm_hour = 10;
   tm0.tm_min = 15;
   tm0.tm_sec = 0;
-  std::time_t time0 = std::mktime(&tm0);
+  std::time_t time0 = timegm(&tm0);
   std::tm tm1 = {};
   tm1.tm_year = 1984 - 1900;
   tm1.tm_mon = 5 - 1;
@@ -241,7 +236,7 @@ TEST(AstarteTestData, InstantiationDatetimeArray) {
   tm1.tm_hour = 10;
   tm1.tm_min = 15;
   tm1.tm_sec = 0;
-  std::time_t time1 = std::mktime(&tm1);
+  std::time_t time1 = timegm(&tm1);
   std::vector<std::chrono::system_clock::time_point> value{
       std::chrono::system_clock::from_time_t(time0), std::chrono::system_clock::from_time_t(time1)};
 #endif  // __cplusplus >= 202002L
@@ -268,7 +263,7 @@ TEST(AstarteTestData, FormatDatetimeArray) {
   tm0.tm_hour = 10;
   tm0.tm_min = 15;
   tm0.tm_sec = 0;
-  std::time_t time0 = std::mktime(&tm0);
+  std::time_t time0 = timegm(&tm0);
   std::tm tm1 = {};
   tm1.tm_year = 1984 - 1900;
   tm1.tm_mon = 5 - 1;
@@ -276,14 +271,14 @@ TEST(AstarteTestData, FormatDatetimeArray) {
   tm1.tm_hour = 10;
   tm1.tm_min = 15;
   tm1.tm_sec = 0;
-  std::time_t time1 = std::mktime(&tm1);
+  std::time_t time1 = timegm(&tm1);
   std::vector<std::chrono::system_clock::time_point> value{
       std::chrono::system_clock::from_time_t(time0), std::chrono::system_clock::from_time_t(time1)};
 #endif  // __cplusplus >= 202002L
 
   auto data = AstarteData(value);
-  auto str = data.format();
-  EXPECT_STREQ(str.c_str(), "[\"1994-04-12T10:15:00.000Z\", \"1984-05-02T10:15:00.000Z\"]");
+  EXPECT_PRED2(CompareAstarteData, data,
+               "[\"1994-04-12T10:15:00.000Z\", \"1984-05-02T10:15:00.000Z\"]");
 }
 
 TEST(AstarteTestData, TryIntoInteger) {
