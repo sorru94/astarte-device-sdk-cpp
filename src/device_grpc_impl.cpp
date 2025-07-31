@@ -148,8 +148,9 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_individual(
     const std::chrono::system_clock::time_point *timestamp) {
   spdlog::debug("Sending individual: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    spdlog::warn("Device disconnected, operation aborted.");
-    return;
+    const std::string msg("Device disconnected, operation aborted.");
+    spdlog::warn(msg);
+    throw AstarteOperationRefusedException(msg);
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -175,8 +176,9 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_object(
     const AstarteDatastreamObject &object, const std::chrono::system_clock::time_point *timestamp) {
   spdlog::debug("Sending object: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    spdlog::warn("Device disconnected, operation aborted.");
-    return;
+    const std::string msg("Device disconnected, operation aborted.");
+    spdlog::warn(msg);
+    throw AstarteOperationRefusedException(msg);
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -202,8 +204,9 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(const std::string &i
                                                             const AstarteData &data) {
   spdlog::debug("Setting property: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    spdlog::warn("Device disconnected, operation aborted.");
-    return;
+    const std::string msg("Device disconnected, operation aborted.");
+    spdlog::warn(msg);
+    throw AstarteOperationRefusedException(msg);
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -228,8 +231,9 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::unset_property(const std::string 
                                                               const std::string &path) {
   spdlog::debug("Unsetting property: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    spdlog::warn("Device disconnected, operation aborted.");
-    return;
+    const std::string msg("Device disconnected, operation aborted.");
+    spdlog::warn(msg);
+    throw AstarteOperationRefusedException(msg);
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
