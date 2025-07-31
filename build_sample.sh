@@ -6,6 +6,7 @@
 
 # --- Configuration ---
 fresh_mode=false
+transport=grpc
 system_grpc=false
 no_format=false
 cpp_standard=20
@@ -23,12 +24,13 @@ Usage: $0 <sample_name> [OPTIONS]
 <sample_name> can be 'simple' or 'qt'.
 
 Common Options:
-  --fresh         Build the sample from scratch (removes its build directory).
-  --stdcpp <VER>  Specify the C++ standard to use (17 or 20). Default: $cpp_standard.
-  --system_grpc   Use the system gRPC instead of building it from scratch.
-  --no_format     Do not include the formatting feature in the astarte device library.
-  -j, --jobs <N>  Specify the number of parallel jobs for make. Default: $jobs.
-  -h, --help      Display this help message.
+  --fresh          Build the sample from scratch (removes its build directory).
+  --transport <TR> Specify the transport to use (mqtt or grpc). Default: $transport.
+  --stdcpp <VER>   Specify the C++ standard to use (17 or 20). Default: $cpp_standard.
+  --system_grpc    Use the system gRPC instead of building it from scratch.
+  --no_format      Do not include the formatting feature in the astarte device library.
+  -j, --jobs <N>   Specify the number of parallel jobs for make. Default: $jobs.
+  -h, --help       Display this help message.
 
 Qt Sample Specific Options:
   --qt_path <PATH>   Path to QtXConfig.cmake (e.g., ~/Qt/6.8.1/gcc_64/lib/cmake/Qt6). Default: $qt_path.
@@ -59,6 +61,13 @@ fi
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --fresh) fresh_mode=true; shift ;;
+        --transport)
+            transport="$2"
+            if [[ ! "$transport" =~ ^('mqtt'|'grpc')$ ]]; then
+                error_exit "Invalid transport '$transport'. Use mqtt or grpc."
+            fi
+            shift 2
+            ;;
         --stdcpp)
             cpp_standard="$2"
             if [[ ! "$cpp_standard" =~ ^(17|20)$ ]]; then
@@ -126,6 +135,10 @@ cmake_options_array+=("-DCMAKE_CXX_STANDARD=$cpp_standard")
 cmake_options_array+=("-DCMAKE_CXX_STANDARD_REQUIRED=ON")
 cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
 cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
+
+if [[ "$transport" == "grpc" ]]; then
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
+fi
 
 if [ "$no_format" = false ]; then
     cmake_options_array+=("-DASTARTE_ENABLE_FORMAT=ON")

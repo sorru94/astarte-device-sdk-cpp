@@ -23,5 +23,4 @@ config.toml
 *.qbs.user*
 CMakeLists.txt.user*
 
-grpc/
 grpc-install/
