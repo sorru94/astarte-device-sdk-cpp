@@ -28,6 +28,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -85,9 +86,9 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_json(
   interface_file.close();
 }
 
-void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_str(std::string json) {
+void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_str(std::string_view json) {
   spdlog::debug("Adding interface");
-  interfaces_bins_.push_back(json);
+  interfaces_bins_.emplace_back(json);
   spdlog::trace("Added interface: \n{}", json);
 }
 
@@ -144,11 +145,11 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::disconnect() {
 }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_individual(
-    const std::string &interface_name, const std::string &path, const AstarteData &data,
+    std::string_view interface_name, std::string_view path, const AstarteData &data,
     const std::chrono::system_clock::time_point *timestamp) {
   spdlog::debug("Sending individual: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    const std::string msg("Device disconnected, operation aborted.");
+    const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
     throw AstarteOperationRefusedException(msg);
   }
@@ -172,11 +173,11 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_individual(
 }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_object(
-    const std::string &interface_name, const std::string &path,
-    const AstarteDatastreamObject &object, const std::chrono::system_clock::time_point *timestamp) {
+    std::string_view interface_name, std::string_view path, const AstarteDatastreamObject &object,
+    const std::chrono::system_clock::time_point *timestamp) {
   spdlog::debug("Sending object: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    const std::string msg("Device disconnected, operation aborted.");
+    const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
     throw AstarteOperationRefusedException(msg);
   }
@@ -199,12 +200,12 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_object(
   }
 }
 
-void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(const std::string &interface_name,
-                                                            const std::string &path,
+void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(std::string_view interface_name,
+                                                            std::string_view path,
                                                             const AstarteData &data) {
   spdlog::debug("Setting property: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    const std::string msg("Device disconnected, operation aborted.");
+    const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
     throw AstarteOperationRefusedException(msg);
   }
@@ -227,11 +228,11 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(const std::string &i
   }
 }
 
-void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::unset_property(const std::string &interface_name,
-                                                              const std::string &path) {
+void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::unset_property(std::string_view interface_name,
+                                                              std::string_view path) {
   spdlog::debug("Unsetting property: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
-    const std::string msg("Device disconnected, operation aborted.");
+    const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
     throw AstarteOperationRefusedException(msg);
   }
