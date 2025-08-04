@@ -45,33 +45,28 @@ class AstarteDeviceGRPC : public AstarteDevice {
   ~AstarteDeviceGRPC() override;
   /** @brief Copy constructor for the Astarte device class. */
   AstarteDeviceGRPC(AstarteDeviceGRPC& other) = delete;
-  /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceGRPC& other) -> AstarteDeviceGRPC& = delete;
   /** @brief Move constructor for the Astarte device class. */
   AstarteDeviceGRPC(AstarteDeviceGRPC&& other) = delete;
+  /** @brief Copy assignment operator for the Astarte device class. */
+  auto operator=(AstarteDeviceGRPC& other) -> AstarteDeviceGRPC& = delete;
   /** @brief Move assignment operator for the Astarte device class. */
   auto operator=(AstarteDeviceGRPC&& other) -> AstarteDeviceGRPC& = delete;
 
   /**
    * @brief Add an interface for the device from a JSON file.
    * @param json_file The path to the .json interface file.
-   * @param timeout A timeout used to check the device connection status.
    */
-  void add_interface_from_file(const std::filesystem::path& json_file,
-                               std::chrono::milliseconds timeout) override;
+  void add_interface_from_file(const std::filesystem::path& json_file) override;
   /**
    * @brief Add an interface for the device from a JSON string view.
    * @param json The interface definition as a JSON string view.
-   * @param timeout A timeout used to check the device connection status.
    */
-  void add_interface_from_str(std::string_view json, std::chrono::milliseconds timeout) override;
+  void add_interface_from_str(std::string_view json) override;
   /**
    * @brief Remove an installed interface.
    * @param interface_name The interface name.
-   * @param timeout A timeout used to check the device connection status.
    */
-  void remove_interface(const std::string& interface_name,
-                        std::chrono::milliseconds timeout) override;
+  void remove_interface(const std::string& interface_name) override;
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will
@@ -80,11 +75,10 @@ class AstarteDeviceGRPC : public AstarteDevice {
   void connect() override;
   /**
    * @brief Check if the device is connected.
-   * @param timeout This is the maximum timeout used to check if the device is connected.
    * @return True if the device is connected to the message hub, false otherwise.
    */
   // NOLINTNEXTLINE(misc-include-cleaner)
-  [[nodiscard]] auto is_connected(const std::chrono::milliseconds& timeout) const -> bool override;
+  [[nodiscard]] auto is_connected() const -> bool override;
   /** @brief Disconnect from Astarte. */
   void disconnect() override;
   /**

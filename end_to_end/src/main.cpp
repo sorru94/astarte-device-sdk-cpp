@@ -59,5 +59,5 @@ int main() {
   // Execute all test cases
   orchestrator.execute_all();
 
-  std::exit(0);
+  return 0;
 }

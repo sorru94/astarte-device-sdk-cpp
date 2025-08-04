@@ -24,7 +24,7 @@ TestCase device_add_remove_interface() {
               AstarteMessage(astarte_interfaces::DeviceProperty::INTERFACE, "/integer_endpoint",
                              AstartePropertyIndividual(AstarteData(12)))),
           TestActionSleep::Create(std::chrono::seconds(1)),
-          TestActionRemoveInterface::Create(astarte_interfaces::DeviceDatastream::INTERFACE, 100ms),
+          TestActionRemoveInterface::Create(astarte_interfaces::DeviceDatastream::INTERFACE),
           TestActionSleep::Create(std::chrono::seconds(1)),
           TestActionTransmitMQTTData::Create(
               AstarteMessage(astarte_interfaces::DeviceDatastream::INTERFACE, "/integer_endpoint",
@@ -34,7 +34,7 @@ TestCase device_add_remove_interface() {
               AstarteMessage(astarte_interfaces::DeviceProperty::INTERFACE, "/integer_endpoint",
                              AstartePropertyIndividual(AstarteData(12)))),
           TestActionSleep::Create(std::chrono::seconds(1)),
-          TestActionAddInterfaceFile::Create(astarte_interfaces::DeviceDatastream::FILE, 100ms),
+          TestActionAddInterfaceFile::Create(astarte_interfaces::DeviceDatastream::FILE),
           TestActionSleep::Create(std::chrono::seconds(1)),
           TestActionTransmitMQTTData::Create(
               AstarteMessage(astarte_interfaces::DeviceDatastream::INTERFACE, "/integer_endpoint",

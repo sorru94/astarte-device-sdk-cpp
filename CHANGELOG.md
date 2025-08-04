@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The connection procedure is now asynchrnonous. When `connect` is called the device will attempt to connect untill the `disconnect` function is called or the object is destroyed. The device will use an exponential backoff to avoid network congestion.
 - Enums elements are now named using a k prefix and camel case format.
 - Use C++20 as the minimum required library version
+- Use jthread library rather than the standard thread one
 
 ### Removed
 - `base64` has been fully removed as a dependency.

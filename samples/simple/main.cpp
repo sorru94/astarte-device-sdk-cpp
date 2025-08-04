@@ -23,9 +23,9 @@ using AstarteDeviceSdk::AstartePropertyIndividual;
 
 using namespace std::chrono_literals;
 
-void reception_handler(std::shared_ptr<AstarteDeviceGRPC> msghub_client) {
-  while (true) {
-    auto incoming = msghub_client->poll_incoming(std::chrono::milliseconds(100));
+void reception_handler(std::stop_token token, std::shared_ptr<AstarteDeviceGRPC> msghub_client) {
+  while (!token.stop_requested()) {
+    auto incoming = msghub_client->poll_incoming(100ms);
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
       spdlog::info("Received message.");
@@ -60,31 +60,31 @@ int main(int argc, char** argv) {
   // Those paths assume the user is calling the Astarte executable from the root of this project.
   std::filesystem::path device_individual_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceDatastream.json";
-  msghub_client->add_interface_from_file(device_individual_interface_file_path, 0ms);
+  msghub_client->add_interface_from_file(device_individual_interface_file_path);
   std::filesystem::path server_individual_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerDatastream.json";
-  msghub_client->add_interface_from_file(server_individual_interface_file_path, 0ms);
+  msghub_client->add_interface_from_file(server_individual_interface_file_path);
   std::filesystem::path device_property_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceProperty.json";
-  msghub_client->add_interface_from_file(device_property_interface_file_path, 0ms);
+  msghub_client->add_interface_from_file(device_property_interface_file_path);
   std::filesystem::path device_aggregated_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceAggregate.json";
-  msghub_client->add_interface_from_file(device_aggregated_interface_file_path, 0ms);
+  msghub_client->add_interface_from_file(device_aggregated_interface_file_path);
   std::filesystem::path server_aggregated_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerAggregate.json";
-  msghub_client->add_interface_from_file(server_aggregated_interface_file_path, 0ms);
+  msghub_client->add_interface_from_file(server_aggregated_interface_file_path);
   std::filesystem::path server_property_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerProperty.json";
-  msghub_client->add_interface_from_file(server_property_interface_file_path, 0ms);
+  msghub_client->add_interface_from_file(server_property_interface_file_path);
 
   msghub_client->connect();
 
   do {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-  } while (!msghub_client->is_connected(std::chrono::milliseconds(100)));
+  } while (!msghub_client->is_connected());
 
   // Start a reception thread for the Astarte device
-  auto reception_thread = std::thread(reception_handler, msghub_client);
+  auto reception_thread = std::jthread(reception_handler, msghub_client);
 
   {
     std::string interface_name("org.astarte-platform.cpp.examples.DeviceDatastream");

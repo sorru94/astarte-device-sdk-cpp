@@ -10,6 +10,7 @@
 #include <chrono>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <stop_token>
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device_grpc.hpp"
@@ -78,11 +79,12 @@ class TestAction {
   }
   void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device,
                      const std::shared_ptr<SharedQueue<AstarteMessage>>& rx_queue,
-                     const std::shared_ptr<std::atomic_bool>& kill_reception) {
+                     const std::shared_ptr<std::stop_source>& ssource) {
     device_ = device;
     rx_queue_ = rx_queue;
-    kill_reception_ = kill_reception;
+    stop_source_ = ssource;
   }
+
   void configure_curl(const std::string& appengine_url, const std::string& appengine_token,
                       const std::string& realm, const std::string& device_id) {
     appengine_url_ = appengine_url;
@@ -94,7 +96,7 @@ class TestAction {
  protected:
   std::shared_ptr<AstarteDeviceGRPC> device_;
   std::shared_ptr<SharedQueue<AstarteMessage>> rx_queue_;
-  std::shared_ptr<std::atomic_bool> kill_reception_;
+  std::shared_ptr<std::stop_source> stop_source_;
   std::string appengine_url_;
   std::string appengine_token_;
   std::string realm_;
@@ -129,70 +131,61 @@ class TestActionSleep : public TestAction {
 class TestActionAddInterfaceString : public TestAction {
  public:
   static std::shared_ptr<TestActionAddInterfaceString> Create(std::string_view interface_json,
-                                                              std::chrono::milliseconds timeout,
                                                               bool should_fail = false) {
     return std::shared_ptr<TestActionAddInterfaceString>(
-        new TestActionAddInterfaceString(interface_json, timeout, should_fail));
+        new TestActionAddInterfaceString(interface_json, should_fail));
   }
 
   void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Adding interface from string...", case_name);
-    device_->add_interface_from_str(interface_json_, timeout_);
+    device_->add_interface_from_str(interface_json_);
   }
 
  private:
-  TestActionAddInterfaceString(std::string_view interface_json, std::chrono::milliseconds timeout,
-                               bool should_fail)
-      : TestAction(should_fail), interface_json_(interface_json), timeout_(timeout) {}
+  TestActionAddInterfaceString(std::string_view interface_json, bool should_fail)
+      : TestAction(should_fail), interface_json_(interface_json) {}
 
   std::string interface_json_;
-  std::chrono::milliseconds timeout_;
 };
 
 class TestActionAddInterfaceFile : public TestAction {
  public:
   static std::shared_ptr<TestActionAddInterfaceFile> Create(
-      const std::filesystem::path& interface_file, std::chrono::milliseconds timeout,
-      bool should_fail = false) {
+      const std::filesystem::path& interface_file, bool should_fail = false) {
     return std::shared_ptr<TestActionAddInterfaceFile>(
-        new TestActionAddInterfaceFile(interface_file, timeout, should_fail));
+        new TestActionAddInterfaceFile(interface_file, should_fail));
   }
 
   void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Adding interface from file...", case_name);
-    device_->add_interface_from_file(interface_file_, timeout_);
+    device_->add_interface_from_file(interface_file_);
   }
 
  private:
-  TestActionAddInterfaceFile(const std::filesystem::path& interface_file,
-                             std::chrono::milliseconds timeout, bool should_fail)
-      : TestAction(should_fail), interface_file_(interface_file), timeout_(timeout) {}
+  TestActionAddInterfaceFile(const std::filesystem::path& interface_file, bool should_fail)
+      : TestAction(should_fail), interface_file_(interface_file) {}
 
   std::filesystem::path interface_file_;
-  std::chrono::milliseconds timeout_;
 };
 
 class TestActionRemoveInterface : public TestAction {
  public:
   static std::shared_ptr<TestActionRemoveInterface> Create(std::string_view interface_name,
-                                                           std::chrono::milliseconds timeout,
                                                            bool should_fail = false) {
     return std::shared_ptr<TestActionRemoveInterface>(
-        new TestActionRemoveInterface(interface_name, timeout, should_fail));
+        new TestActionRemoveInterface(interface_name, should_fail));
   }
 
   void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Removing interface...", case_name);
-    device_->remove_interface(interface_name_, timeout_);
+    device_->remove_interface(interface_name_);
   }
 
  private:
-  TestActionRemoveInterface(std::string_view interface_name, std::chrono::milliseconds timeout,
-                            bool should_fail)
-      : TestAction(should_fail), interface_name_(interface_name), timeout_(timeout) {}
+  TestActionRemoveInterface(std::string_view interface_name, bool should_fail)
+      : TestAction(should_fail), interface_name_(interface_name) {}
 
   std::string interface_name_;
-  std::chrono::milliseconds timeout_;
 };
 
 class TestActionConnect : public TestAction {
@@ -206,7 +199,7 @@ class TestActionConnect : public TestAction {
     device_->connect();
     do {
       std::this_thread::sleep_for(std::chrono::seconds(1));
-    } while (!device_->is_connected(std::chrono::milliseconds(100)));
+    } while (!device_->is_connected());
   }
 
  private:
@@ -222,7 +215,7 @@ class TestActionDisconnect : public TestAction {
   void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Disconnecting...", case_name);
     device_->disconnect();
-    *kill_reception_ = true;
+    stop_source_->request_stop();
   }
 
  private:
