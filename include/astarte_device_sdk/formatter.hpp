@@ -316,8 +316,8 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamIndividua
   }
 };
 
-std::ostream& operator<<(std::ostream& out,
-                         const AstarteDeviceSdk::AstarteDatastreamIndividual data) {
+inline std::ostream& operator<<(std::ostream& out,
+                                const AstarteDeviceSdk::AstarteDatastreamIndividual data) {
   out << ASTARTE_NS_FORMAT::format("{}", data);
   return out;
 }
@@ -362,7 +362,8 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamObject> {
   }
 };
 
-std::ostream& operator<<(std::ostream& out, const AstarteDeviceSdk::AstarteDatastreamObject data) {
+inline std::ostream& operator<<(std::ostream& out,
+                                const AstarteDeviceSdk::AstarteDatastreamObject data) {
   out << ASTARTE_NS_FORMAT::format("{}", data);
   return out;
 }
@@ -399,8 +400,8 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstartePropertyIndividual>
   }
 };
 
-std::ostream& operator<<(std::ostream& out,
-                         const AstarteDeviceSdk::AstartePropertyIndividual data) {
+inline std::ostream& operator<<(std::ostream& out,
+                                const AstarteDeviceSdk::AstartePropertyIndividual data) {
   out << ASTARTE_NS_FORMAT::format("{}", data);
   return out;
 }
