@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- Qt sample compilation errors on windows machines.
+
 ## [0.6.0] - 2025-07-21
 ### Added
 - Added `is_connected` method to the Astarte device. Users can evaluate through that method if the device is connected to the Astarte message hub.
