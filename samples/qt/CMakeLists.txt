@@ -14,14 +14,19 @@ else()
     set(QT_VERSION_MAJOR 5)
 endif()
 
-# C++ standard
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Qt features
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+
+# Overwrite some of the Astarte features
+set(ASTARTE_PUBLIC_SPDLOG_DEP ON CACHE BOOL "Overwrite the Astarte spdlog visibility")
+
+# Overwrite some openssl configuration
+IF (WIN32)
+  option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+  set(OPENSSL_NO_ASM ON CACHE BOOL "Overwrite the Openssl configuration")
+ENDIF()
 
 # Find required Qt modules
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
