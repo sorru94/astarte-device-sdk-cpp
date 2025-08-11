@@ -99,7 +99,7 @@ include(FetchContent)
 FetchContent_Declare(
     astarte_device_sdk
   GIT_REPOSITORY git@github.com:secomind/astarte-device-sdk-cpp.git
-  GIT_TAG v0.6.0
+  GIT_TAG v0.6.1
 )
 FetchContent_MakeAvailable(astarte_device_sdk)
 ```

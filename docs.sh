@@ -15,7 +15,7 @@ cpp_standard="20"
 fresh_mode=false
 docs_dir="doc"
 docs_build_dir_name="_build"
-astarte_sdk_version="0.6.0"
+astarte_sdk_version="0.6.1"
 doxyfile_name="astarte-device-sdk.doxyfile.in"
 script_initial_pwd="$PWD"
 
