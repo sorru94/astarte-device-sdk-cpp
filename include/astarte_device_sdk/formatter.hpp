@@ -24,6 +24,7 @@
 #include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
+#include "astarte_device_sdk/ownership.hpp"
 #include "astarte_device_sdk/property.hpp"
 #include "astarte_device_sdk/type.hpp"
 
@@ -214,6 +215,11 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteData> {
   }
 };
 
+inline std::ostream& operator<<(std::ostream& out, const AstarteDeviceSdk::AstarteData data) {
+  out << ASTARTE_NS_FORMAT::format("{}", data);
+  return out;
+}
+
 /**
  * @brief ASTARTE_NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteType.
  */
@@ -287,6 +293,11 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteType> {
     return ASTARTE_NS_FORMAT::format_to(ctx.out(), "{}", name);
   }
 };
+
+inline std::ostream& operator<<(std::ostream& out, const AstarteDeviceSdk::AstarteType typ) {
+  out << ASTARTE_NS_FORMAT::format("{}", typ);
+  return out;
+}
 
 /**
  * @brief ASTARTE_NS_FORMAT::formatter specialization for
@@ -451,6 +462,49 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteMessage> {
     return ASTARTE_NS_FORMAT::format_to(out, "}}");
   }
 };
+
+inline std::ostream& operator<<(std::ostream& out, const AstarteDeviceSdk::AstarteMessage msg) {
+  out << ASTARTE_NS_FORMAT::format("{}", msg);
+  return out;
+}
+
+/**
+ * @brief ASTARTE_NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteStoredProperty.
+ */
+template <>
+struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteStoredProperty> {
+  /**
+   * @brief Parse the format string. Default implementation.
+   * @param ctx The parse context.
+   * @return An iterator to the end of the parsed range.
+   */
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) const {
+    return ctx.begin();
+  }
+
+  /**
+   * @brief Format the AstarteStoredProperty object.
+   * @param msg The AstarteStoredProperty to format.
+   * @param ctx The format context.
+   * @return An iterator to the end of the output.
+   */
+  template <typename FormatContext>
+  auto format(const AstarteDeviceSdk::AstarteStoredProperty& prop, FormatContext& ctx) const {
+    auto out = ctx.out();
+    return ASTARTE_NS_FORMAT::format_to(
+        ctx.out(), "Interface: {} v{}, Path: {}, Ownership: {}, Value: {}",
+        prop.get_interface_name(), prop.get_version_major(), prop.get_path(),
+        (prop.get_ownership() == AstarteDeviceSdk::AstarteOwnership::kDevice ? "device" : "server"),
+        prop.get_value());
+  }
+};
+
+inline std::ostream& operator<<(std::ostream& out,
+                                const AstarteDeviceSdk::AstarteStoredProperty prop) {
+  out << ASTARTE_NS_FORMAT::format("{}", prop);
+  return out;
+}
 
 /// @endcond
 

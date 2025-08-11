@@ -523,8 +523,8 @@ class TestActionGetDeviceProperty : public TestAction {
     AstartePropertyIndividual property = device_->get_property(interface_name_, path_);
     if (property != property_) {
       spdlog::error("Fetched property differs from expected.");
-      spdlog::error("Fetched: {}", property.format());
-      spdlog::error("Expected: {}", property_.format());
+      spdlog::error("Fetched: {}", property);
+      spdlog::error("Expected: {}", property_);
       throw EndToEndMismatchException("Fetched and expected properties differ.");
     }
   }

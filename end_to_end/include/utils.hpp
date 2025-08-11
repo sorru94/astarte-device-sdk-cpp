@@ -14,7 +14,7 @@ auto format_list(const std::list<T>& input) -> std::string {
   std::ostringstream oss;
   oss << "{";
   for (auto v : input) {
-    oss << v.format() << ", ";
+    oss << v << ", ";
   }
   oss << "}";
   return oss.str();

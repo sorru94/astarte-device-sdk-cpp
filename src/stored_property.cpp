@@ -5,7 +5,6 @@
 #include "astarte_device_sdk/stored_property.hpp"
 
 #include <cstdint>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -45,15 +44,5 @@ auto AstarteStoredProperty::operator==(const AstarteStoredProperty& other) const
 auto AstarteStoredProperty::operator!=(const AstarteStoredProperty& other) const -> bool {
   return !(*this == other);
 }
-
-#if defined(ASTARTE_FORMAT_ENABLED)
-auto AstarteStoredProperty::format() const -> std::string {
-  std::ostringstream stream;
-  stream << "Interface: " << interface_name_ << " v" << version_major_ << ", Path: " << path_
-         << ", Ownership: " << (ownership_ == AstarteOwnership::kDevice ? "device" : "server")
-         << ", Value: " << data_.format();
-  return stream.str();
-}
-#endif
 
 }  // namespace AstarteDeviceSdk

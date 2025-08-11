@@ -72,13 +72,6 @@ class AstarteStoredProperty {
    * @return True when different, false otherwise.
    */
   [[nodiscard]] auto operator!=(const AstarteStoredProperty& other) const -> bool;
-#if defined(ASTARTE_FORMAT_ENABLED)
-  /**
-   * @brief Pretty format the Astarte stored individual property.
-   * @return A string representing in human readable format the content of the class instance.
-   */
-  [[nodiscard]] auto format() const -> std::string;
-#endif
 
  private:
   std::string interface_name_;
