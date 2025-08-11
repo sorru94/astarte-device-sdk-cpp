@@ -26,6 +26,7 @@
 #include "astarte_device_sdk/object.hpp"
 #include "astarte_device_sdk/ownership.hpp"
 #include "astarte_device_sdk/property.hpp"
+#include "astarte_device_sdk/stored_property.hpp"
 #include "astarte_device_sdk/type.hpp"
 
 /**
@@ -491,7 +492,6 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteStoredProperty> {
    */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteStoredProperty& prop, FormatContext& ctx) const {
-    auto out = ctx.out();
     return ASTARTE_NS_FORMAT::format_to(
         ctx.out(), "Interface: {} v{}, Path: {}, Ownership: {}, Value: {}",
         prop.get_interface_name(), prop.get_version_major(), prop.get_path(),
