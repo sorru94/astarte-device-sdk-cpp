@@ -30,6 +30,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -71,6 +72,8 @@ using gRPCStoredProperties = astarteplatform::msghub::StoredProperties;
 using gRPCOwnership = astarteplatform::msghub::Ownership;
 using gRPCPropertyFilter = astarteplatform::msghub::PropertyFilter;
 using gRPCPropertyIdentifier = astarteplatform::msghub::PropertyIdentifier;
+using gRPCInterfacesJson = astarteplatform::msghub::InterfacesJson;
+using gRPCInterfacesName = astarteplatform::msghub::InterfacesName;
 
 AstarteDeviceGRPC::AstarteDeviceGRPCImpl::AstarteDeviceGRPCImpl(std::string server_addr,
                                                                 std::string node_uuid)
@@ -81,26 +84,77 @@ AstarteDeviceGRPC::AstarteDeviceGRPCImpl::AstarteDeviceGRPCImpl(std::string serv
 
 AstarteDeviceGRPC::AstarteDeviceGRPCImpl::~AstarteDeviceGRPCImpl() { disconnect(); }
 
-void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_json(
-    const std::filesystem::path& json_file) {
+void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_file(
+    const std::filesystem::path& json_file, std::chrono::milliseconds timeout) {
   spdlog::debug("Adding interface from file: {}", json_file.string());
+
+  // Check file validity
   std::ifstream interface_file(json_file, std::ios::in);
   if (!interface_file.is_open()) {
     spdlog::error("Could not open the interface file: {}", json_file.string());
     throw AstarteFileOpenException(json_file.string());
   }
+
   // Read the entire JSON file content into a string
   const std::string interface_json((std::istreambuf_iterator<char>(interface_file)),
                                    std::istreambuf_iterator<char>());
-  interfaces_bins_.push_back(interface_json);
-  spdlog::trace("Added interface: \n{}", interface_json);
+
+  // Close the file
   interface_file.close();
+
+  // Add the interface from the fetched string
+  add_interface_from_str(interface_json, timeout);
 }
 
-void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_str(std::string_view json) {
-  spdlog::debug("Adding interface");
+void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_str(
+    std::string_view json, std::chrono::milliseconds timeout) {
+  spdlog::debug("Adding interface from string");
+
+  // If the device is connected, notify the message hub
+  if (is_connected(timeout)) {
+    gRPCInterfacesJson grpc_interfaces_json;
+    grpc_interfaces_json.add_interfaces_json(json);
+    ClientContext context;
+    google::protobuf::Empty response;
+    const Status status = stub_->AddInterfaces(&context, grpc_interfaces_json, &response);
+    if (!status.ok()) {
+      spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+      return;
+    }
+  }
+
   interfaces_bins_.emplace_back(json);
   spdlog::trace("Added interface: \n{}", json);
+}
+
+void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::remove_interface(const std::string& interface_name,
+                                                                std::chrono::milliseconds timeout) {
+  spdlog::debug("Removing interface: {}", interface_name);
+  const std::string escaped_interface_name =
+      std::regex_replace(interface_name, std::regex("\\."), "\\.");
+  const std::string pattern_string =
+      R"(\"interface_name\":\s*\")" + escaped_interface_name + R"(\")";
+  const std::regex pattern(pattern_string);
+
+  for (auto i = interfaces_bins_.begin(); i != interfaces_bins_.end(); ++i) {
+    const std::string& interface_json = *i;
+    std::smatch match;
+    if (std::regex_search(interface_json, match, pattern)) {
+      if (is_connected(timeout)) {
+        gRPCInterfacesName grpc_interface_names;
+        grpc_interface_names.add_names(interface_name);
+        ClientContext context;
+        google::protobuf::Empty response;
+        const Status status = stub_->RemoveInterfaces(&context, grpc_interface_names, &response);
+        if (!status.ok()) {
+          spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+          return;
+        }
+      }
+      interfaces_bins_.erase(i);
+      break;
+    }
+  }
 }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connect() {
@@ -417,7 +471,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::handle_events(
   }
   spdlog::info("Message hub stream has been interrupted.");
 
-  // Log an error if it the stream has been stopped due to a failure.
+  // Log an error if the stream has been stopped due to a failure.
   const Status status = reader->Finish();
   if (!status.ok()) {
     grpc_stream_error_.store(true);

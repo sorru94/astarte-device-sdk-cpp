@@ -4,6 +4,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
@@ -19,6 +20,8 @@ using AstarteDeviceSdk::AstarteDatastreamObject;
 using AstarteDeviceSdk::AstarteDeviceGRPC;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstartePropertyIndividual;
+
+using namespace std::chrono_literals;
 
 void reception_handler(std::shared_ptr<AstarteDeviceGRPC> msghub_client) {
   while (true) {
@@ -57,22 +60,22 @@ int main(int argc, char** argv) {
   // Those paths assume the user is calling the Astarte executable from the root of this project.
   std::filesystem::path device_individual_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceDatastream.json";
-  msghub_client->add_interface_from_json(device_individual_interface_file_path);
+  msghub_client->add_interface_from_file(device_individual_interface_file_path, 0ms);
   std::filesystem::path server_individual_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerDatastream.json";
-  msghub_client->add_interface_from_json(server_individual_interface_file_path);
+  msghub_client->add_interface_from_file(server_individual_interface_file_path, 0ms);
   std::filesystem::path device_property_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceProperty.json";
-  msghub_client->add_interface_from_json(device_property_interface_file_path);
+  msghub_client->add_interface_from_file(device_property_interface_file_path, 0ms);
   std::filesystem::path device_aggregated_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceAggregate.json";
-  msghub_client->add_interface_from_json(device_aggregated_interface_file_path);
+  msghub_client->add_interface_from_file(device_aggregated_interface_file_path, 0ms);
   std::filesystem::path server_aggregated_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerAggregate.json";
-  msghub_client->add_interface_from_json(server_aggregated_interface_file_path);
+  msghub_client->add_interface_from_file(server_aggregated_interface_file_path, 0ms);
   std::filesystem::path server_property_interface_file_path =
       "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerProperty.json";
-  msghub_client->add_interface_from_json(server_property_interface_file_path);
+  msghub_client->add_interface_from_file(server_property_interface_file_path, 0ms);
 
   msghub_client->connect();
 

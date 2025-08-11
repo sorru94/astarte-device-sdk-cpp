@@ -53,15 +53,25 @@ class AstarteDeviceGRPC : public AstarteDevice {
   auto operator=(AstarteDeviceGRPC&& other) -> AstarteDeviceGRPC& = delete;
 
   /**
-   * @brief Add an interface for the device from a json file.
+   * @brief Add an interface for the device from a JSON file.
    * @param json_file The path to the .json interface file.
+   * @param timeout A timeout used to check the device connection status.
    */
-  void add_interface_from_json(const std::filesystem::path& json_file) override;
+  void add_interface_from_file(const std::filesystem::path& json_file,
+                               std::chrono::milliseconds timeout) override;
   /**
-   * @brief Add an interface for the device from a json file.
-   * @param json The interface to add.
+   * @brief Add an interface for the device from a JSON string view.
+   * @param json The interface definition as a JSON string view.
+   * @param timeout A timeout used to check the device connection status.
    */
-  void add_interface_from_str(std::string_view json) override;
+  void add_interface_from_str(std::string_view json, std::chrono::milliseconds timeout) override;
+  /**
+   * @brief Remove an installed interface.
+   * @param interface_name The interface name.
+   * @param timeout A timeout used to check the device connection status.
+   */
+  void remove_interface(const std::string& interface_name,
+                        std::chrono::milliseconds timeout) override;
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will

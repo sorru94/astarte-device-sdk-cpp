@@ -27,12 +27,19 @@ AstarteDeviceGRPC::AstarteDeviceGRPC(const std::string& server_addr, const std::
 
 AstarteDeviceGRPC::~AstarteDeviceGRPC() = default;
 
-void AstarteDeviceGRPC::add_interface_from_json(const std::filesystem::path& json_file) {
-  astarte_device_impl_->add_interface_from_json(json_file);
+void AstarteDeviceGRPC::add_interface_from_file(const std::filesystem::path& json_file,
+                                                std::chrono::milliseconds timeout) {
+  astarte_device_impl_->add_interface_from_file(json_file, timeout);
 }
 
-void AstarteDeviceGRPC::add_interface_from_str(std::string_view json) {
-  astarte_device_impl_->add_interface_from_str(json);
+void AstarteDeviceGRPC::add_interface_from_str(std::string_view json,
+                                               std::chrono::milliseconds timeout) {
+  astarte_device_impl_->add_interface_from_str(json, timeout);
+}
+
+void AstarteDeviceGRPC::remove_interface(const std::string& interface_name,
+                                         std::chrono::milliseconds timeout) {
+  astarte_device_impl_->remove_interface(interface_name, timeout);
 }
 
 void AstarteDeviceGRPC::connect() { astarte_device_impl_->connect(); }
