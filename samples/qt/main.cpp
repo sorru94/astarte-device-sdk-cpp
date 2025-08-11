@@ -11,6 +11,7 @@
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device_grpc.hpp"
+#include "astarte_device_sdk/formatter.hpp"
 #include "astarte_device_sdk/msg.hpp"
 
 using namespace AstarteDeviceSdk;
@@ -19,12 +20,13 @@ class AstarteWorker : public QObject {
   Q_OBJECT
 
  public:
-  AstarteWorker(QObject *parent = nullptr) : QObject(parent) {
+  AstarteWorker(QObject* parent = nullptr) : QObject(parent) {
     QString server_addr = "localhost:50051";
     QString node_id = "aa04dade-9401-4c37-8c6a-d8da15b083ae";
     device = std::make_shared<AstarteDeviceGRPC>(server_addr.toStdString(), node_id.toStdString());
 
     addInterfaces();
+    qInfo() << "Connecting the device";
     device->connect();
 
     QTimer::singleShot(3000, this, &AstarteWorker::sendInitialData);
@@ -39,14 +41,13 @@ class AstarteWorker : public QObject {
     auto incoming = device->poll_incoming(std::chrono::milliseconds(0));
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
-#if defined(ASTARTE_FORMAT_ENABLED)
-      qDebug() << "Received:" << QString::fromStdString(msg.format());
-#endif
+      qInfo() << "Received:" << QString::fromStdString(ASTARTE_NS_FORMAT::format("{}", msg));
     }
   }
 
   void sendInitialData() {
     {
+      qInfo() << "Streaming individual data";
       QString interface = "org.astarte-platform.cpp.examples.DeviceDatastream";
       auto now = std::chrono::system_clock::now();
 
@@ -102,6 +103,7 @@ class AstarteWorker : public QObject {
     }
 
     {
+      qInfo() << "Streaming object data";
       std::string interface_name = "org.astarte-platform.cpp.examples.DeviceAggregate";
       std::string common_path = "/sensor15";
 
@@ -135,22 +137,26 @@ class AstarteWorker : public QObject {
 
  private:
   std::shared_ptr<AstarteDeviceGRPC> device;
-  QTimer *pollingTimer;
+  QTimer* pollingTimer;
 
   void addInterfaces() {
+    qInfo() << "Adding interfaces";
+    std::filesystem::path qt_dir = QCoreApplication::applicationDirPath().toStdString();
+    std::filesystem::path interfaces_dir =
+        qt_dir.parent_path().parent_path().parent_path() / "simple" / "interfaces";
     // Those paths assume the user is calling the Astarte executable from the root of this project.
     std::filesystem::path device_individual_interface_file_path =
-        "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceDatastream.json";
+        interfaces_dir / "org.astarte-platform.cpp.examples.DeviceDatastream.json";
     std::filesystem::path server_individual_interface_file_path =
-        "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerDatastream.json";
+        interfaces_dir / "org.astarte-platform.cpp.examples.ServerDatastream.json";
     std::filesystem::path device_property_interface_file_path =
-        "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceProperty.json";
+        interfaces_dir / "org.astarte-platform.cpp.examples.DeviceProperty.json";
     std::filesystem::path device_aggregated_interface_file_path =
-        "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceAggregate.json";
+        interfaces_dir / "org.astarte-platform.cpp.examples.DeviceAggregate.json";
     std::filesystem::path server_aggregated_interface_file_path =
-        "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerAggregate.json";
+        interfaces_dir / "org.astarte-platform.cpp.examples.ServerAggregate.json";
     std::filesystem::path server_property_interface_file_path =
-        "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerProperty.json";
+        interfaces_dir / "org.astarte-platform.cpp.examples.ServerProperty.json";
 
     device->add_interface_from_json(device_individual_interface_file_path);
     device->add_interface_from_json(server_individual_interface_file_path);
@@ -161,7 +167,7 @@ class AstarteWorker : public QObject {
   }
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
 
   AstarteWorker worker;

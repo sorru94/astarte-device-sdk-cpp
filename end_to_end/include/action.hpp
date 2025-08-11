@@ -14,6 +14,7 @@
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device_grpc.hpp"
 #include "astarte_device_sdk/exceptions.hpp"
+#include "astarte_device_sdk/formatter.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 #include "exceptions.hpp"
@@ -269,8 +270,8 @@ class TestActionReadReceivedMQTTData : public TestAction {
     AstarteMessage received = rx_queue_->pop().value();
     if (received != message_) {
       spdlog::error("Received message differs from expected.");
-      spdlog::error("Received: {}", received.format());
-      spdlog::error("Expected: {}", message_.format());
+      spdlog::error("Received: {}", received);
+      spdlog::error("Expected: {}", message_);
       throw EndToEndMismatchException("Expected and received data differ.");
     }
   }
@@ -297,7 +298,7 @@ class TestActionTransmitRESTData : public TestAction {
     if (message_.is_datastream()) {
       if (message_.is_individual()) {
         const auto& data(message_.into<AstarteDatastreamIndividual>());
-        std::string payload = "{\"data\":" + data.format() + "}";
+        std::string payload = ASTARTE_NS_FORMAT::format(R"({{"data":{}}})", data);
         spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
@@ -309,7 +310,7 @@ class TestActionTransmitRESTData : public TestAction {
         }
       } else {
         const auto& data(message_.into<AstarteDatastreamObject>());
-        std::string payload = "{\"data\":" + data.format() + "}";
+        std::string payload = ASTARTE_NS_FORMAT::format(R"({{"data":{}}})", data);
         spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
@@ -325,7 +326,7 @@ class TestActionTransmitRESTData : public TestAction {
 
       if (data.get_value().has_value()) {
         spdlog::debug("sending server property");
-        std::string payload = "{\"data\":" + data.format() + "}";
+        std::string payload = ASTARTE_NS_FORMAT::format(R"({{"data":{}}})", data);
         spdlog::trace("HTTP POST: {} {}", request_url, payload);
         cpr::Response post_response =
             cpr::Post(cpr::Url{request_url}, cpr::Body{payload},
@@ -420,7 +421,7 @@ class TestActionFetchRESTData : public TestAction {
     }
 
     const auto& expected_data(message_.into<AstarteDatastreamIndividual>());
-    json expected_data_json = json::parse(expected_data.format());
+    json expected_data_json = json::parse(ASTARTE_NS_FORMAT::format("{}", expected_data));
     json fetched_data = response_json[message_.get_path()]["value"];
 
     if (expected_data_json != fetched_data) {
@@ -453,7 +454,7 @@ class TestActionFetchRESTData : public TestAction {
 
     const auto& expected_data(message_.into<AstarteDatastreamObject>());
 
-    json expected_data_json = json::parse(expected_data.format());
+    json expected_data_json = json::parse(ASTARTE_NS_FORMAT::format("{}", expected_data));
 
     // Every time the test is repeated, the object size increases by one, because
     // it retrieves every object data tha has been sent to that interface up to that point.
@@ -483,7 +484,7 @@ class TestActionFetchRESTData : public TestAction {
       throw EndToEndHTTPException("Fetching of data through REST API failed.");
     }
 
-    json expected_data_json = json::parse(expected_data.format());
+    json expected_data_json = json::parse(ASTARTE_NS_FORMAT::format("{}", expected_data));
     // unlike the device datastream, the fetched property does not contain the `value` field
     json fetched_data = response_json[message_.get_path()];
 

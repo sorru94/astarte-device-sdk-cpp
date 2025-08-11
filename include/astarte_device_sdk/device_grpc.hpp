@@ -40,23 +40,23 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param server_addr The gRPC server address of the Astarte message hub.
    * @param node_uuid The UUID identifier for this device with the Astarte message hub.
    */
-  AstarteDeviceGRPC(const std::string &server_addr, const std::string &node_uuid);
+  AstarteDeviceGRPC(const std::string& server_addr, const std::string& node_uuid);
   /** @brief Destructor for the Astarte device class. */
   ~AstarteDeviceGRPC() override;
   /** @brief Copy constructor for the Astarte device class. */
-  AstarteDeviceGRPC(AstarteDeviceGRPC &other) = delete;
+  AstarteDeviceGRPC(AstarteDeviceGRPC& other) = delete;
   /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceGRPC &other) -> AstarteDeviceGRPC & = delete;
+  auto operator=(AstarteDeviceGRPC& other) -> AstarteDeviceGRPC& = delete;
   /** @brief Move constructor for the Astarte device class. */
-  AstarteDeviceGRPC(AstarteDeviceGRPC &&other) = delete;
+  AstarteDeviceGRPC(AstarteDeviceGRPC&& other) = delete;
   /** @brief Move assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceGRPC &&other) -> AstarteDeviceGRPC & = delete;
+  auto operator=(AstarteDeviceGRPC&& other) -> AstarteDeviceGRPC& = delete;
 
   /**
    * @brief Add an interface for the device from a json file.
    * @param json_file The path to the .json interface file.
    */
-  void add_interface_from_json(const std::filesystem::path &json_file) override;
+  void add_interface_from_json(const std::filesystem::path& json_file) override;
   /**
    * @brief Add an interface for the device from a json file.
    * @param json The interface to add.
@@ -74,7 +74,7 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @return True if the device is connected to the message hub, false otherwise.
    */
   // NOLINTNEXTLINE(misc-include-cleaner)
-  [[nodiscard]] auto is_connected(const std::chrono::milliseconds &timeout) const -> bool override;
+  [[nodiscard]] auto is_connected(const std::chrono::milliseconds& timeout) const -> bool override;
   /** @brief Disconnect from Astarte. */
   void disconnect() override;
   /**
@@ -85,8 +85,8 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
   void send_individual(std::string_view interface_name, std::string_view path,
-                       const AstarteData &data,
-                       const std::chrono::system_clock::time_point *timestamp) override;
+                       const AstarteData& data,
+                       const std::chrono::system_clock::time_point* timestamp) override;
   /**
    * @brief Send object data to Astarte.
    * @param interface_name The name of the interface on which to send the data.
@@ -95,8 +95,8 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param timestamp The timestamp for the data, this might be a nullptr.
    */
   void send_object(std::string_view interface_name, std::string_view path,
-                   const AstarteDatastreamObject &object,
-                   const std::chrono::system_clock::time_point *timestamp) override;
+                   const AstarteDatastreamObject& object,
+                   const std::chrono::system_clock::time_point* timestamp) override;
   /**
    * @brief Set a device property.
    * @param interface_name The name of the interface for the property.
@@ -104,7 +104,7 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param data The property data.
    */
   void set_property(std::string_view interface_name, std::string_view path,
-                    const AstarteData &data) override;
+                    const AstarteData& data) override;
   /**
    * @brief Unset a device property.
    * @param interface_name The name of the interface for the property.
@@ -116,14 +116,14 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @param timeout Will block for this timeout if no message is present.
    * @return The received message when present, std::nullopt otherwise.
    */
-  auto poll_incoming(const std::chrono::milliseconds &timeout)
+  auto poll_incoming(const std::chrono::milliseconds& timeout)
       -> std::optional<AstarteMessage> override;
   /**
    * @brief Get all stored properties matching the input filter.
    * @param ownership Optional ownership filter.
    * @return A list of stored properties, as returned by the message hub.
    */
-  auto get_all_properties(const std::optional<AstarteOwnership> &ownership)
+  auto get_all_properties(const std::optional<AstarteOwnership>& ownership)
       -> std::list<AstarteStoredProperty>;
   /**
    * @brief Get stored properties matching the interface.

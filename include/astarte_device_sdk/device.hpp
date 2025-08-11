@@ -35,26 +35,26 @@ class AstarteDevice {
    */
   virtual ~AstarteDevice() = default;
   /** @brief Copy constructor for the Astarte device class. */
-  AstarteDevice(const AstarteDevice &other) = delete;
+  AstarteDevice(const AstarteDevice& other) = delete;
   /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(const AstarteDevice &other) -> AstarteDevice & = delete;
+  auto operator=(const AstarteDevice& other) -> AstarteDevice& = delete;
   /**
    * @brief Move constructor for the Astarte device class.
    * @param other Object to move.
    */
-  AstarteDevice(AstarteDevice &&other) = default;
+  AstarteDevice(AstarteDevice&& other) = default;
   /**
    * @brief Move assignment operator for the Astarte device class.
    * @param other Object to move.
    * @return Moved object.
    */
-  auto operator=(AstarteDevice &&other) -> AstarteDevice & = default;
+  auto operator=(AstarteDevice&& other) -> AstarteDevice& = default;
 
   /**
    * @brief Add an interface for the device from a JSON file.
    * @param json_file The path to the .json interface file.
    */
-  virtual void add_interface_from_json(const std::filesystem::path &json_file) = 0;
+  virtual void add_interface_from_json(const std::filesystem::path& json_file) = 0;
   /**
    * @brief Add an interface for the device from a JSON string view.
    * @param json The interface definition as a JSON string view.
@@ -71,7 +71,7 @@ class AstarteDevice {
    * @param timeout The maximum time to wait for a connection confirmation.
    * @return True if the device is connected, false otherwise.
    */
-  [[nodiscard]] virtual auto is_connected(const std::chrono::milliseconds &timeout) const
+  [[nodiscard]] virtual auto is_connected(const std::chrono::milliseconds& timeout) const
       -> bool = 0;
   /**
    * @brief Disconnect the device from Astarte.
@@ -85,8 +85,8 @@ class AstarteDevice {
    * @param timestamp An optional timestamp for the data point. If nullptr, Astarte will assign one.
    */
   virtual void send_individual(std::string_view interface_name, std::string_view path,
-                               const AstarteData &data,
-                               const std::chrono::system_clock::time_point *timestamp) = 0;
+                               const AstarteData& data,
+                               const std::chrono::system_clock::time_point* timestamp) = 0;
   /**
    * @brief Send an aggregate object data payload to Astarte.
    * @param interface_name The name of the target interface.
@@ -95,8 +95,8 @@ class AstarteDevice {
    * @param timestamp An optional timestamp for the data. If nullptr, Astarte will assign one.
    */
   virtual void send_object(std::string_view interface_name, std::string_view path,
-                           const AstarteDatastreamObject &object,
-                           const std::chrono::system_clock::time_point *timestamp) = 0;
+                           const AstarteDatastreamObject& object,
+                           const std::chrono::system_clock::time_point* timestamp) = 0;
   /**
    * @brief Set a device property on Astarte.
    * @param interface_name The name of the interface containing the property.
@@ -104,7 +104,7 @@ class AstarteDevice {
    * @param data The value to set for the property.
    */
   virtual void set_property(std::string_view interface_name, std::string_view path,
-                            const AstarteData &data) = 0;
+                            const AstarteData& data) = 0;
   /**
    * @brief Unset a device property on Astarte.
    * @param interface_name The name of the interface containing the property.
@@ -117,7 +117,7 @@ class AstarteDevice {
    * @return An std::optional containing the received AstarteMessage if one was available,
    * or std::nullopt if the timeout was reached.
    */
-  virtual auto poll_incoming(const std::chrono::milliseconds &timeout)
+  virtual auto poll_incoming(const std::chrono::milliseconds& timeout)
       -> std::optional<AstarteMessage> = 0;
 
  protected:

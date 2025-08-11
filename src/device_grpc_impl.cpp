@@ -82,7 +82,7 @@ AstarteDeviceGRPC::AstarteDeviceGRPCImpl::AstarteDeviceGRPCImpl(std::string serv
 AstarteDeviceGRPC::AstarteDeviceGRPCImpl::~AstarteDeviceGRPCImpl() { disconnect(); }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_json(
-    const std::filesystem::path &json_file) {
+    const std::filesystem::path& json_file) {
   spdlog::debug("Adding interface from file: {}", json_file.string());
   std::ifstream interface_file(json_file, std::ios::in);
   if (!interface_file.is_open()) {
@@ -113,7 +113,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connect() {
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::is_connected(
-    const std::chrono::milliseconds &timeout) const -> bool {
+    const std::chrono::milliseconds& timeout) const -> bool {
   // The event handler is started when a connection attempt is performed.
   // If a connection cannot be established it will exit quickly.
   if (!event_handler_.joinable()) {
@@ -156,8 +156,8 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::disconnect() {
 }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_individual(
-    std::string_view interface_name, std::string_view path, const AstarteData &data,
-    const std::chrono::system_clock::time_point *timestamp) {
+    std::string_view interface_name, std::string_view path, const AstarteData& data,
+    const std::chrono::system_clock::time_point* timestamp) {
   spdlog::debug("Sending individual: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
     const std::string_view msg("Device disconnected, operation aborted.");
@@ -184,8 +184,8 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_individual(
 }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_object(
-    std::string_view interface_name, std::string_view path, const AstarteDatastreamObject &object,
-    const std::chrono::system_clock::time_point *timestamp) {
+    std::string_view interface_name, std::string_view path, const AstarteDatastreamObject& object,
+    const std::chrono::system_clock::time_point* timestamp) {
   spdlog::debug("Sending object: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
     const std::string_view msg("Device disconnected, operation aborted.");
@@ -213,7 +213,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_object(
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(std::string_view interface_name,
                                                             std::string_view path,
-                                                            const AstarteData &data) {
+                                                            const AstarteData& data) {
   spdlog::debug("Setting property: {} {}", interface_name, path);
   if (!event_handler_.joinable()) {
     const std::string_view msg("Device disconnected, operation aborted.");
@@ -224,7 +224,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(std::string_view int
   message.set_interface_name(interface_name);
   message.set_path(path);
 
-  const std::optional<AstarteData> &opt_data = data;
+  const std::optional<AstarteData>& opt_data = data;
   GrpcConverterTo converter;
   std::unique_ptr<gRPCAstartePropertyIndividual> grpc_property_individual = converter(opt_data);
   message.set_allocated_property_individual(grpc_property_individual.release());
@@ -266,12 +266,12 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::unset_property(std::string_view i
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::poll_incoming(
-    const std::chrono::milliseconds &timeout) -> std::optional<AstarteMessage> {
+    const std::chrono::milliseconds& timeout) -> std::optional<AstarteMessage> {
   return rcv_queue_.pop(timeout);
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_all_properties(
-    const std::optional<AstarteOwnership> &ownership) -> std::list<AstarteStoredProperty> {
+    const std::optional<AstarteOwnership>& ownership) -> std::list<AstarteStoredProperty> {
   if (ownership.has_value()) {
     spdlog::debug("Getting all stored properties {} owned.", ownership_as_str(ownership.value()));
   } else {
@@ -368,7 +368,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connection_attempt() {
 
   // Create the node message for the attach RPC.
   gRPCNode node;
-  for (const std::string &interface_json : interfaces_bins_) {
+  for (const std::string& interface_json : interfaces_bins_) {
     node.add_interfaces_json(interface_json);
   }
 
@@ -411,7 +411,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::handle_events(
     std::optional<AstarteMessage> parsed_event =
         AstarteDeviceGRPCImpl::parse_message_hub_event(msghub_event);
     if (parsed_event.has_value()) {
-      const AstarteMessage &parsed_message = parsed_event.value();
+      const AstarteMessage& parsed_message = parsed_event.value();
       this->rcv_queue_.push(parsed_message);
     }
   }
@@ -426,17 +426,17 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::handle_events(
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::parse_message_hub_event(
-    const gRPCMessageHubEvent &event) -> std::optional<AstarteMessage> {
+    const gRPCMessageHubEvent& event) -> std::optional<AstarteMessage> {
   spdlog::trace("Parsing message hub event.");
   std::optional<AstarteMessage> res = std::nullopt;
   if (event.has_message()) {
-    const gRPCAstarteMessage &astarteMessage = event.message();
+    const gRPCAstarteMessage& astarteMessage = event.message();
     res = GrpcConverterFrom{}(astarteMessage);
   } else if (event.has_error()) {
-    const gRPCMessageHubError &error = event.error();
+    const gRPCMessageHubError& error = event.error();
     spdlog::error("Message hub error: {}", error.description());
     spdlog::error("Error source backtrace: ");
-    for (const std::string &source : error.source()) {
+    for (const std::string& source : error.source()) {
       spdlog::error("  {}", source);
     }
   } else {
@@ -455,7 +455,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connection_loop() {
       // This is a blocking function.
       // It will return only if the connection fails or the device is disconnected.
       connection_attempt();
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
       spdlog::error("Connection failed: {}", e.what());
     }
 

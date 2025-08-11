@@ -24,25 +24,25 @@ AstarteStoredProperty::AstarteStoredProperty(std::string_view interface_name, st
       ownership_(ownership),
       data_(std::move(data)) {}
 
-auto AstarteStoredProperty::get_interface_name() const -> const std::string & {
+auto AstarteStoredProperty::get_interface_name() const -> const std::string& {
   return interface_name_;
 }
 
-auto AstarteStoredProperty::get_path() const -> const std::string & { return path_; }
+auto AstarteStoredProperty::get_path() const -> const std::string& { return path_; }
 
 auto AstarteStoredProperty::get_version_major() const -> int32_t { return version_major_; }
 
-auto AstarteStoredProperty::get_ownership() const -> const AstarteOwnership & { return ownership_; }
+auto AstarteStoredProperty::get_ownership() const -> const AstarteOwnership& { return ownership_; }
 
-auto AstarteStoredProperty::get_value() const -> const AstarteData & { return data_; }
+auto AstarteStoredProperty::get_value() const -> const AstarteData& { return data_; }
 
-auto AstarteStoredProperty::operator==(const AstarteStoredProperty &other) const -> bool {
+auto AstarteStoredProperty::operator==(const AstarteStoredProperty& other) const -> bool {
   return (interface_name_ == other.interface_name_) && (path_ == other.path_) &&
          (version_major_ == other.version_major_) && (ownership_ == other.ownership_) &&
          (data_ == other.data_);
 }
 
-auto AstarteStoredProperty::operator!=(const AstarteStoredProperty &other) const -> bool {
+auto AstarteStoredProperty::operator!=(const AstarteStoredProperty& other) const -> bool {
   return !(*this == other);
 }
 
