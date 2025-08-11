@@ -61,7 +61,21 @@ auto time_point_to_utc(const std::chrono::system_clock::time_point* timestamp) -
 
 class TestAction {
  public:
-  virtual void execute(const std::string& case_name) const = 0;
+  explicit TestAction() : should_fail_(false) {}
+  explicit TestAction(bool should_fail) : should_fail_(should_fail) {}
+  virtual void execute_unchecked(const std::string& case_name) const = 0;
+  virtual void execute(const std::string& case_name) {
+    try {
+      execute_unchecked(case_name);
+    } catch (const std::exception& e) {
+      if (should_fail_) {
+        spdlog::debug("[{}] Catched exception: {}", case_name, e.what());
+        spdlog::info("[{}] Test action failed as expected...", case_name);
+      } else {
+        throw e;
+      }
+    }
+  }
   void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device,
                      const std::shared_ptr<SharedQueue<AstarteMessage>>& rx_queue,
                      const std::shared_ptr<std::atomic_bool>& kill_reception) {
@@ -85,6 +99,7 @@ class TestAction {
   std::string appengine_token_;
   std::string realm_;
   std::string device_id_;
+  bool should_fail_;
 };
 
 class TestActionSleep : public TestAction {
@@ -97,7 +112,7 @@ class TestActionSleep : public TestAction {
     return std::shared_ptr<TestActionSleep>(new TestActionSleep(milliseconds));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Sleeping for {}ms...", case_name, duration_.count());
     std::this_thread::sleep_for(duration_);
   }
@@ -111,13 +126,82 @@ class TestActionSleep : public TestAction {
   std::chrono::milliseconds duration_;
 };
 
+class TestActionAddInterfaceString : public TestAction {
+ public:
+  static std::shared_ptr<TestActionAddInterfaceString> Create(std::string_view interface_json,
+                                                              std::chrono::milliseconds timeout,
+                                                              bool should_fail = false) {
+    return std::shared_ptr<TestActionAddInterfaceString>(
+        new TestActionAddInterfaceString(interface_json, timeout, should_fail));
+  }
+
+  void execute_unchecked(const std::string& case_name) const override {
+    spdlog::info("[{}] Adding interface from string...", case_name);
+    device_->add_interface_from_str(interface_json_, timeout_);
+  }
+
+ private:
+  TestActionAddInterfaceString(std::string_view interface_json, std::chrono::milliseconds timeout,
+                               bool should_fail)
+      : TestAction(should_fail), interface_json_(interface_json), timeout_(timeout) {}
+
+  std::string interface_json_;
+  std::chrono::milliseconds timeout_;
+};
+
+class TestActionAddInterfaceFile : public TestAction {
+ public:
+  static std::shared_ptr<TestActionAddInterfaceFile> Create(
+      const std::filesystem::path& interface_file, std::chrono::milliseconds timeout,
+      bool should_fail = false) {
+    return std::shared_ptr<TestActionAddInterfaceFile>(
+        new TestActionAddInterfaceFile(interface_file, timeout, should_fail));
+  }
+
+  void execute_unchecked(const std::string& case_name) const override {
+    spdlog::info("[{}] Adding interface from file...", case_name);
+    device_->add_interface_from_file(interface_file_, timeout_);
+  }
+
+ private:
+  TestActionAddInterfaceFile(const std::filesystem::path& interface_file,
+                             std::chrono::milliseconds timeout, bool should_fail)
+      : TestAction(should_fail), interface_file_(interface_file), timeout_(timeout) {}
+
+  std::filesystem::path interface_file_;
+  std::chrono::milliseconds timeout_;
+};
+
+class TestActionRemoveInterface : public TestAction {
+ public:
+  static std::shared_ptr<TestActionRemoveInterface> Create(std::string_view interface_name,
+                                                           std::chrono::milliseconds timeout,
+                                                           bool should_fail = false) {
+    return std::shared_ptr<TestActionRemoveInterface>(
+        new TestActionRemoveInterface(interface_name, timeout, should_fail));
+  }
+
+  void execute_unchecked(const std::string& case_name) const override {
+    spdlog::info("[{}] Removing interface...", case_name);
+    device_->remove_interface(interface_name_, timeout_);
+  }
+
+ private:
+  TestActionRemoveInterface(std::string_view interface_name, std::chrono::milliseconds timeout,
+                            bool should_fail)
+      : TestAction(should_fail), interface_name_(interface_name), timeout_(timeout) {}
+
+  std::string interface_name_;
+  std::chrono::milliseconds timeout_;
+};
+
 class TestActionConnect : public TestAction {
  public:
   static std::shared_ptr<TestActionConnect> Create() {
     return std::shared_ptr<TestActionConnect>(new TestActionConnect());
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Connecting...", case_name);
     device_->connect();
     do {
@@ -135,7 +219,7 @@ class TestActionDisconnect : public TestAction {
     return std::shared_ptr<TestActionDisconnect>(new TestActionDisconnect());
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Disconnecting...", case_name);
     device_->disconnect();
     *kill_reception_ = true;
@@ -153,7 +237,7 @@ class TestActionCheckDeviceStatus : public TestAction {
         new TestActionCheckDeviceStatus(connected, introspection));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Checking device status...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_;
     spdlog::trace("HTTP GET: {}", request_url);
@@ -204,7 +288,7 @@ class TestActionTransmitMQTTData : public TestAction {
         new TestActionTransmitMQTTData(message, timestamp, fails));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Transmitting MQTT data...", case_name);
     try {
       if (message_.is_datastream()) {
@@ -256,7 +340,7 @@ class TestActionReadReceivedMQTTData : public TestAction {
         new TestActionReadReceivedMQTTData(message));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Reading received MQTT data...", case_name);
     auto start = std::chrono::high_resolution_clock::now();
     while (rx_queue_->empty()) {
@@ -288,7 +372,7 @@ class TestActionTransmitRESTData : public TestAction {
     return std::shared_ptr<TestActionTransmitRESTData>(new TestActionTransmitRESTData(message));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Transmitting REST data...", case_name);
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
                               "/interfaces/" + message_.get_interface() + message_.get_path();
@@ -368,7 +452,7 @@ class TestActionFetchRESTData : public TestAction {
         new TestActionFetchRESTData(message, timestamp));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Fetching REST data...", case_name);
 
     std::string request_url = appengine_url_ + "/v1/" + realm_ + "/devices/" + device_id_ +
@@ -518,7 +602,7 @@ class TestActionGetDeviceProperty : public TestAction {
         new TestActionGetDeviceProperty(interface_name, path, property));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Getting property from device...", case_name);
     AstartePropertyIndividual property = device_->get_property(interface_name_, path_);
     if (property != property_) {
@@ -547,7 +631,7 @@ class TestActionGetDeviceProperties : public TestAction {
         new TestActionGetDeviceProperties(interface_name, properties));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Getting properties from device...", case_name);
     std::list<AstarteStoredProperty> properties = device_->get_properties(interface_name_);
     if (!compare_lists(properties, properties_)) {
@@ -577,7 +661,7 @@ class TestActionGetAllFilteredProperties : public TestAction {
         new TestActionGetAllFilteredProperties(ownership, properties));
   }
 
-  void execute(const std::string& case_name) const override {
+  void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Getting all properties from device...", case_name);
     std::list<AstarteStoredProperty> properties = device_->get_all_properties(ownership_);
     if (!compare_lists(properties, properties_)) {

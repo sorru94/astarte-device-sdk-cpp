@@ -11,6 +11,8 @@
 
 #include "case.hpp"
 
+using namespace std::chrono_literals;
+
 struct ConfigGRPC {
   std::string server_addr;
   std::string node_id;
@@ -35,7 +37,6 @@ class TestOrchestrator {
   void add_test_case(TestCase&& test_case) {
     std::shared_ptr<AstarteDeviceGRPC> device =
         std::make_shared<AstarteDeviceGRPC>(grpc_config_.server_addr, grpc_config_.node_id);
-    using namespace std::chrono_literals;
     for (const std::filesystem::path& interface_path : grpc_config_.interfaces) {
       device->add_interface_from_file(interface_path, 0ms);
     }
