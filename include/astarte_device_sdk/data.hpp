@@ -136,14 +136,6 @@ class AstarteData {
     return std::nullopt;
   }
 #endif  // __cplusplus >= 202002L
-
-#if defined(ASTARTE_FORMAT_ENABLED)
-  /**
-   * @brief Pretty format the Astarte data.
-   * @return A string representing in human readable format the content of the class instance.
-   */
-  [[nodiscard]] auto format() const -> std::string;
-#endif
   /**
    * @brief Get the type of the data contained in this class instance.
    * @return The type of the content of this class instance.

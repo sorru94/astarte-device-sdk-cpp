@@ -10,6 +10,7 @@
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device_grpc.hpp"
+#include "astarte_device_sdk/formatter.hpp"
 #include "astarte_device_sdk/msg.hpp"
 
 using AstarteDeviceSdk::AstarteData;
@@ -30,29 +31,23 @@ void reception_handler(std::shared_ptr<AstarteDeviceGRPC> msghub_client) {
       if (msg.is_datastream()) {
         if (msg.is_individual()) {
           spdlog::info("Type: individual datastream");
-          const auto &data(msg.into<AstarteDatastreamIndividual>());
-#if defined(ASTARTE_FORMAT_ENABLED)
-          spdlog::info("Value: {}", data.format());
-#endif
+          const auto& data(msg.into<AstarteDatastreamIndividual>());
+          spdlog::info("Value: {}", data);
         } else {
           spdlog::info("Type: object datastream");
-          const auto &data(msg.into<AstarteDatastreamObject>());
-#if defined(ASTARTE_FORMAT_ENABLED)
-          spdlog::info("Value: {}", data.format());
-#endif
+          const auto& data(msg.into<AstarteDatastreamObject>());
+          spdlog::info("Value: {}", data);
         }
       } else {
         spdlog::info("Type: individual property");
-        const auto &data(msg.into<AstartePropertyIndividual>());
-#if defined(ASTARTE_FORMAT_ENABLED)
-        spdlog::info("Value: {}", data.format());
-#endif
+        const auto& data(msg.into<AstartePropertyIndividual>());
+        spdlog::info("Value: {}", data);
       }
     }
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   spdlog::set_level(spdlog::level::debug);
   std::string server_addr = "localhost:50051";
   std::string node_id("aa04dade-9401-4c37-8c6a-d8da15b083ae");

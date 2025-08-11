@@ -15,7 +15,7 @@ cpp_standard="20"
 fresh_mode=false
 docs_dir="doc"
 docs_build_dir_name="_build"
-astarte_sdk_version="0.5.0"
+astarte_sdk_version="0.6.1"
 doxyfile_name="astarte-device-sdk.doxyfile.in"
 script_initial_pwd="$PWD"
 
@@ -167,7 +167,7 @@ fi
 export DOXYGEN_OUT="./$docs_build_dir_name"
 export DOXYGEN_ASTARTE_DEVICE_SDK_BASE=".."
 export DOXYGEN_ASTARTE_DEVICE_SDK_VERSION="$astarte_sdk_version"
-export DOXYGEN_ASTARTE_DEVICE_SDK_MACROS="__cplusplus=$doxygen_cpp_standard_macro_value ASTARTE_FORMAT_ENABLED=1"
+export DOXYGEN_ASTARTE_DEVICE_SDK_MACROS="__cplusplus=$doxygen_cpp_standard_macro_value"
 
 echo "Running Doxygen with configuration:"
 echo "  DOXYGEN_OUT=$DOXYGEN_OUT"

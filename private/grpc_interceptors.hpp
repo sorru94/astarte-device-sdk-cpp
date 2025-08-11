@@ -20,7 +20,7 @@ using grpc::experimental::InterceptorBatchMethods;
 class NodeIdInterceptor : public Interceptor {
  public:
   explicit NodeIdInterceptor(std::string node_id);
-  void Intercept(InterceptorBatchMethods *methods) override;
+  void Intercept(InterceptorBatchMethods* methods) override;
 
  private:
   std::string node_id_;
@@ -29,7 +29,7 @@ class NodeIdInterceptor : public Interceptor {
 class NodeIdInterceptorFactory : public ClientInterceptorFactoryInterface {
  public:
   explicit NodeIdInterceptorFactory(std::string node_id);
-  auto CreateClientInterceptor(ClientRpcInfo *info) -> Interceptor * override;
+  auto CreateClientInterceptor(ClientRpcInfo* info) -> Interceptor* override;
 
  private:
   std::string node_id_;

@@ -37,12 +37,12 @@ class AstarteStoredProperty {
    * @brief Get the interface name contained within the object.
    * @return A constant reference to the interface name string.
    */
-  [[nodiscard]] auto get_interface_name() const -> const std::string &;
+  [[nodiscard]] auto get_interface_name() const -> const std::string&;
   /**
    * @brief Get the path contained within the object.
    * @return A constant reference to the path string.
    */
-  [[nodiscard]] auto get_path() const -> const std::string &;
+  [[nodiscard]] auto get_path() const -> const std::string&;
   /**
    * @brief Get the major version within the object.
    * @details The major version is the major version of the interface of the property.
@@ -54,31 +54,24 @@ class AstarteStoredProperty {
    * @details The ownership is the ownership of the interface of the property.
    * @return A constant reference to the ownership.
    */
-  [[nodiscard]] auto get_ownership() const -> const AstarteOwnership &;
+  [[nodiscard]] auto get_ownership() const -> const AstarteOwnership&;
   /**
    * @brief Get the value contained within the object.
    * @return A constant reference to the data, if any.
    */
-  [[nodiscard]] auto get_value() const -> const AstarteData &;
+  [[nodiscard]] auto get_value() const -> const AstarteData&;
   /**
    * @brief Overloader for the comparison operator ==.
    * @param other The object to compare to.
    * @return True when equal, false otherwise.
    */
-  [[nodiscard]] auto operator==(const AstarteStoredProperty &other) const -> bool;
+  [[nodiscard]] auto operator==(const AstarteStoredProperty& other) const -> bool;
   /**
    * @brief Overloader for the comparison operator !=.
    * @param other The object to compare to.
    * @return True when different, false otherwise.
    */
-  [[nodiscard]] auto operator!=(const AstarteStoredProperty &other) const -> bool;
-#if defined(ASTARTE_FORMAT_ENABLED)
-  /**
-   * @brief Pretty format the Astarte stored individual property.
-   * @return A string representing in human readable format the content of the class instance.
-   */
-  [[nodiscard]] auto format() const -> std::string;
-#endif
+  [[nodiscard]] auto operator!=(const AstarteStoredProperty& other) const -> bool;
 
  private:
   std::string interface_name_;

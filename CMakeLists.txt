@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(
   AstarteDeviceSDKcpp
-  VERSION 0.5.99
+  VERSION 0.6.1
   LANGUAGES CXX)
 
 include(FetchContent)
@@ -18,14 +18,30 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
 # Configuration options for this library
-option(ASTARTE_ENABLE_FORMAT "Enable formatting of Astarte device data" OFF)
 option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
 set(ASTARTE_MESSAGE_HUB_PROTO_DIR CACHE PATH "Directory to an already downloaded astarte-message-hub-proto repository")
 
+# check if std::format is actually supported.
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(
+  "
+  #include <format>
+  int main() {
+    auto s = std::format(\"Hello {}\", 42);
+    return 0;
+  }
+  "
+  HAS_STD_FORMAT
+)
+
+if(HAS_STD_FORMAT)
+  # C++20 with <format> available to compiler requires to enable the following spdlog feature
+  set(SPDLOG_USE_STD_FORMAT true)
+endif()
+
 message(STATUS "--------------------------------------------------")
 message(STATUS "Astarte SDK Configuration:")
-message(STATUS "  ASTARTE_ENABLE_FORMAT:           ${ASTARTE_ENABLE_FORMAT}")
 message(STATUS "  ASTARTE_PUBLIC_SPDLOG_DEP:       ${ASTARTE_PUBLIC_SPDLOG_DEP}")
 message(STATUS "  ASTARTE_PUBLIC_PROTO_DEP:        ${ASTARTE_PUBLIC_PROTO_DEP}")
 message(STATUS "  ASTARTE_MESSAGE_HUB_PROTO_DIR:   ${ASTARTE_MESSAGE_HUB_PROTO_DIR}")
@@ -74,10 +90,6 @@ target_link_libraries(astarte_device_sdk
         ${_PROTOBUF_LIBPROTOBUF}
 )
 
-# Link the dependencies within the library
-if(ASTARTE_ENABLE_FORMAT)
-    target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_FORMAT_ENABLED)
-endif()
 if(ASTARTE_PUBLIC_SPDLOG_DEP)
     target_link_libraries(astarte_device_sdk PUBLIC spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
 else()
@@ -128,4 +140,4 @@ configure_file(
     @ONLY
 )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/astarte_device_sdk.pc  DESTINATION lib/pkgconfig)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/astarte_device_sdk.pc DESTINATION lib/pkgconfig)
