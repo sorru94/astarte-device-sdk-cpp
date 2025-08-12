@@ -13,6 +13,7 @@
 #include <chrono>
 #include <filesystem>
 #include <optional>
+#include <string>
 #include <string_view>
 
 #include "astarte_device_sdk/data.hpp"
@@ -49,17 +50,26 @@ class AstarteDevice {
    * @return Moved object.
    */
   auto operator=(AstarteDevice&& other) -> AstarteDevice& = default;
-
   /**
    * @brief Add an interface for the device from a JSON file.
    * @param json_file The path to the .json interface file.
+   * @param timeout A timeout used to check the device connection status.
    */
-  virtual void add_interface_from_json(const std::filesystem::path& json_file) = 0;
+  virtual void add_interface_from_file(const std::filesystem::path& json_file,
+                                       std::chrono::milliseconds timeout) = 0;
   /**
    * @brief Add an interface for the device from a JSON string view.
    * @param json The interface definition as a JSON string view.
+   * @param timeout A timeout used to check the device connection status.
    */
-  virtual void add_interface_from_str(std::string_view json) = 0;
+  virtual void add_interface_from_str(std::string_view json, std::chrono::milliseconds timeout) = 0;
+  /**
+   * @brief Remove an installed interface.
+   * @param interface_name The interface name.
+   * @param timeout A timeout used to check the device connection status.
+   */
+  virtual void remove_interface(const std::string& interface_name,
+                                std::chrono::milliseconds timeout) = 0;
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous function. It starts a management process that will handle

@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QThread>
 #include <QTimer>
+#include <chrono>
 #include <filesystem>
 #include <memory>
 
@@ -15,6 +16,7 @@
 #include "astarte_device_sdk/msg.hpp"
 
 using namespace AstarteDeviceSdk;
+using namespace std::chrono_literals;
 
 class AstarteWorker : public QObject {
   Q_OBJECT
@@ -158,12 +160,12 @@ class AstarteWorker : public QObject {
     std::filesystem::path server_property_interface_file_path =
         interfaces_dir / "org.astarte-platform.cpp.examples.ServerProperty.json";
 
-    device->add_interface_from_json(device_individual_interface_file_path);
-    device->add_interface_from_json(server_individual_interface_file_path);
-    device->add_interface_from_json(device_property_interface_file_path);
-    device->add_interface_from_json(device_aggregated_interface_file_path);
-    device->add_interface_from_json(server_aggregated_interface_file_path);
-    device->add_interface_from_json(server_property_interface_file_path);
+    device->add_interface_from_file(device_individual_interface_file_path, 0ms);
+    device->add_interface_from_file(server_individual_interface_file_path, 0ms);
+    device->add_interface_from_file(device_property_interface_file_path, 0ms);
+    device->add_interface_from_file(device_aggregated_interface_file_path, 0ms);
+    device->add_interface_from_file(server_aggregated_interface_file_path, 0ms);
+    device->add_interface_from_file(server_property_interface_file_path, 0ms);
   }
 };
 

@@ -8,6 +8,7 @@
 #include "astarte_device_sdk/msg.hpp"
 #include "constants/astarte_interfaces.hpp"
 #include "orchestrator.hpp"
+#include "testcases/device_add_remove_interface.hpp"
 #include "testcases/device_aggregate.hpp"
 #include "testcases/device_datastream.hpp"
 #include "testcases/device_property.hpp"
@@ -45,6 +46,7 @@ int main() {
 
   orchestrator.add_test_case(testcases::device_status());
   orchestrator.add_test_case(testcases::device_reconnection());
+  orchestrator.add_test_case(testcases::device_add_remove_interface());
   orchestrator.add_test_case(testcases::device_datastream());
   orchestrator.add_test_case(testcases::server_datastream());
   orchestrator.add_test_case(testcases::device_aggregate());

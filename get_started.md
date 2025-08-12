@@ -191,6 +191,7 @@ A couple of assumptions have been made:
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <chrono>
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device_grpc.hpp"
@@ -203,6 +204,8 @@ using AstarteDeviceSdk::AstarteDatastreamObject;
 using AstarteDeviceSdk::AstarteDeviceGRPC;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstartePropertyIndividual;
+
+using namespace std::chrono_literals;
 
 void reception_handler(std::shared_ptr<AstarteDeviceGRPC> device) {
   while (true) {
@@ -242,9 +245,9 @@ int main(int argc, char **argv) {
   std::filesystem::path device_property_interface_file_path =
       "./org.astarte-platform.cpp.get-started.Property.json";
 
-  device->add_interface_from_json(device_individual_interface_file_path);
-  device->add_interface_from_json(device_aggregated_interface_file_path);
-  device->add_interface_from_json(device_property_interface_file_path);
+  device->add_interface_from_file(device_individual_interface_file_path, 0ms);
+  device->add_interface_from_file(device_aggregated_interface_file_path, 0ms);
+  device->add_interface_from_file(device_property_interface_file_path, 0ms);
 
   device->connect();
 

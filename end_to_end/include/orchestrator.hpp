@@ -6,9 +6,12 @@
 
 #include <spdlog/spdlog.h>
 
+#include <chrono>
 #include <vector>
 
 #include "case.hpp"
+
+using namespace std::chrono_literals;
 
 struct ConfigGRPC {
   std::string server_addr;
@@ -35,7 +38,7 @@ class TestOrchestrator {
     std::shared_ptr<AstarteDeviceGRPC> device =
         std::make_shared<AstarteDeviceGRPC>(grpc_config_.server_addr, grpc_config_.node_id);
     for (const std::filesystem::path& interface_path : grpc_config_.interfaces) {
-      device->add_interface_from_json(interface_path);
+      device->add_interface_from_file(interface_path, 0ms);
     }
 
     test_case.attach_device(device);
