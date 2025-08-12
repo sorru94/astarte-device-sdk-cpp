@@ -9,11 +9,9 @@
 #include <google/protobuf/text_format.h>
 
 #include <string>
+#include <type_traits>
 
 #include "astarte_device_sdk/formatter.hpp"
-
-#if __cplusplus >= 202002L
-#include <type_traits>
 
 template <typename T>
 concept ProtobufMessage = std::is_base_of_v<google::protobuf::Message, T>;
@@ -32,24 +30,5 @@ struct ASTARTE_NS_FORMAT::formatter<T> {  // NOLINT
     return ASTARTE_NS_FORMAT::format_to(ctx.out(), "{}", obj_str);
   }
 };
-#else   // __cplusplus >= 202002L
-template <typename T>
-using enable_if_protobuf = std::enable_if_t<std::is_base_of_v<google::protobuf::Message, T> >;
-
-template <typename T>
-struct ASTARTE_NS_FORMAT::formatter<T, char, enable_if_protobuf<T> > {  // NOLINT
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) {
-    return ctx.begin();
-  }
-
-  template <typename FormatContext>
-  auto format(const T& obj, FormatContext& ctx) const {
-    std::string obj_str;
-    google::protobuf::TextFormat::PrintToString(obj, &obj_str);
-    return ASTARTE_NS_FORMAT::format_to(ctx.out(), "{}", obj_str);
-  }
-};
-#endif  // __cplusplus >= 202002L
 
 #endif  // GRPC_FORMATTER_H

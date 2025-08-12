@@ -26,7 +26,7 @@ astarte-device-sdk-cpp/samples/qt
 
 - **C++ compiler**
 
-    ⚠️ *Requires support for at least C++17*
+    ⚠️ *Requires support for at least C++20*
 
 - **gRPC**
 

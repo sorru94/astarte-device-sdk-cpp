@@ -13,7 +13,7 @@ This repo contains an implementation of an Astarte device SDK for C++.
 
 ## Minimum C++ version
 
-This library requires at least C++ 17.
+This library requires at least C++ 20.
 
 ## Supported Astarte message hub versions
 
