@@ -16,6 +16,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <stop_token>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -47,10 +48,10 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
   ~AstarteDeviceGRPCImpl();
   /** @brief Copy constructor for the Astarte device class. */
   AstarteDeviceGRPCImpl(AstarteDeviceGRPCImpl& other) = delete;
-  /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceGRPCImpl& other) -> AstarteDeviceGRPCImpl& = delete;
   /** @brief Move constructor for the Astarte device class. */
   AstarteDeviceGRPCImpl(AstarteDeviceGRPCImpl&& other) = delete;
+  /** @brief Copy assignment operator for the Astarte device class. */
+  auto operator=(AstarteDeviceGRPCImpl& other) -> AstarteDeviceGRPCImpl& = delete;
   /** @brief Move assignment operator for the Astarte device class. */
   auto operator=(AstarteDeviceGRPCImpl&& other) -> AstarteDeviceGRPCImpl& = delete;
 
@@ -58,22 +59,18 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @brief Parse an interface definition from a JSON file and adds it to the device.
    * @details The file content is read and stored internally for use during the connection phase.
    * @param json_file The filesystem path to the .json interface file.
-   * @param timeout A timeout used to check the device connection status.
    */
-  void add_interface_from_file(const std::filesystem::path& json_file,
-                               std::chrono::milliseconds timeout);
+  void add_interface_from_file(const std::filesystem::path& json_file);
   /**
    * @brief Parse an interface definition from a JSON string and adds it to the device.
    * @param json The interface to add.
-   * @param timeout A timeout used to check the device connection status.
    */
-  void add_interface_from_str(std::string_view json, std::chrono::milliseconds timeout);
+  void add_interface_from_str(std::string_view json);
   /**
    * @brief Remove an installed interface.
    * @param interface_name The interface name.
-   * @param timeout A timeout used to check the device connection status.
    */
-  void remove_interface(const std::string& interface_name, std::chrono::milliseconds timeout);
+  void remove_interface(const std::string& interface_name);
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will
@@ -82,10 +79,9 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
   void connect();
   /**
    * @brief Check if the device is connected.
-   * @param timeout This is the maximum timeout used to check if the device is connected.
    * @return True if the device is connected to the message hub, false otherwise.
    */
-  [[nodiscard]] auto is_connected(const std::chrono::milliseconds& timeout) const -> bool;
+  [[nodiscard]] auto is_connected() const -> bool;
   /**
    * @brief Disconnect from the Astarte message hub.
    * @details Gracefully terminates the connection by sending a Detach message.
@@ -157,21 +153,28 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
       -> AstartePropertyIndividual;
 
  private:
-  void connection_attempt();
-  void handle_events(std::unique_ptr<grpc::ClientContext> context,
+  // Helper struct to hold the results of the Attach RPC call
+  struct AttachResult {
+    std::unique_ptr<grpc::ClientContext> context;
+    std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader;
+  };
+  void setup_grpc_channel();
+  auto perform_attach() -> std::optional<AttachResult>;
+  void connection_attempt(const std::stop_token& token);
+  void handle_events(const std::stop_token& token, std::unique_ptr<grpc::ClientContext> context,
                      std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
   static auto parse_message_hub_event(const gRPCMessageHubEvent& event)
       -> std::optional<AstarteMessage>;
-  void connection_loop();
+  void connection_loop(const std::stop_token& token);
 
   std::string server_addr_;
   std::string node_uuid_;
   std::unique_ptr<gRPCMessageHub::Stub> stub_;
   std::vector<std::string> interfaces_bins_;
-  std::thread connection_thread_;
-  std::atomic_bool connection_stop_flag_;
-  std::atomic_bool grpc_stream_error_;
-  std::thread event_handler_;
+  std::optional<std::jthread> connection_thread_;
+  std::atomic_bool connected_{false};
+  std::stop_source ssource_;
+  std::atomic_bool grpc_stream_error_{false};
   SharedQueue<AstarteMessage> rcv_queue_;
 };
 

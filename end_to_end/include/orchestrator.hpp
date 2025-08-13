@@ -7,6 +7,7 @@
 #include <spdlog/spdlog.h>
 
 #include <chrono>
+#include <functional>
 #include <vector>
 
 #include "case.hpp"
@@ -33,25 +34,29 @@ class TestOrchestrator {
                             const struct ConfigCURL& config_curl)
       : grpc_config_(config_grpc), curl_config_(config_curl) {}
 
-  // Add test case to orchestrator
-  void add_test_case(TestCase&& test_case) {
-    std::shared_ptr<AstarteDeviceGRPC> device =
-        std::make_shared<AstarteDeviceGRPC>(grpc_config_.server_addr, grpc_config_.node_id);
-    for (const std::filesystem::path& interface_path : grpc_config_.interfaces) {
-      device->add_interface_from_file(interface_path, 0ms);
-    }
+  // Add test case factory to orchestrator
+  void add_test_case(TestCase&& tc) { test_cases_.push(std::move(tc)); }
 
-    test_case.attach_device(device);
-    test_case.configure_curl(curl_config_.appengine_url, curl_config_.appengine_token,
-                             curl_config_.realm, curl_config_.device_id);
-
-    test_cases_.push_back(std::move(test_case));
-  }
-
-  // Execute all test cases
+  // Execute all test cases by creating them on the fly
   void execute_all() {
     spdlog::info("Executing all end to end test cases...");
-    for (auto& test_case : test_cases_) {
+
+    // remove testcases from queue so that at each iteration the TestCase resources
+    // are freed
+    for (; !test_cases_.empty(); test_cases_.pop()) {
+      TestCase test_case = std::move(test_cases_.front());
+
+      // create a new device and attach it
+      std::shared_ptr<AstarteDeviceGRPC> device =
+          std::make_shared<AstarteDeviceGRPC>(grpc_config_.server_addr, grpc_config_.node_id);
+      for (const std::filesystem::path& interface_path : grpc_config_.interfaces) {
+        device->add_interface_from_file(interface_path);
+      }
+      test_case.attach_device(device);
+      test_case.configure_curl(curl_config_.appengine_url, curl_config_.appengine_token,
+                               curl_config_.realm, curl_config_.device_id);
+
+      // run the isolated test
       test_case.start();
       test_case.execute();
     }
@@ -60,5 +65,5 @@ class TestOrchestrator {
  private:
   struct ConfigGRPC grpc_config_;
   struct ConfigCURL curl_config_;
-  std::vector<TestCase> test_cases_;
+  std::queue<TestCase> test_cases_;
 };

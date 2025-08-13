@@ -207,8 +207,8 @@ using AstarteDeviceSdk::AstartePropertyIndividual;
 
 using namespace std::chrono_literals;
 
-void reception_handler(std::shared_ptr<AstarteDeviceGRPC> device) {
-  while (true) {
+void reception_handler(std::stop_token token, std::shared_ptr<AstarteDeviceGRPC> device) {
+  while (!token.stop_requested()) {
     auto incoming = device->poll_incoming(std::chrono::milliseconds(100));
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
@@ -255,7 +255,7 @@ int main(int argc, char **argv) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
   } while (!device->is_connected(std::chrono::milliseconds(100)));
 
-  auto reception_thread = std::thread(reception_handler, device);
+  auto reception_thread = std::jthread(reception_handler, device);
 
   // ...
   // Here we will operate with the device

@@ -37,13 +37,13 @@ class AstarteDevice {
   virtual ~AstarteDevice() = default;
   /** @brief Copy constructor for the Astarte device class. */
   AstarteDevice(const AstarteDevice& other) = delete;
-  /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(const AstarteDevice& other) -> AstarteDevice& = delete;
   /**
    * @brief Move constructor for the Astarte device class.
    * @param other Object to move.
    */
   AstarteDevice(AstarteDevice&& other) = default;
+  /** @brief Copy assignment operator for the Astarte device class. */
+  auto operator=(const AstarteDevice& other) -> AstarteDevice& = delete;
   /**
    * @brief Move assignment operator for the Astarte device class.
    * @param other Object to move.
@@ -53,23 +53,18 @@ class AstarteDevice {
   /**
    * @brief Add an interface for the device from a JSON file.
    * @param json_file The path to the .json interface file.
-   * @param timeout A timeout used to check the device connection status.
    */
-  virtual void add_interface_from_file(const std::filesystem::path& json_file,
-                                       std::chrono::milliseconds timeout) = 0;
+  virtual void add_interface_from_file(const std::filesystem::path& json_file) = 0;
   /**
    * @brief Add an interface for the device from a JSON string view.
    * @param json The interface definition as a JSON string view.
-   * @param timeout A timeout used to check the device connection status.
    */
-  virtual void add_interface_from_str(std::string_view json, std::chrono::milliseconds timeout) = 0;
+  virtual void add_interface_from_str(std::string_view json) = 0;
   /**
    * @brief Remove an installed interface.
    * @param interface_name The interface name.
-   * @param timeout A timeout used to check the device connection status.
    */
-  virtual void remove_interface(const std::string& interface_name,
-                                std::chrono::milliseconds timeout) = 0;
+  virtual void remove_interface(const std::string& interface_name) = 0;
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous function. It starts a management process that will handle
@@ -78,11 +73,9 @@ class AstarteDevice {
   virtual void connect() = 0;
   /**
    * @brief Check if the device is connected to the Astarte message hub.
-   * @param timeout The maximum time to wait for a connection confirmation.
    * @return True if the device is connected, false otherwise.
    */
-  [[nodiscard]] virtual auto is_connected(const std::chrono::milliseconds& timeout) const
-      -> bool = 0;
+  [[nodiscard]] virtual auto is_connected() const -> bool = 0;
   /**
    * @brief Disconnect the device from Astarte.
    */

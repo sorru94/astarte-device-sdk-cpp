@@ -10,6 +10,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+### Changed
+- Use C++20 as the minimum required library version.
+
+### Removed
+- Avoid using timeout to check the device connection status.
+
 ## [0.6.1] - 2025-08-11
 ### Added
 - Astarte classes can now be formatted, using the standard library's formatter by default. If it's not available, the feature uses the `fmtlib` library from `spdlog` as a fallback. To use this fallback, you must enable the `ASTARTE_PUBLIC_SPDLOG_DEP` option in CMake.
@@ -38,7 +45,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The value contained in an Astarte message can now be directly converted to one of: `AstarteDatastreamIndividual`, `AstartePropertyIndividual` and `AstarteDatastreamObject` using the `into` method.
 - The connection procedure is now asynchrnonous. When `connect` is called the device will attempt to connect untill the `disconnect` function is called or the object is destroyed. The device will use an exponential backoff to avoid network congestion.
 - Enums elements are now named using a k prefix and camel case format.
-- Use C++20 as the minimum required library version
 
 ### Removed
 - `base64` has been fully removed as a dependency.
