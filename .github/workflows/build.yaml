@@ -20,7 +20,7 @@ jobs:
       group: build-simple-sample-fetch-grpc-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build library for C++ 20
         run: ./build_sample.sh simple
   build-simple-sample-install-grpc:
@@ -29,7 +29,7 @@ jobs:
       group: build-simple-sample-install-grpc-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: astarte-device-sdk-cpp
       - name: Setup gRPC build cache
@@ -57,7 +57,7 @@ jobs:
       matrix:
         qt_version: [5.15.2, 6.5.3]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup gRPC build cache
         id: cache-grpc-cpp
         uses: actions/cache@v4
