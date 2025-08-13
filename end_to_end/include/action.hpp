@@ -78,11 +78,9 @@ class TestAction {
     }
   }
   void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device,
-                     const std::shared_ptr<SharedQueue<AstarteMessage>>& rx_queue,
-                     const std::shared_ptr<std::stop_source>& ssource) {
+                     const std::shared_ptr<SharedQueue<AstarteMessage>>& rx_queue) {
     device_ = device;
     rx_queue_ = rx_queue;
-    stop_source_ = ssource;
   }
 
   void configure_curl(const std::string& appengine_url, const std::string& appengine_token,
@@ -96,7 +94,6 @@ class TestAction {
  protected:
   std::shared_ptr<AstarteDeviceGRPC> device_;
   std::shared_ptr<SharedQueue<AstarteMessage>> rx_queue_;
-  std::shared_ptr<std::stop_source> stop_source_;
   std::string appengine_url_;
   std::string appengine_token_;
   std::string realm_;
@@ -215,7 +212,6 @@ class TestActionDisconnect : public TestAction {
   void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Disconnecting...", case_name);
     device_->disconnect();
-    stop_source_->request_stop();
   }
 
  private:

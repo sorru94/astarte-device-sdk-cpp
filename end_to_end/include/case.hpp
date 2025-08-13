@@ -23,16 +23,11 @@ class TestCase {
                     const std::vector<std::shared_ptr<TestAction>>& actions)
       : name_(name),
         actions_(actions),
-        ssource_(std::make_shared<std::stop_source>()),
         rx_queue_(std::make_shared<SharedQueue<AstarteMessage>>()) {}
 
-  ~TestCase() {
-    if (ssource_) {
-      ssource_->request_stop();
-    }
-  }
+  ~TestCase() = default;
 
-  // TestaCase is not copyable
+  // TestCase is not copyable
   TestCase(const TestCase&) = delete;
   auto operator=(const TestCase&) -> TestCase& = delete;
   // TestCase is movable
@@ -48,15 +43,14 @@ class TestCase {
 
   void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device) {
     for (const auto& action : actions_) {
-      action->attach_device(device, rx_queue_, ssource_);
+      action->attach_device(device, rx_queue_);
     }
     device_ = device;
   }
 
   void start() {
     if (!thread_) {
-      thread_ =
-          std::make_shared<std::jthread>(&TestCase::reception_handler, this, ssource_->get_token());
+      thread_ = std::make_unique<std::jthread>(&TestCase::reception_handler, this);
     }
   }
 
@@ -71,10 +65,8 @@ class TestCase {
   std::vector<std::shared_ptr<TestAction>> actions_;
   std::string name_;
   std::shared_ptr<AstarteDeviceGRPC> device_;
-  // master stop source to cleanly join all testcases threads
-  std::shared_ptr<std::stop_source> ssource_;
   std::shared_ptr<SharedQueue<AstarteMessage>> rx_queue_;
-  std::shared_ptr<std::jthread> thread_;
+  std::unique_ptr<std::jthread> thread_;
 
   void reception_handler(std::stop_token token) {
     while (!token.stop_requested()) {
