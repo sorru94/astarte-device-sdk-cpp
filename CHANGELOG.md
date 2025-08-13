@@ -10,9 +10,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [0.7.0] - 2025-08-13
+### Added
+- API calls to fetch stored device properties in the gRPC Astarte device.
+
 ### Changed
 - Use C++20 as the minimum required library version.
+- The gRPC Astarte device introspection can now be modified dynamically while the device is connected.
 
 ### Removed
 - Avoid using timeout to check the device connection status.
