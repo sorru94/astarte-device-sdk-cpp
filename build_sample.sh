@@ -6,6 +6,7 @@
 
 # --- Configuration ---
 fresh_mode=false
+transport=grpc
 system_grpc=false
 jobs=$(nproc --all)
 sample_to_build=""
@@ -21,10 +22,11 @@ Usage: $0 <sample_name> [OPTIONS]
 <sample_name> can be 'simple' or 'qt'.
 
 Common Options:
-  --fresh         Build the sample from scratch (removes its build directory).
-  --system_grpc   Use the system gRPC instead of building it from scratch.
-  -j, --jobs <N>  Specify the number of parallel jobs for make. Default: $jobs.
-  -h, --help      Display this help message.
+  --fresh          Build the sample from scratch (removes its build directory).
+  --transport <TR> Specify the transport to use (mqtt or grpc). Default: $transport.
+  --system_grpc    Use the system gRPC instead of building it from scratch.
+  -j, --jobs <N>   Specify the number of parallel jobs for make. Default: $jobs.
+  -h, --help       Display this help message.
 
 Qt Sample Specific Options:
   --qt_path <PATH>   Path to QtXConfig.cmake (e.g., ~/Qt/6.8.1/gcc_64/lib/cmake/Qt6). Default: $qt_path.
@@ -55,6 +57,13 @@ fi
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --fresh) fresh_mode=true; shift ;;
+        --transport)
+            transport="$2"
+            if [[ ! "$transport" =~ ^('mqtt'|'grpc')$ ]]; then
+                error_exit "Invalid transport '$transport'. Use mqtt or grpc."
+            fi
+            shift 2
+            ;;
         --system_grpc) system_grpc=true; shift ;;
         -j|--jobs)
             jobs="$2"
@@ -114,6 +123,10 @@ cmake_options_array+=("-DCMAKE_CXX_STANDARD=20")
 cmake_options_array+=("-DCMAKE_CXX_STANDARD_REQUIRED=ON")
 cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
 cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
+
+if [[ "$transport" == "grpc" ]]; then
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
+fi
 
 if [ "$system_grpc" = true ]; then
     cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
