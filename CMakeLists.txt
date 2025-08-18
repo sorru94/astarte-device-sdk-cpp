@@ -172,6 +172,10 @@ install(
 #     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/astarte_device_sdk
 # )
 
+# # install the entire public include directory, preserving its structure.
+# # This way we don't miss out any header file, such as those in subdirecotries
+# install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
 install(
     FILES
         "${CMAKE_CURRENT_BINARY_DIR}/astarte_device_sdkConfig.cmake"

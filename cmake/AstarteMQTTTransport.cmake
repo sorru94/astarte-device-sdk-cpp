@@ -19,6 +19,9 @@ function(astarte_sdk_configure_mqtt_dependencies)
     # Fetch and configure the Paho C++ library
     if(ASTARTE_USE_SYSTEM_MQTT)
         find_package(PahoMqttCpp REQUIRED)
+        find_package(cpr REQUIRED)
+        find_package(nlohmann_json REQUIRED)
+        find_package(tomlplusplus REQUIRED)
     else()
         FetchContent_Declare(
             paho-mqtt-cpp
@@ -32,6 +35,27 @@ function(astarte_sdk_configure_mqtt_dependencies)
         set(PAHO_WITH_MQTT_C ON CACHE BOOL "")
 
         FetchContent_MakeAvailable(paho-mqtt-cpp)
+
+        # Library to handle HTTP requests
+        set(CPR_GIT_REPOSITORY https://github.com/libcpr/cpr.git)
+        set(CPR_GIT_TAG 1.12.0)
+        FetchContent_Declare(cpr GIT_REPOSITORY ${CPR_GIT_REPOSITORY} GIT_TAG ${CPR_GIT_TAG})
+        FetchContent_MakeAvailable(cpr)
+
+        # Library to manage json
+        set(JSON_GIT_URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+        FetchContent_Declare(json URL ${JSON_GIT_URL})
+        FetchContent_MakeAvailable(json)
+
+        # Library to manage toml files
+        set(TOML_GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git)
+        set(TOML_GIT_TAG v3.4.0)
+        FetchContent_Declare(
+            tomlplusplus
+            GIT_REPOSITORY ${TOML_GIT_REPOSITORY}
+            GIT_TAG ${TOML_GIT_TAG}
+        )
+        FetchContent_MakeAvailable(tomlplusplus)
     endif()
 endfunction()
 
@@ -46,8 +70,13 @@ function(
     ASTARTE_MQTT_SOURCES
     ASTARTE_MQTT_PRIVATE_HEADERS
 )
-    list(APPEND ${ASTARTE_MQTT_PUBLIC_HEADERS} "include/astarte_device_sdk/device_mqtt.hpp")
-    list(APPEND ${ASTARTE_MQTT_SOURCES} "src/mqtt/device_mqtt.cpp")
+    list(
+        APPEND
+        ${ASTARTE_MQTT_PUBLIC_HEADERS}
+        "include/astarte_device_sdk/device_mqtt.hpp"
+        "include/astarte_device_sdk/mqtt/pairing.hpp"
+    )
+    list(APPEND ${ASTARTE_MQTT_SOURCES} "src/mqtt/device_mqtt.cpp" "src/mqtt/pairing.cpp")
     set(${ASTARTE_MQTT_PUBLIC_HEADERS} ${${ASTARTE_MQTT_PUBLIC_HEADERS}} PARENT_SCOPE)
     set(${ASTARTE_MQTT_SOURCES} ${${ASTARTE_MQTT_SOURCES}} PARENT_SCOPE)
 endfunction()
@@ -60,6 +89,14 @@ function(astarte_sdk_add_mqtt_transport)
     else()
         target_link_libraries(astarte_device_sdk PRIVATE PahoMqttCpp::paho-mqttpp3)
     endif()
+
+    # Link with cpr HTTP library
+    target_link_libraries(
+        astarte_device_sdk
+        PRIVATE cpr::cpr
+        PRIVATE nlohmann_json::nlohmann_json
+        PUBLIC tomlplusplus::tomlplusplus
+    )
 endfunction()
 
 # Creates and installs the pkg-config file for the mqtt-enabled SDK.
