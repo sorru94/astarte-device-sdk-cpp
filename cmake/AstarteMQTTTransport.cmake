@@ -21,7 +21,10 @@ function(astarte_sdk_configure_mqtt_dependencies)
         find_package(PahoMqttCpp REQUIRED)
         find_package(cpr REQUIRED)
         find_package(nlohmann_json REQUIRED)
-        find_package(tomlplusplus REQUIRED)
+
+        if(NOT TARGET ada)
+            find_package(ada REQUIRED)
+        endif()
     else()
         FetchContent_Declare(
             paho-mqtt-cpp
@@ -56,6 +59,12 @@ function(astarte_sdk_configure_mqtt_dependencies)
             GIT_TAG ${TOML_GIT_TAG}
         )
         FetchContent_MakeAvailable(tomlplusplus)
+
+        # Library to manage url
+        set(URL_GIT_REPOSITORY https://github.com/ada-url/ada.git)
+        set(URL_GIT_TAG v3.2.4)
+        FetchContent_Declare(ada GIT_REPOSITORY ${URL_GIT_REPOSITORY} GIT_TAG ${URL_GIT_TAG})
+        FetchContent_MakeAvailable(ada)
     endif()
 endfunction()
 
@@ -95,8 +104,17 @@ function(astarte_sdk_add_mqtt_transport)
         astarte_device_sdk
         PRIVATE cpr::cpr
         PRIVATE nlohmann_json::nlohmann_json
-        PUBLIC tomlplusplus::tomlplusplus
+        PRIVATE ada::ada
     )
+endfunction()
+
+# Adds mqtt-specific targets to the installation list.
+function(astarte_sdk_add_mqtt_install_targets TARGET_LIST_VAR)
+    if(NOT ASTARTE_USE_SYSTEM_MQTT)
+        list(APPEND ${TARGET_LIST_VAR} ada nlohmann_json cpr paho-mqtt3as)
+    endif()
+
+    set(${TARGET_LIST_VAR} ${${TARGET_LIST_VAR}} PARENT_SCOPE)
 endfunction()
 
 # Creates and installs the pkg-config file for the mqtt-enabled SDK.
