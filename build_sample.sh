@@ -10,7 +10,7 @@ transport=grpc
 system_transport=false
 jobs=$(nproc --all)
 sample_to_build=""
-qt_path="$HOME/Qt/6.8.1/gcc_64/lib/cmake/Qt6"
+qt_path="$HOME/Qt/6.5.3/gcc_64/lib/cmake/Qt6"
 qt_version=6
 project_root=$(pwd) # Assuming this script is always run from the root of this project
 
@@ -19,7 +19,7 @@ display_help() {
     cat << EOF
 Usage: $0 <sample_name> [OPTIONS]
 
-<sample_name> can be 'simple' or 'qt'.
+<sample_name> can be 'grpc_native' or 'grpc_qt'.
 
 Common Options:
   --fresh               Build the sample from scratch (removes its build directory).
@@ -42,15 +42,15 @@ error_exit() {
 # --- Argument Parsing ---
 if [[ -z "$1" ]]; then
     display_help
-    error_exit "No sample specified. Please choose 'simple' or 'qt'."
+    error_exit "No sample specified. Please choose 'grpc_native' or 'grpc_qt'."
 fi
 
 sample_to_build="$1"
 shift
 
-if [[ "$sample_to_build" != "simple" && "$sample_to_build" != "qt" ]]; then
+if [[ "$sample_to_build" != "grpc_native" && "$sample_to_build" != "grpc_qt" ]]; then
     display_help
-    error_exit "Invalid sample name: '$sample_to_build'. Must be 'simple' or 'qt'."
+    error_exit "Invalid sample name: '$sample_to_build'. Must be 'grpc_native' or 'grpc_qt'."
 fi
 
 # Now parse the rest of the arguments
@@ -94,12 +94,12 @@ done
 # --- Build Logic ---
 
 case "$sample_to_build" in
-    simple)
-        sample_src_dir="samples/simple"
+    grpc_native)
+        sample_src_dir="samples/grpc/native"
         build_dir="${sample_src_dir}/build"
         ;;
-    qt)
-        sample_src_dir="samples/qt"
+    grpc_qt)
+        sample_src_dir="samples/grpc/qt"
         build_dir="${sample_src_dir}/build"
         ;;
 esac
@@ -134,7 +134,7 @@ if [ "$system_transport" = true ] && [[ "$transport" == "grpc" ]]; then
     cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 
-if [[ "$sample_to_build" == "qt" ]]; then
+if [[ "$sample_to_build" == "grpc_qt" ]]; then
     if [[ -z "$qt_path" ]]; then
         error_exit "Error: --qt_path not specified for Qt sample."
     fi

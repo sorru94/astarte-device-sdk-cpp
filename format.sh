@@ -102,7 +102,7 @@ file_patterns=(
     "src/"*.cpp
     "include/astarte_device_sdk/"*.hpp
     "private/"*.hpp
-    "samples/"*/*.cpp
+    "samples/"*/*/*.cpp
     "unit/"*.cpp
     "end_to_end/src/"*.cpp
     "end_to_end/include/"*.hpp
@@ -142,8 +142,8 @@ cmake_files=(
     "cmake/AstarteMQTTTransport.cmake"
     "unit/CMakeLists.txt"
     "end_to_end/CMakeLists.txt"
-    "samples/qt/CMakeLists.txt"
-    "samples/simple/CMakeLists.txt"
+    "samples/grpc/qt/CMakeLists.txt"
+    "samples/grpc/native/CMakeLists.txt"
 )
 
 gersemi_args=("--config" ".gersemirc")
