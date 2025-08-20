@@ -73,4 +73,36 @@ auto PairingApi::create_pairing_url(std::string_view astarte_base_url) -> ada::u
   return std::move(pairing_url);
 }
 
+auto PairingApi::get_broker_url(std::string_view credential_secret, int timeout_ms) const
+    -> std::string {
+  auto request_url = pairing_url;
+  std::string pathname =
+      std::format("{}/v1/{}/devices/{}", request_url.get_pathname(), realm, device_id);
+  request_url.set_pathname(pathname);
+  spdlog::debug("request url: {}", request_url.get_href());
+
+  cpr::Header auth{{"Authorization", std::format("Bearer {}", credential_secret)}};
+
+  cpr::Response res = cpr::Get(cpr::Url{request_url.get_href()}, auth, cpr::Timeout{timeout_ms});
+
+  if (res.error) {
+    throw DeviceRegistrationException(
+        std::format("Failed to retrieve Broker URL. CPR error: {}", res.error.message));
+  }
+
+  if (!is_successful(res.status_code)) {
+    throw RetrieveBrokerUrlException(
+        std::format("Failed to retrieve Broker URL. HTTP status code: {}, Reason: {}",
+                    res.status_code, res.text));
+  }
+
+  try {
+    json response_json = json::parse(res.text);
+    return response_json.at("data").at("protocols").at("astarte_mqtt_v1").at("broker_url");
+  } catch (const json::exception& e) {
+    throw JsonAccessErrorException(
+        std::format("Failed to parse JSON: {}. Body: {}", e.what(), res.text));
+  }
+}
+
 }  // namespace AstarteDeviceSdk
