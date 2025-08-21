@@ -40,4 +40,4 @@ jobs:
           ./astarte-device-sdk-cpp/.github/scripts/build-grpc.sh
       - name: Run the unit tests for C++ 20
         working-directory: ./astarte-device-sdk-cpp
-        run: ./unit.sh --system_grpc --fresh
+        run: ./unit.sh --system_transport --fresh

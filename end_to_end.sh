@@ -6,7 +6,8 @@
 
 # --- Configuration ---
 fresh_mode=false
-system_grpc=false
+transport=grpc
+system_transport=false
 jobs=$(nproc --all)
 build_dir="end_to_end/build"
 
@@ -18,10 +19,11 @@ Usage: $0 [OPTIONS]
 Builds the end-to-end samples.
 
 Options:
-  --fresh         Build from scratch (removes $build_dir).
-  --system_grpc   Use the system gRPC instead of building it from scratch.
-  -j, --jobs <N>  Specify the number of parallel jobs for make. Default: $jobs.
-  -h, --help      Display this help message.
+  --fresh               Build from scratch (removes $build_dir).
+  --transport <TR>      Specify the transport to use (mqtt or grpc). Default: $transport.
+  --system_transport    Use the system trasnport (gRPC or MQTT) instead of building it from scratch.
+  -j, --jobs <N>        Specify the number of parallel jobs for make. Default: $jobs.
+  -h, --help            Display this help message.
 EOF
 }
 error_exit() {
@@ -33,7 +35,14 @@ error_exit() {
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --fresh) fresh_mode=true; shift ;;
-        --system_grpc) system_grpc=true; shift ;;
+        --transport)
+            transport="$2"
+            if [[ ! "$transport" =~ ^('mqtt'|'grpc')$ ]]; then
+                error_exit "Invalid transport '$transport'. Use mqtt or grpc."
+            fi
+            shift 2
+            ;;
+        --system_transport) system_transport=true; shift ;;
         -j|--jobs)
             jobs="$2"
             if ! [[ "$jobs" =~ ^[0-9]+$ && "$jobs" -gt 0 ]]; then
@@ -51,7 +60,8 @@ echo "Configuration:"
 echo "  Fresh Mode: $fresh_mode"
 echo "  Build Directory: $build_dir"
 echo "  Parallel Jobs (make): $jobs"
-echo "  Use System gRPC: $system_grpc"
+echo " Transport: $transport"
+echo "  Use System transport: $system_transport"
 echo ""
 
 # Clean build directory if --fresh is set
@@ -81,7 +91,13 @@ fi
 # Configure CMake
 echo "Running CMake..."
 cmake_options_array=()
-if [ "$system_grpc" = true ]; then
+if [[ "$transport" == "grpc" ]]; then
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
+else
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=OFF")
+fi
+
+if [ "$system_transport" = true ] && [[ "$transport" == "grpc" ]]; then
     cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 cmake_options_array+=("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")

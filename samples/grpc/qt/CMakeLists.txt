@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.19)
-project(qt LANGUAGES CXX)
+project(grpc_qt LANGUAGES CXX)
 
 # Option to select Qt version
 option(USE_QT6 "Use Qt 6 instead of Qt 5" ON)
@@ -38,32 +38,32 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 # Add the root SDK directory as a subdirectory
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
 
 # Build the executable
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_add_executable(qt
+    qt_add_executable(grpc_qt
         main.cpp
     )
 else()
-    add_executable(qt main.cpp)
+    add_executable(grpc_qt main.cpp)
 endif()
 
 # Link against Qt and Astarte SDK
-target_link_libraries(qt PRIVATE Qt${QT_VERSION_MAJOR}::Core astarte_device_sdk)
+target_link_libraries(grpc_qt PRIVATE Qt${QT_VERSION_MAJOR}::Core astarte_device_sdk)
 
 # Install rules
 include(GNUInstallDirs)
 
 install(
-    TARGETS qt
+    TARGETS grpc_qt
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_generate_deploy_app_script(
-        TARGET qt
+        TARGET grpc_qt
         OUTPUT_SCRIPT deploy_script
         NO_UNSUPPORTED_PLATFORM_ERROR
     )

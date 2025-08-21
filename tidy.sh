@@ -6,9 +6,10 @@
 
 # --- Configuration ---
 fresh_mode=false
-system_grpc=false
+transport=grpc
+system_transport=false
 jobs=$(nproc --all)
-build_dir="samples/simple/build"
+build_dir="samples/grpc/native/build"
 venv_dir=".venv"
 clang_tidy_package_name="clang-tidy"
 clang_tidy_package_version="19.1.0"
@@ -22,11 +23,12 @@ Description:
   This script configures and builds the project, then runs clang-tidy.
 
 Options:
-  --fresh            Clear out the build directory ($build_dir) before processing.
-  --system_grpc      Use the system gRPC instead of building it from scratch.
-  -j, --jobs <N>     Specify the number of parallel jobs for make.
-                     Default: $jobs (uses N-1 cores, or 1 if only 1 core).
-  -h, --help         Show this help message and exit.
+  --fresh               Clear out the build directory ($build_dir) before processing.
+  --transport <TR>      Specify the transport to use (mqtt or grpc). Default: $transport.
+  --system_transport    Use the system trasnport (gRPC or MQTT) instead of building it from scratch.
+  -j, --jobs <N>        Specify the number of parallel jobs for make.
+                        Default: $jobs (uses N-1 cores, or 1 if only 1 core).
+  -h, --help            Show this help message and exit.
 EOF
 }
 error_exit() {
@@ -38,7 +40,14 @@ error_exit() {
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --fresh) fresh_mode=true; shift ;;
-        --system_grpc) system_grpc=true; shift ;;
+        --transport)
+            transport="$2"
+            if [[ ! "$transport" =~ ^('mqtt'|'grpc')$ ]]; then
+                error_exit "Invalid transport '$transport'. Use mqtt or grpc."
+            fi
+            shift 2
+            ;;
+        --system_transport) system_transport=true; shift ;;
         -j|--jobs)
             jobs="$2"
             if ! [[ "$jobs" =~ ^[0-9]+$ && "$jobs" -gt 0 ]]; then
@@ -111,7 +120,13 @@ fi
 # Run CMake
 echo "Running CMake..."
 cmake_options_array=()
-if [ "$system_grpc" = true ]; then
+if [[ "$transport" == "grpc" ]]; then
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
+else
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=OFF")
+fi
+
+if [ "$system_transport" = true ] && [[ "$transport" == "grpc" ]]; then
     cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")

@@ -10,7 +10,7 @@ This example demonstrates how to use the **Astarte device SDK for C++** in a **Q
 ## 📁 Example location
 
 ```
-astarte-device-sdk-cpp/samples/qt
+astarte-device-sdk-cpp/samples/grpc_qt
 ```
 
 
@@ -36,13 +36,13 @@ astarte-device-sdk-cpp/samples/qt
 
 ## ⚙️ Building the example using Qt Creator UI
 
-1. Open the `astarte-device-sdk-cpp/samples/qt` folder using **Qt Creator** (*Open Project*).
+1. Open the `astarte-device-sdk-cpp/samples/grpc_qt` folder using **Qt Creator** (*Open Project*).
 2. Qt Creator will detect `CMakeLists.txt` and prompt you to configure the project.
 3. Click the **hammer icon** (🔨) in the lower-left corner of Qt Creator to build the project.
 4. The build output will appear in a directory like:
 
 ```
-samples/qt/build/Desktop_Qt_6_8_1-Debug/
+samples/grpc_qt/build/Desktop_Qt_6_8_1-Debug/
 ```
 
 > **Note:** The exact folder name may differ depending on your selected Qt kit.
@@ -50,7 +50,7 @@ samples/qt/build/Desktop_Qt_6_8_1-Debug/
 To run the example from root:
 
 ```bash
-./samples/qt/build/Desktop_Qt_6_8_1-Debug/qt
+./samples/grpc_qt/build/Desktop_Qt_6_8_1-Debug/grpc_qt
 ```
 
 ### ⚠️ Qt 5 build configuration: Disable USE_QT6 option in Qt Creator
@@ -73,7 +73,7 @@ Instead of using **Qt Creator**, you can build the project directly from the ter
 provided script:
 
 ```bash
-./build_sample.sh qt [OPTIONS]
+./build_sample.sh grpc_qt [OPTIONS]
 ```
 
 After building, the executable can be found in `build` folder.
@@ -81,7 +81,7 @@ After building, the executable can be found in `build` folder.
 To run the example from root:
 
 ```bash
-./samples/qt/build/qt
+./samples/grpc_qt/build/grpc_qt
 ```
 
 ## ⚠️ Notes
@@ -106,7 +106,7 @@ configured.
 Make sure your `CMakeLists.txt` file includes the following content:
 
 ```cmake
-target_link_libraries(qt
+target_link_libraries(grpc_qt
     PRIVATE astarte_device_sdk
 )
 

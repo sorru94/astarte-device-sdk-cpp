@@ -6,10 +6,11 @@
 
 # --- Configuration ---
 fresh_mode=false
-system_grpc=false
+transport=grpc
+system_transport=false
 jobs=$(nproc --all)
 sample_to_build=""
-qt_path="$HOME/Qt/6.8.1/gcc_64/lib/cmake/Qt6"
+qt_path="$HOME/Qt/6.5.3/gcc_64/lib/cmake/Qt6"
 qt_version=6
 project_root=$(pwd) # Assuming this script is always run from the root of this project
 
@@ -18,13 +19,14 @@ display_help() {
     cat << EOF
 Usage: $0 <sample_name> [OPTIONS]
 
-<sample_name> can be 'simple' or 'qt'.
+<sample_name> can be 'grpc_native' or 'grpc_qt'.
 
 Common Options:
-  --fresh         Build the sample from scratch (removes its build directory).
-  --system_grpc   Use the system gRPC instead of building it from scratch.
-  -j, --jobs <N>  Specify the number of parallel jobs for make. Default: $jobs.
-  -h, --help      Display this help message.
+  --fresh               Build the sample from scratch (removes its build directory).
+  --transport <TR>      Specify the transport to use (mqtt or grpc). Default: $transport.
+  --system_transport    Use the system trasnport (gRPC or MQTT) instead of building it from scratch.
+  -j, --jobs <N>        Specify the number of parallel jobs for make. Default: $jobs.
+  -h, --help            Display this help message.
 
 Qt Sample Specific Options:
   --qt_path <PATH>   Path to QtXConfig.cmake (e.g., ~/Qt/6.8.1/gcc_64/lib/cmake/Qt6). Default: $qt_path.
@@ -40,22 +42,29 @@ error_exit() {
 # --- Argument Parsing ---
 if [[ -z "$1" ]]; then
     display_help
-    error_exit "No sample specified. Please choose 'simple' or 'qt'."
+    error_exit "No sample specified. Please choose 'grpc_native' or 'grpc_qt'."
 fi
 
 sample_to_build="$1"
 shift
 
-if [[ "$sample_to_build" != "simple" && "$sample_to_build" != "qt" ]]; then
+if [[ "$sample_to_build" != "grpc_native" && "$sample_to_build" != "grpc_qt" ]]; then
     display_help
-    error_exit "Invalid sample name: '$sample_to_build'. Must be 'simple' or 'qt'."
+    error_exit "Invalid sample name: '$sample_to_build'. Must be 'grpc_native' or 'grpc_qt'."
 fi
 
 # Now parse the rest of the arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --fresh) fresh_mode=true; shift ;;
-        --system_grpc) system_grpc=true; shift ;;
+        --transport)
+            transport="$2"
+            if [[ ! "$transport" =~ ^('mqtt'|'grpc')$ ]]; then
+                error_exit "Invalid transport '$transport'. Use mqtt or grpc."
+            fi
+            shift 2
+            ;;
+        --system_transport) system_transport=true; shift ;;
         -j|--jobs)
             jobs="$2"
             if ! [[ "$jobs" =~ ^[0-9]+$ && "$jobs" -gt 0 ]]; then
@@ -85,12 +94,12 @@ done
 # --- Build Logic ---
 
 case "$sample_to_build" in
-    simple)
-        sample_src_dir="samples/simple"
+    grpc_native)
+        sample_src_dir="samples/grpc/native"
         build_dir="${sample_src_dir}/build"
         ;;
-    qt)
-        sample_src_dir="samples/qt"
+    grpc_qt)
+        sample_src_dir="samples/grpc/qt"
         build_dir="${sample_src_dir}/build"
         ;;
 esac
@@ -115,11 +124,17 @@ cmake_options_array+=("-DCMAKE_CXX_STANDARD_REQUIRED=ON")
 cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
 cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
 
-if [ "$system_grpc" = true ]; then
+if [[ "$transport" == "grpc" ]]; then
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
+else
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=OFF")
+fi
+
+if [ "$system_transport" = true ] && [[ "$transport" == "grpc" ]]; then
     cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 
-if [[ "$sample_to_build" == "qt" ]]; then
+if [[ "$sample_to_build" == "grpc_qt" ]]; then
     if [[ -z "$qt_path" ]]; then
         error_exit "Error: --qt_path not specified for Qt sample."
     fi

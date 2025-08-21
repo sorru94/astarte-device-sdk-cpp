@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [unreleased]
 ### Changed
+- Introduced an `AstarteDeviceMQTT` class that uses the MQTT protocol as a transport layer.
+- The `simple` sample has been renamed to `grpc_native`.
+- The `qt` sample has been renamed to `grpc_qt`.
 - Use C++20 as the minimum required library version.
 
 ### Removed
