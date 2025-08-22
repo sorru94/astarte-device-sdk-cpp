@@ -59,7 +59,7 @@ function(astarte_sdk_configure_mqtt_dependencies)
 
         # Cryptographic library
         set(CRYPTO_GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git)
-        set(CRYPTO_GIT_TAG v3.6.4)
+        set(CRYPTO_GIT_TAG v3.6.5)
         FetchContent_Declare(
             MbedTLS
             GIT_REPOSITORY ${CRYPTO_GIT_REPOSITORY}
