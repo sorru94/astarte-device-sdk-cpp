@@ -39,14 +39,6 @@ class PairingApi {
   auto register_device(std::string_view pairing_token,
                        std::chrono::milliseconds timeout_ms = 0ms) const -> std::string;
 
-  /**
-   * @brief Retrieve the URL of the Astarte MQTT broker.
-   * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
-   * @param timeout_ms A timeout value to perform the HTTP request.
-   * @return The broker URL.
-   */
-  auto get_broker_url(std::string_view credential_secret, int timeout_ms = 0) const -> std::string;
-
   /** @brief The Astarte realm name. */
   const std::string realm;
   /** @brief The Astarte device id. */
@@ -55,8 +47,34 @@ class PairingApi {
   const ada::url_aggregator pairing_url;
 
  private:
-  // static helper function used to parse astarte base URL and create the pairing URL.
+  /**
+   * @brief Retrieve the URL of the Astarte MQTT broker.
+   * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
+   * @param timeout_ms A timeout value to perform the HTTP request.
+   * @return The broker URL.
+   */
+  auto get_broker_url(std::string_view credential_secret, int timeout_ms = 0) const -> std::string;
+
+  /**
+   * @brief Retrieve the Astarte device certificate.
+   * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
+   * @param timeout_ms A timeout value to perform the HTTP request.
+   * @return The device certificate.
+   */
+  auto get_device_cert(std::string_view credential_secret, int timeout_ms = 0) const -> std::string;
+
+  /**
+   * @brief Helper function to parse astarte base URL and create the pairing URL.
+   * @param astarte_base_url The Astarte base URL.
+   * @return The Astarte Pairing API broker URL.
+   */
   static auto create_pairing_url(std::string_view astarte_base_url) -> ada::url_aggregator;
+
+  /**
+   * @brief Retrieve the Astarte device CSR.
+   * @return The device CSR.
+   */
+  auto get_device_csr() const -> std::string;
 };
 
 }  // namespace AstarteDeviceSdk

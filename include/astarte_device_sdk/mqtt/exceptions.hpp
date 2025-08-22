@@ -102,6 +102,19 @@ class RetrieveBrokerUrlException : public PairingApiException {
       : PairingApiException("RetrieveBrokerUrlException(" + err_message + ")") {}
 };
 
+/**
+ * @brief Base exception for errors related to the cryptographic operations.
+ */
+class CryptoException : public MqttException {
+ public:
+  /**
+   * @brief Constructs the CryptoException object.
+   * @param err_message A descriptive error message.
+   */
+  explicit CryptoException(const std::string& err_message)
+      : MqttException("CryptoException(" + err_message + ")") {}
+};
+
 }  // namespace AstarteDeviceSdk
 
 #endif  // ASTARTE_MQTT_EXCEPTIONS_HPP
