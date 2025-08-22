@@ -13,7 +13,7 @@
 #include <stop_token>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/device_grpc.hpp"
+#include "astarte_device_sdk/device.hpp"
 #include "astarte_device_sdk/exceptions.hpp"
 #include "astarte_device_sdk/formatter.hpp"
 #include "astarte_device_sdk/msg.hpp"
@@ -27,7 +27,7 @@ using json = nlohmann::json;
 using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteDatastreamIndividual;
 using AstarteDeviceSdk::AstarteDatastreamObject;
-using AstarteDeviceSdk::AstarteDeviceGRPC;
+using AstarteDeviceSdk::AstarteDevice;
 using AstarteDeviceSdk::AstarteException;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstarteOwnership;
@@ -77,7 +77,7 @@ class TestAction {
       }
     }
   }
-  void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device,
+  void attach_device(const std::shared_ptr<AstarteDevice>& device,
                      const std::shared_ptr<SharedQueue<AstarteMessage>>& rx_queue) {
     device_ = device;
     rx_queue_ = rx_queue;
@@ -92,7 +92,7 @@ class TestAction {
   }
 
  protected:
-  std::shared_ptr<AstarteDeviceGRPC> device_;
+  std::shared_ptr<AstarteDevice> device_;
   std::shared_ptr<SharedQueue<AstarteMessage>> rx_queue_;
   std::string appengine_url_;
   std::string appengine_token_;

@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "action.hpp"
-#include "astarte_device_sdk/device_grpc.hpp"
+#include "astarte_device_sdk/device.hpp"
 
-using AstarteDeviceSdk::AstarteDeviceGRPC;
+using AstarteDeviceSdk::AstarteDevice;
 
 // End to end test case
 class TestCase {
@@ -41,7 +41,7 @@ class TestCase {
     }
   }
 
-  void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device) {
+  void attach_device(const std::shared_ptr<AstarteDevice>& device) {
     for (const auto& action : actions_) {
       action->attach_device(device, rx_queue_);
     }
@@ -64,7 +64,7 @@ class TestCase {
  private:
   std::vector<std::shared_ptr<TestAction>> actions_;
   std::string name_;
-  std::shared_ptr<AstarteDeviceGRPC> device_;
+  std::shared_ptr<AstarteDevice> device_;
   std::shared_ptr<SharedQueue<AstarteMessage>> rx_queue_;
   std::unique_ptr<std::jthread> thread_;
 
