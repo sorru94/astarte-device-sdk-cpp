@@ -22,9 +22,7 @@
 #include "astarte_device_sdk/device.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
-#include "astarte_device_sdk/ownership.hpp"
 #include "astarte_device_sdk/property.hpp"
-#include "astarte_device_sdk/stored_property.hpp"
 
 /** @brief Umbrella namespace for the Astarte device SDK */
 namespace AstarteDeviceSdk {
@@ -128,13 +126,13 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @return A list of stored properties, as returned by the message hub.
    */
   auto get_all_properties(const std::optional<AstarteOwnership>& ownership)
-      -> std::list<AstarteStoredProperty>;
+      -> std::list<AstarteStoredProperty> override;
   /**
    * @brief Get stored properties matching the interface.
    * @param interface_name The name of the interface for the properties.
    * @return A list of stored properties, as returned by the message hub.
    */
-  auto get_properties(std::string_view interface_name) -> std::list<AstarteStoredProperty>;
+  auto get_properties(std::string_view interface_name) -> std::list<AstarteStoredProperty> override;
   /**
    * @brief Get a single stored property matching the interface name and path.
    * @param interface_name The name of the interface for the property.
@@ -142,7 +140,7 @@ class AstarteDeviceGRPC : public AstarteDevice {
    * @return The stored property, as returned by the message hub.
    */
   auto get_property(std::string_view interface_name, std::string_view path)
-      -> AstartePropertyIndividual;
+      -> AstartePropertyIndividual override;
 
  private:
   struct AstarteDeviceGRPCImpl;
