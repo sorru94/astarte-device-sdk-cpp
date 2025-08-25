@@ -13,15 +13,30 @@ This is a simple end to end framework that tests basic functionality for this SD
 The end to end test expects a `config.toml` file to be found in this folder (`end_to_end`).
 The structure should be as follows:
 ```toml
-# Configuration for gRPC
-server_addr = ""
-node_id = ""
-
 # Configuration for HTTP requests
 realm = ""
 appengine_url = ""
 appengine_token = ""
 device_id = ""
+
+transport = "" # One of 'grpc' or 'mqtt'
+```
+Some configuration arguments are transport specific and should be added in the `config.toml` based
+on the desired transport.
+
+### gRPC specific
+
+```toml
+# Configuration for gRPC
+server_addr = ""
+node_id = ""
+```
+
+### MQTT specific
+
+```toml
+# Configuration for MQTT
+...
 ```
 
 ## Building
