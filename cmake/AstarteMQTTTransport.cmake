@@ -41,7 +41,7 @@ function(astarte_sdk_configure_mqtt_dependencies)
 
         # Library to handle HTTP requests
         set(CPR_GIT_REPOSITORY https://github.com/libcpr/cpr.git)
-        set(CPR_GIT_TAG 1.12.0)
+        set(CPR_GIT_TAG 1.11.2)
         FetchContent_Declare(cpr GIT_REPOSITORY ${CPR_GIT_REPOSITORY} GIT_TAG ${CPR_GIT_TAG})
         FetchContent_MakeAvailable(cpr)
 
@@ -84,10 +84,21 @@ function(
         ${ASTARTE_MQTT_PUBLIC_HEADERS}
         "include/astarte_device_sdk/device_mqtt.hpp"
         "include/astarte_device_sdk/mqtt/pairing.hpp"
+        "include/astarte_device_sdk/mqtt/exceptions.hpp"
+        "include/astarte_device_sdk/mqtt/config.hpp"
     )
-    list(APPEND ${ASTARTE_MQTT_SOURCES} "src/mqtt/device_mqtt.cpp" "src/mqtt/pairing.cpp")
+    list(
+        APPEND
+        ${ASTARTE_MQTT_SOURCES}
+        "src/mqtt/device_mqtt.cpp"
+        "src/mqtt/device_mqtt_impl.cpp"
+        "src/mqtt/pairing.cpp"
+        "src/mqtt/config.cpp"
+    )
+    list(APPEND ${ASTARTE_MQTT_PRIVATE_HEADERS} "private/mqtt/device_mqtt_impl.hpp")
     set(${ASTARTE_MQTT_PUBLIC_HEADERS} ${${ASTARTE_MQTT_PUBLIC_HEADERS}} PARENT_SCOPE)
     set(${ASTARTE_MQTT_SOURCES} ${${ASTARTE_MQTT_SOURCES}} PARENT_SCOPE)
+    set(${ASTARTE_MQTT_PRIVATE_HEADERS} ${${ASTARTE_MQTT_PRIVATE_HEADERS}} PARENT_SCOPE)
 endfunction()
 
 # Adds MQTT source files and links required libraries to the main target.
