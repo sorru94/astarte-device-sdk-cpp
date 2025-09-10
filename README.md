@@ -8,8 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 This repo contains an implementation of an Astarte device SDK for C++.
 
-> **N.B.** At the current state this SDK only provides connectivity to Astarte through the
-[Astarte message hub](https://github.com/astarte-platform/astarte-message-hub).
+> **N.B.** At the current state this SDK only provides connectivity to Astarte through the [Astarte message hub](https://github.com/astarte-platform/astarte-message-hub).
 
 ## Minimum C++ version
 
@@ -17,35 +16,23 @@ This library requires at least C++ 20.
 
 ## Supported Astarte message hub versions
 
-This library relies on the Astarte message hub for connectivity with Astarte.
-The message hub should be at least at version X.X for this library to function properly.
+This library relies on the Astarte message hub for connectivity with Astarte. The message hub should be at least at version 0.8.0 for this library to function properly.
 
 ## Formatting Astarte data
 
-Astarte data, both in transmission and reception is encapsulated in C++ objects.
-It is possible to pretty print data objects. The resulting string will be in a JSON compabile format and
-can be used to interact with the Astarte REST APIs during developement.
+Astarte data, both in transmission and reception is encapsulated in C++ objects. It is possible to pretty print data objects. The resulting string will be in a JSON compabile format and can be used to interact with the Astarte REST APIs during developement.
 
 ## Optional features
 
 Some features of the library can be enabled or disabled using CMake options.
 
-
 ### Public spdlog dependency
 
-The spdlog libary is the logger used by the Astarte device library.
-By the default it's a private dependency, checked our with fetch content. However, the user can
-choose to link the library as a public dependency using the dedicated option.
-
-The option to enable this feature is: `ASTARTE_PUBLIC_SPDLOG_DEP`.
+The spdlog libary is the logger used by the Astarte device library. By the default it's a private dependency, checked our with fetch content. However, the user can choose to link the library as a public dependency using the dedicated option `ASTARTE_PUBLIC_SPDLOG_DEP`.
 
 ### Public message hub proto dependency
 
-The [Astarte message hub proto](https://github.com/astarte-platform/astarte-message-hub-proto) is a
-separate CMake project that contains the protobuffer definitions of the gRPC used by this library
-to connect with the Astarte message hub.
-This feature makes the Astarte message hub proto project a public dependency of this library.
-The user can subsequently access the gRPC stubs directly from within C++ code.
+The [Astarte message hub proto](https://github.com/astarte-platform/astarte-message-hub-proto) is a separate CMake project that contains the protobuffer definitions of the gRPC used by this library to connect with the Astarte message hub. This feature makes the Astarte message hub proto project a public dependency of this library. The user can subsequently access the gRPC stubs directly from within C++ code.
 
 The option to enable this feature is: `ASTARTE_PUBLIC_PROTO_DEP`.
 
@@ -53,46 +40,35 @@ The option to enable this feature is: `ASTARTE_PUBLIC_PROTO_DEP`.
 
 ## Dependencies
 
-For this library to properly work some dependencies are required. All of them can be imported
-directly by the library using fetch content.
-However, the user may choose to use system installed ones setting some cmake options.
+For this library to work properly some dependencies are required. All of them can be imported directly by the library using fetch content. However, the user may choose to use system installed ones setting some cmake options.
 
 ### gRPC
 
-The most importand and large depencency for this library is [gRPC](https://github.com/grpc/grpc).
-The officially supported version of gRPC is `v0.69.0`, but any gRPC version following that one
-should work just fine.
+The most importand and large depencency for this library is [gRPC](https://github.com/grpc/grpc). The officially supported version of gRPC is `v1.72.0`, but any gRPC recent version should work just fine.
 
-By default gRPC will be imported using FetchContent. Users can choose to use their system gRPC
-by setting the CMake option `ASTARTE_USE_SYSTEM_GRPC`.
+By default gRPC will be imported using FetchContent. Users can choose to use their system gRPC by setting the CMake option `ASTARTE_USE_SYSTEM_GRPC`.
 
-> **N.B.** Importing gRPC with FetchContent requires a re-compilation of the gRPC library
-leading to a much longer build time.
-> We suggest using your system gRPC for fast developement.
+> **N.B.** Importing gRPC with FetchContent requires a re-compilation of the gRPC library leading to a much longer build time. We suggest using your system gRPC for fast developement.
 
 ### Astarte message hub proto
 
-The [Astarte message hub proto](https://github.com/astarte-platform/astarte-message-hub-proto) is
-a separate project that contains the protobuffer definitions of the gRPC used by this library
-to connect with the Astarte message hub.
-This dependency is imported using fetch content and it's necessary for the proper functioning of
-the library.
+The [Astarte message hub proto](https://github.com/astarte-platform/astarte-message-hub-proto) is a separate project that contains the protobuffer definitions of the gRPC used by this library to connect with the Astarte message hub. This dependency is imported using fetch content and it's necessary for the proper functioning of the library.
+
+By default the Astarte message hub protos will be imported using FetchContent. Users can choose to use a local checkout of the repository by setting the CMake option `ASTARTE_MESSAGE_HUB_PROTO_DIR` to the appropriate directory.
 
 ### spdlog
 
-This library uses [spdlog](https://github.com/gabime/spdlog) to log information.
-The logging utility is imported using FetchContent and is an essential component of this library.
+This library uses [spdlog](https://github.com/gabime/spdlog) to log information. The logging utility is imported using FetchContent and is an essential component of this library.
+
+By default spdlog will be imported using FetchContent. Users can choose to use a local installation by setting the CMake option `ASTARTE_USE_SYSTEM_SPDLOG`.
 
 ## Get started with the samples
 
-Various samples have been added in the `samples` folder of this project.
-An utility bash script has also been added, named `build_sample.sh`. It can be used to build one of
-the samples without having to deal directly with CMake.
+Various samples have been added in the `samples` folder of this project. An utility bash script has also been added, named `build_sample.sh`. It can be used to build one of the samples without having to deal directly with CMake.
 
 ## Importing the library in an external project
 
-This library supports CMake as the default build system.
-It can be imported adding the following lines to your application CMakeList file.
+This library supports CMake as the default build system. It can be imported adding the following lines to your application CMakeList file.
 
 ```CMake
 include(FetchContent)
@@ -108,4 +84,26 @@ Additionally remember to link the library with your executable.
 ```CMake
 target_link_libraries(app
     PRIVATE astarte_device_sdk)
+```
+
+## Conan integration
+
+The package manager [Conan](https://conan.io/) is supported by this library. This package has not yet been added to the Conan center index and subsequently it's not yet available using the dependency import in a conanfile. However, users can always install into their local cache by checking out this repository and then running the following commands.
+
+```bash
+conan create . --build=missing --settings=compiler.cppstd=20
+```
+
+The created package can then be added to the conanfile of a project.
+```toml
+[requires]
+astarte-device-sdk/0.7.0
+```
+
+Additionally remember to import and link the library with your executable.
+```CMake
+find_package(astarte_device_sdk)
+...
+target_link_libraries(app
+    PRIVATE astarte_device_sdk::astarte_device_sdk)
 ```

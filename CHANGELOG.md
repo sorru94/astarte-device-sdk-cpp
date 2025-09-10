@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Support for the [Conan](https://conan.io/) package manager. Users can build the library as a conan package and import it in their Conan projects.
+
 ## [0.7.0] - 2025-08-13
 ### Added
 - API calls to fetch stored device properties in the gRPC Astarte device.
