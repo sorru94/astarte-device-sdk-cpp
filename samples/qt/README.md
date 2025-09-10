@@ -6,14 +6,6 @@ SPDX-License-Identifier: Apache-2.0 -->
 
 This example demonstrates how to use the **Astarte device SDK for C++** in a **Qt** application.
 
-
-## 📁 Example location
-
-```
-astarte-device-sdk-cpp/samples/qt
-```
-
-
 ## 🛠️ Requirements
 
 - **Qt**
@@ -50,7 +42,7 @@ samples/qt/build/Desktop_Qt_6_8_1-Debug/
 To run the example from root:
 
 ```bash
-./samples/qt/build/Desktop_Qt_6_8_1-Debug/qt
+./samples/qt/build/Desktop_Qt_6_8_1-Debug/app
 ```
 
 ### ⚠️ Qt 5 build configuration: Disable USE_QT6 option in Qt Creator
@@ -69,8 +61,7 @@ This step ensures that the project builds properly with Qt 5.
 
 ## 🧰 Building from terminal with script
 
-Instead of using **Qt Creator**, you can build the project directly from the terminal using the
-provided script:
+Instead of using **Qt Creator**, you can build the project directly from the terminal using the provided script:
 
 ```bash
 ./build_sample.sh qt [OPTIONS]
@@ -81,8 +72,16 @@ After building, the executable can be found in `build` folder.
 To run the example from root:
 
 ```bash
-./samples/qt/build/qt
+./samples/qt/build/app
 ```
+
+### Conan system dependencies
+
+The script builds by default using Conan to import most of its dependencies. However, a couple of system packages are required for this approach to work. On debian systems install the system dependencies with the following command.
+```bash
+apt install -y libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev libxcomposite-dev libxdamage-dev libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxres-dev libxtst-dev libxcb-glx0-dev libxcb-xkb-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev libxcb-dri2-0-dev libxcb-present-dev libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev libxcb-util-dev
+```
+Conan will notify you of exactly which system dependencies you are missing. So if in doubt run the build script and check the output.
 
 ## ⚠️ Notes
 
@@ -98,8 +97,7 @@ Please verify:
 - `main.cpp` is part of the CMake project and recognized by Qt Creator.
 - `CMAKE_AUTOMOC` is enabled in your `CMakeLists.txt` (as shown above).
 
-The `main.moc` file is generated automatically during the build if the project is properly
-configured.
+The `main.moc` file is generated automatically during the build if the project is properly configured.
 
 ### 📄 About the CMakeList.txt
 
@@ -116,15 +114,4 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_BINARY_DIR}/l
 set(CMAKE_AUTOMOC ON)
 ```
 
-This configuration ensures that the **Astarte device SDK** is fetched from GitHub and properly
-linked with the Qt project. The `CMAKE_AUTOMOC` setting is essential for Qt’s meta-object compiler
-to generate required `.moc` files automatically.
-
-
-### Installing with Conan
-
-The following system dependencies are required:
-```
-sudo apt update && sudo apt install -y libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev libxcomposite-dev libxdamage-dev libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxres-dev libxtst-dev libxcb-glx0-dev libxcb-xkb-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev libxcb-dri2-0-dev libxcb-present-dev libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev libxcb-util-dev
-sudo apt-get install
-```
+This configuration ensures that the **Astarte device SDK** is fetched from GitHub and properly linked with the Qt project. The `CMAKE_AUTOMOC` setting is essential for Qt’s meta-object compiler to generate required `.moc` files automatically.
