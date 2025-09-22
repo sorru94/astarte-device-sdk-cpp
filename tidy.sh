@@ -9,7 +9,9 @@ fresh_mode=false
 transport=grpc
 system_transport=false
 jobs=$(nproc --all)
-build_dir="samples/grpc/native/build"
+project_root=$(pwd) # Assuming this script is always run from the root of this project
+sample_src_dir="samples/grpc/native"
+build_dir="${sample_src_dir}/build"
 venv_dir=".venv"
 clang_tidy_package_name="clang-tidy"
 clang_tidy_package_version="19.1.0"
@@ -26,8 +28,7 @@ Options:
   --fresh               Clear out the build directory ($build_dir) before processing.
   --transport <TR>      Specify the transport to use (mqtt or grpc). Default: $transport.
   --system_transport    Use the system trasnport (gRPC or MQTT) instead of building it from scratch.
-  -j, --jobs <N>        Specify the number of parallel jobs for make.
-                        Default: $jobs (uses N-1 cores, or 1 if only 1 core).
+  -j, --jobs <N>        Specify the number of parallel jobs for make. Default: $jobs.
   -h, --help            Show this help message and exit.
 EOF
 }
@@ -112,33 +113,24 @@ fi
 mkdir -p "$build_dir"
 
 # Navigate to build directory
-original_dir=$(pwd)
-if ! cd "$build_dir"; then
-    error_exit "Failed to navigate to build directory: $build_dir"
-fi
+cd "$build_dir" || error_exit "Failed to navigate to $build_dir"
 
 # Run CMake
 echo "Running CMake..."
 cmake_options_array=()
-if [[ "$transport" == "grpc" ]]; then
-    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
-else
-    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=OFF")
-fi
-
-if [ "$system_transport" = true ] && [[ "$transport" == "grpc" ]]; then
-    cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
-fi
-cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
-cmake_options_array+=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 cmake_options_array+=("-DCMAKE_CXX_STANDARD=20")
 cmake_options_array+=("-DCMAKE_CXX_STANDARD_REQUIRED=ON")
+cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
 cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
-cmake_options_array+=("-DASTARTE_PUBLIC_PROTO_DEP=ON")
-if ! cmake "${cmake_options_array[@]}" ..; then
-    error_exit "CMake configuration failed."
+cmake_options_array+=("-DSAMPLE_USE_SYSTEM_ASTARTE_LIB=OFF")
+cmake_options_array+=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+if [[ "$transport" == "grpc" && "$system_transport" == true ]]; then
+    cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
 fi
 
+if ! cmake "${cmake_options_array[@]}" "$project_root/$sample_src_dir"; then
+    error_exit "CMake configuration failed."
+fi
 
 # Build the project
 echo "Building with make -j $jobs ..."
@@ -148,9 +140,9 @@ fi
 
 # Return to the original directory from where the script was called,
 # before running clang-tidy, as clang-tidy paths might be relative to project root.
-echo "Returning to $original_dir..."
-if ! cd "$original_dir"; then
-    error_exit "Failed to return to original directory: $original_dir"
+echo "Returning to $project_root..."
+if ! cd "$project_root"; then
+    error_exit "Failed to return to original directory: $project_root"
 fi
 
 # --- Run clang-tidy ---
@@ -167,6 +159,11 @@ tidy_options_array+=("-p=${build_dir}")
 source_files=(
     "src/"*.cpp
 )
+if [ "$transport" == "grpc" ]; then
+    source_files+=("src/grpc/"*.cpp)
+else
+    source_files+=("src/mqtt/"*.cpp)
+fi
 
 echo "Analyzing ${#source_files[@]} file(s) with clang-tidy..."
 if ! clang-tidy "${tidy_options_array[@]}" "${source_files[@]}"; then

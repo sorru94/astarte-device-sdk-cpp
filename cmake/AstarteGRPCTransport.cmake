@@ -23,7 +23,7 @@ function(astarte_sdk_configure_grpc_dependencies)
         set(MSGHUB_PROTO_GITHUB_URL
             https://github.com/astarte-platform/astarte-message-hub-proto.git
         )
-        set(MSGHUB_PROTO_GIT_TAG v0.8.4)
+        set(MSGHUB_PROTO_GIT_TAG release-0.8)
         FetchContent_Declare(
             astarte_msghub_proto
             GIT_REPOSITORY ${MSGHUB_PROTO_GITHUB_URL}
@@ -52,6 +52,43 @@ function(astarte_sdk_add_grpc_transport)
     else()
         target_link_libraries(astarte_device_sdk PRIVATE astarte_msghub_proto)
     endif()
+endfunction()
+
+# Adds gRPC-specific targets to the installation list.
+function(astarte_sdk_add_grpc_install_targets TARGET_LIST_VAR)
+    list(APPEND ${TARGET_LIST_VAR} astarte_msghub_proto)
+    if(NOT ASTARTE_USE_SYSTEM_GRPC)
+        list(
+            APPEND
+            ${TARGET_LIST_VAR}
+            # gRPC C++ libraries
+            grpc++
+            grpc++_reflection
+            # gRPC C-core libraries
+            grpc
+            gpr
+            address_sorting
+            # Protobuf library
+            libprotobuf
+            # Dependencies of gRPC revealed by CMake export errors
+            upb_json_lib
+            upb_textformat_lib
+            zlibstatic
+            re2
+            # OpenSSL libs (gRPC builds them as 'ssl' and 'crypto')
+            ssl
+            crypto
+            # Deeper dependencies of the UPB library
+            upb_mini_descriptor_lib
+            upb_wire_lib
+            # Base-level UPB and UTF8 dependencies
+            upb_base_lib
+            upb_mem_lib
+            upb_message_lib
+            utf8_range_lib
+        )
+    endif()
+    set(${TARGET_LIST_VAR} ${${TARGET_LIST_VAR}} PARENT_SCOPE)
 endfunction()
 
 # Creates and installs the pkg-config file for the gRPC-enabled SDK.

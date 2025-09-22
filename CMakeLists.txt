@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(AstarteDeviceSDKcpp VERSION 0.6.1 LANGUAGES CXX)
+project(AstarteDeviceSDKcpp VERSION 0.7.0 LANGUAGES CXX)
 
 include(FetchContent)
 include(cmake/AstarteGRPCTransport.cmake)
@@ -16,8 +16,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
-# --- Generic Configuration Options ---
-option(ASTARTE_TRANSPORT_GRPC "Enable gRPC transport" OFF)
+# Configuration options for this library
+option(ASTARTE_TRANSPORT_GRPC "Enable gRPC transport" ON)
+option(ASTARTE_USE_SYSTEM_SPDLOG "Use system installed spdlog" OFF)
 option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 
 # check if std::format is actually supported.
@@ -40,10 +41,9 @@ endif()
 
 message(STATUS "--------------------------------------------------")
 message(STATUS "Astarte SDK Configuration:")
-message(STATUS "  Generic Options:")
-message(STATUS "    ASTARTE_PUBLIC_SPDLOG_DEP:   ${ASTARTE_PUBLIC_SPDLOG_DEP}")
-message(STATUS "  Transports:")
-message(STATUS "    gRPC enabled:                ${ASTARTE_TRANSPORT_GRPC}")
+message(STATUS "  ASTARTE_TRANSPORT_GRPC:          ${ASTARTE_TRANSPORT_GRPC}")
+message(STATUS "  ASTARTE_USE_SYSTEM_SPDLOG:       ${ASTARTE_USE_SYSTEM_SPDLOG}")
+message(STATUS "  ASTARTE_PUBLIC_SPDLOG_DEP:       ${ASTARTE_PUBLIC_SPDLOG_DEP}")
 
 if(ASTARTE_TRANSPORT_GRPC)
     astarte_sdk_add_grpc_options()
@@ -53,11 +53,19 @@ endif()
 
 message(STATUS "--------------------------------------------------")
 
-# --- Generic Dependencies ---
-set(SPDLOG_GITHUB_URL https://github.com/gabime/spdlog.git)
-set(SPDLOG_GIT_TAG v1.15.1)
-FetchContent_Declare(spdlog GIT_REPOSITORY ${SPDLOG_GITHUB_URL} GIT_TAG ${SPDLOG_GIT_TAG} SYSTEM)
-FetchContent_MakeAvailable(spdlog)
+if(NOT ASTARTE_USE_SYSTEM_SPDLOG)
+    set(SPDLOG_GITHUB_URL https://github.com/gabime/spdlog.git)
+    set(SPDLOG_GIT_TAG v1.15.3)
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY ${SPDLOG_GITHUB_URL}
+        GIT_TAG ${SPDLOG_GIT_TAG}
+        SYSTEM
+    )
+    FetchContent_MakeAvailable(spdlog)
+else()
+    find_package(spdlog REQUIRED)
+endif()
 
 if(ASTARTE_TRANSPORT_GRPC)
     astarte_sdk_configure_grpc_dependencies()
@@ -68,7 +76,10 @@ endif()
 # --- Core Library Target Definition ---
 add_library(astarte_device_sdk)
 target_compile_features(astarte_device_sdk PUBLIC cxx_std_20)
-target_include_directories(astarte_device_sdk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(
+    astarte_device_sdk
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include> $<INSTALL_INTERFACE:include>
+)
 target_include_directories(astarte_device_sdk PRIVATE ${CMAKE_CURRENT_LIST_DIR}/private)
 file(GLOB astarte_sdk_src "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
 target_sources(astarte_device_sdk PRIVATE ${astarte_sdk_src})
@@ -78,11 +89,6 @@ if(ASTARTE_PUBLIC_SPDLOG_DEP)
     target_link_libraries(astarte_device_sdk PUBLIC spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
 else()
     target_link_libraries(astarte_device_sdk PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
-endif()
-
-# Apply generic compile definitions
-if(ASTARTE_ENABLE_FORMAT)
-    target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_FORMAT_ENABLED)
 endif()
 
 if(ASTARTE_TRANSPORT_GRPC)
@@ -100,13 +106,41 @@ set_target_properties(
     PROPERTIES PUBLIC_HEADER "${SDK_PUBLIC_HEADERS}" POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
 )
 
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    "cmake/Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/astarte_device_sdkConfig.cmake"
+    INSTALL_DESTINATION "lib/cmake/astarte_device_sdk"
+)
+
+set(INSTALL_TARGETS_LIST astarte_device_sdk)
+if(NOT ASTARTE_USE_SYSTEM_SPDLOG)
+    list(APPEND INSTALL_TARGETS_LIST spdlog)
+endif()
+if(ASTARTE_TRANSPORT_GRPC)
+    astarte_sdk_add_grpc_install_targets(INSTALL_TARGETS_LIST)
+endif()
+
 install(
-    TARGETS astarte_device_sdk
-    EXPORT astarte_device_sdk
+    TARGETS ${INSTALL_TARGETS_LIST}
+    EXPORT astarte_device_sdk-target
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/astarte_device_sdk
+)
+
+install(
+    EXPORT astarte_device_sdk-target
+    FILE astarte_device_sdk-target.cmake
+    NAMESPACE astarte_device_sdk::
+    DESTINATION lib/cmake/astarte_device_sdk
+)
+
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/astarte_device_sdkConfig.cmake"
+    DESTINATION "lib/cmake/astarte_device_sdk"
 )
 
 if(ASTARTE_TRANSPORT_GRPC)
