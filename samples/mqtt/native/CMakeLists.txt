@@ -7,15 +7,27 @@ cmake_minimum_required(VERSION 3.15)
 # Ensure the main project is found
 project(MqttExample)
 
-# Add the root directory to make the library definition available
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
+# Option
+option(SAMPLE_USE_SYSTEM_ASTARTE_LIB "Use system installed Astarte device lib" ON)
 
-if(ASTARTE_TRANSPORT_GRPC)
-    message(FATAL_ERROR "ASTARTE_TRANSPORT_GRPC is ON. Cannot build MQTT example.")
+message(STATUS "--------------------------------------------------")
+message(STATUS "Simple sample configuration:")
+message(STATUS "  SAMPLE_USE_SYSTEM_ASTARTE_LIB: ${SAMPLE_USE_SYSTEM_ASTARTE_LIB}")
+message(STATUS "--------------------------------------------------")
+
+# Astarte message hub protos
+if(SAMPLE_USE_SYSTEM_ASTARTE_LIB)
+    find_package(astarte_device_sdk REQUIRED)
+else()
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
 endif()
 
 # Add the executable
 add_executable(app main.cpp)
 
 # Link the library created in the root directory
-target_link_libraries(app PRIVATE astarte_device_sdk)
+if(SAMPLE_USE_SYSTEM_ASTARTE_LIB)
+    target_link_libraries(app PRIVATE astarte_device_sdk::astarte_device_sdk)
+else()
+    target_link_libraries(app PRIVATE astarte_device_sdk)
+endif()

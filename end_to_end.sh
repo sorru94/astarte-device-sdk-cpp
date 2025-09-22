@@ -6,10 +6,14 @@
 
 # --- Configuration ---
 fresh_mode=false
+external_tools=false
 transport=grpc
-system_transport=false
-jobs=$(nproc --all)
-build_dir="end_to_end/build"
+end_to_end_src_dir="end_to_end"
+build_dir="${end_to_end_src_dir}/build"
+cmake_user_presets="${end_to_end_src_dir}/CMakeUserPresets.json"
+venv_dir=".venv"
+conan_package_name="conan"
+conan_package_version="2.20.1"
 
 # --- Helper Functions ---
 display_help() {
@@ -19,11 +23,10 @@ Usage: $0 [OPTIONS]
 Builds the end-to-end samples.
 
 Options:
-  --fresh               Build from scratch (removes $build_dir).
-  --transport <TR>      Specify the transport to use (mqtt or grpc). Default: $transport.
-  --system_transport    Use the system trasnport (gRPC or MQTT) instead of building it from scratch.
-  -j, --jobs <N>        Specify the number of parallel jobs for make. Default: $jobs.
-  -h, --help            Display this help message.
+  --fresh             Build from scratch (removes $build_dir).
+  --transport <TR>    Specify the transport to use. One of: grpc (default) or mqtt.
+  --ext-tools         Do not setup the venv and python tooling for the build within the script.
+  -h, --help          Display this help message.
 EOF
 }
 error_exit() {
@@ -42,14 +45,7 @@ while [[ "$#" -gt 0 ]]; do
             fi
             shift 2
             ;;
-        --system_transport) system_transport=true; shift ;;
-        -j|--jobs)
-            jobs="$2"
-            if ! [[ "$jobs" =~ ^[0-9]+$ && "$jobs" -gt 0 ]]; then
-                error_exit "Invalid argument for --jobs. Please provide a positive number."
-            fi
-            shift 2
-            ;;
+        --ext-tools) external_tools=true; shift ;;
         -h|--help) display_help; exit 0 ;;
         *) display_help; error_exit "Unknown option: $1" ;;
     esac
@@ -57,60 +53,51 @@ done
 
 # --- Build Logic ---
 echo "Configuration:"
-echo "  Fresh Mode: $fresh_mode"
-echo "  Build Directory: $build_dir"
-echo "  Parallel Jobs (make): $jobs"
-echo " Transport: $transport"
-echo "  Use System transport: $system_transport"
+echo "  Fresh mode: $fresh_mode"
+echo "  Transport: $transport"
+echo "  External tools: $external_tools"
 echo ""
+
+# --- Environment and dependency setup ---
+if [ "$external_tools" = false ]; then
+    # shellcheck source=/dev/null
+    source ./scripts/setup_conan_env.sh
+    setup_python_conan_env $venv_dir $conan_package_name $conan_package_version
+fi
 
 # Clean build directory if --fresh is set
 if [ "$fresh_mode" = true ]; then
-    if [ -d "$build_dir" ]; then
-        echo "Fresh build requested. Removing $build_dir..."
-        if ! rm -rf "$build_dir"; then
-            error_exit "Failed to remove build directory '$build_dir'."
-        fi
-    else
-        echo "Fresh build requested, but $build_dir does not exist. Skipping removal."
-    fi
+    echo "Fresh build requested. Removing $build_dir, $cmake_user_presets and conan library..."
+    rm -rf "$build_dir"
+    rm -f "$cmake_user_presets"
+    conan remove astarte-device-sdk -c
 fi
 
-# Create build directory if it doesn't exist
-echo "Ensuring build directory '$build_dir' exists..."
-if ! mkdir -p "$build_dir"; then
-    error_exit "Failed to create build directory '$build_dir'."
+# Detect the default conan profile
+if ! conan profile detect --exist-ok; then
+    error_exit "Conan profile detection failed."
 fi
 
-# Navigate to build directory
-echo "Changing directory to '$build_dir'..."
-if ! cd "$build_dir"; then
-    error_exit "Failed to navigate to '$build_dir'."
+# --- Run conan conan on the library ---
+echo "Creating the library using Conan..."
+
+conan_options_array=()
+conan_options_array+=("--build=missing")
+conan_options_array+=("--settings=build_type=Debug")
+conan_options_array+=("--settings=compiler.cppstd=20")
+if ! conan create .  --options=transport=$transport "${conan_options_array[@]}"; then
+    error_exit "Conan package creation failed for the library."
 fi
 
-# Configure CMake
-echo "Running CMake..."
-cmake_options_array=()
-if [[ "$transport" == "grpc" ]]; then
-    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
-else
-    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=OFF")
+# --- Run conan conan on the sample ---
+echo "Running Conan for the end to end tests..."
+
+# Enter the sample folder
+cd "${end_to_end_src_dir}" || error_exit "Failed to navigate to $end_to_end_src_dir"
+
+# Build the sample
+if ! conan build . --output-folder=build "${conan_options_array[@]}"; then
+    error_exit "Conan build failed for the end to end tests."
 fi
 
-if [ "$system_transport" = true ] && [[ "$transport" == "grpc" ]]; then
-    cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
-fi
-cmake_options_array+=("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
-cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
-cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
-
-echo "CMake options: ${cmake_options_array[*]}"
-if ! cmake "${cmake_options_array[@]}" ..; then
-    error_exit "CMake configuration failed."
-fi
-
-# Build the project
-echo "Building with make -j $jobs ..."
-if ! make -j "$jobs"; then
-    error_exit "Make build failed."
-fi
+echo "Build complete the end to end tests. Executable should be in: $build_dir/"

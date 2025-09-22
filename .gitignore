@@ -27,3 +27,6 @@ config.toml
 CMakeLists.txt.user*
 
 grpc-install/
+
+# Conan stuff
+CMakeUserPresets.json

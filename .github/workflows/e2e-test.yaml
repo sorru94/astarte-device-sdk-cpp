@@ -18,17 +18,21 @@ jobs:
   end-to-end-test-grpc:
     runs-on: ubuntu-latest
     concurrency:
-      group: end-to-end-test-${{ github.ref }}
+      group: end-to-end-test--${{ matrix.msghub-version }}${{ github.ref }}
       cancel-in-progress: true
     strategy:
       matrix:
         msghub-version: ["v0.8.0"]
-        grpc-version: ["1.69.0"]
     steps:
       - name: Checkout C++ client
         uses: actions/checkout@v5
         with:
           path: astarte-device-sdk-cpp
+      - name: Install Conan
+        uses: conan-io/setup-conan@v1
+        with:
+          cache_packages: true
+          use_venv: true
       - name: Create Astarte Cluster
         uses: astarte-platform/astarte-cluster-action@v1
         with:
@@ -48,21 +52,6 @@ jobs:
           echo "E2E_PAIRING_URL=https://api.autotest.astarte-platform.org/pairing" >> $GITHUB_ENV
           echo "E2E_DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
           echo "E2E_CREDENTIALS_SECRET=$CREDENTIALS_SECRET" >> $GITHUB_ENV
-      - name: Setup gRPC build cache
-        id: cache-grpc-cpp
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./grpc
-            ./grpc-install
-          # Cache the hash of the build script for the CMAKE flags
-          key: grpc-cpp-v${{ matrix.grpc-version }}-${{ hashFiles('astarte-device-sdk-cpp/.github/scripts/build-grpc.sh') }}
-      - name: Setup gRPC for build
-        run: |
-          ./astarte-device-sdk-cpp/.github/scripts/setup-grpc.sh '${{ matrix.grpc-version }}'
-      - name: Compile gRPC from source
-        run: |
-          ./astarte-device-sdk-cpp/.github/scripts/build-grpc.sh
       - name: Checkout message hub
         uses: actions/checkout@v5
         with:
@@ -116,7 +105,15 @@ jobs:
           cat config.toml
       - name: Build the end to end tests
         working-directory: ./astarte-device-sdk-cpp
-        run: ./end_to_end.sh --fresh --system_transport
+        run: ./end_to_end.sh --fresh --ext-tools --transport grpc
       - name: Run the end to end tests
         working-directory: ./astarte-device-sdk-cpp
-        run: ./end_to_end/build/end_to_end_runner
+        run: ./end_to_end/build/app
+      - name: Install valgrind
+        working-directory: ./astarte-device-sdk-cpp
+        run: |
+          sudo apt update
+          sudo apt install valgrind
+      - name: Run the end to end tests with valgrind
+        working-directory: ./astarte-device-sdk-cpp
+        run: valgrind --leak-check=summary --track-origins=no --error-exitcode=1 ./end_to_end/build/app

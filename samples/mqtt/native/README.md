@@ -7,8 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 # MQTT example for the Astarte device
 
 This sample shows the device sdk functionalities for the Astarte device library for C++, such as
-the registration of a new device, its connection to Astarte through an MQTT connection, sending and
-receiving data from/to Astarte, etc.
+the registration of a new device, its connection to Astarte through an MQTT connection, sending and receiving data from/to Astarte, etc.
 
 ## Configure the sample
 It is possible to configure the example by creating and modifying a `config.toml` file.
