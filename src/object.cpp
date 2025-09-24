@@ -11,15 +11,13 @@
 
 namespace AstarteDeviceSdk {
 
-// Default constructor
-AstarteDatastreamObject::AstarteDatastreamObject() = default;
 // Constructor with initializer list
-AstarteDatastreamObject::AstarteDatastreamObject(std::initializer_list<MapType::value_type> init)
+AstarteDatastreamObject::AstarteDatastreamObject(std::initializer_list<value_type> init)
     : data_(init) {}
 // Access element by key (modifiable)
-auto AstarteDatastreamObject::at(const std::string& key) -> AstarteData& { return data_.at(key); }
+auto AstarteDatastreamObject::at(const key_type& key) -> mapped_type& { return data_.at(key); }
 // Access element by key (const)
-auto AstarteDatastreamObject::at(const std::string& key) const -> const AstarteData& {
+auto AstarteDatastreamObject::at(const key_type& key) const -> const mapped_type& {
   return data_.at(key);
 }
 // Begin iterator (modifiable)
@@ -35,23 +33,22 @@ auto AstarteDatastreamObject::size() const -> size_type { return data_.size(); }
 // Check if map is empty
 auto AstarteDatastreamObject::empty() const -> bool { return data_.empty(); }
 // Insert element into the map
-void AstarteDatastreamObject::insert(const std::string& key, const AstarteData& data) {
-  data_.insert({key, data});
-}
+void AstarteDatastreamObject::insert(const value_type& value) { data_.insert(value); }
 // Erase element by key
-auto AstarteDatastreamObject::erase(const std::string& key) -> size_type {
-  return data_.erase(key);
-}
+auto AstarteDatastreamObject::erase(const key_type& key) -> size_type { return data_.erase(key); }
 // Clear the map
 void AstarteDatastreamObject::clear() { data_.clear(); }
 // Find element by key (modifiable)
-auto AstarteDatastreamObject::find(const std::string& key) -> iterator { return data_.find(key); }
+auto AstarteDatastreamObject::find(const key_type& key) -> iterator { return data_.find(key); }
 // Find element by key (const)
-auto AstarteDatastreamObject::find(const std::string& key) const -> const_iterator {
+auto AstarteDatastreamObject::find(const key_type& key) const -> const_iterator {
   return data_.find(key);
 }
 
-auto AstarteDatastreamObject::get_raw_data() const -> const MapType& { return this->data_; }
+auto AstarteDatastreamObject::get_raw_data() const
+    -> const std::unordered_map<key_type, mapped_type>& {
+  return this->data_;
+}
 
 auto AstarteDatastreamObject::operator==(const AstarteDatastreamObject& other) const -> bool {
   return this->data_ == other.get_raw_data();

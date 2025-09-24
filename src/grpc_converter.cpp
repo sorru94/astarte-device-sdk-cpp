@@ -368,7 +368,7 @@ auto GrpcConverterFrom::operator()(const gRPCAstarteDatastreamObject& value)
   AstarteDatastreamObject object;
   const google::protobuf::Map<std::string, gRPCAstarteData>& grpc_data = value.data();
   for (const auto& [key, data] : grpc_data) {
-    object.insert(key, (*this)(data));
+    object.insert({key, (*this)(data)});
   }
   return object;
 }
