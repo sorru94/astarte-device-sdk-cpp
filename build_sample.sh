@@ -16,6 +16,8 @@ qt_path="$HOME/Qt/6.5.3/gcc_64/lib/cmake/Qt6"
 venv_dir=".venv"
 conan_package_name="conan"
 conan_package_version="2.20.1"
+meson_package_name="meson"
+meson_package_version="1.9.1"
 
 # --- Helper functions ---
 display_help() {
@@ -115,6 +117,11 @@ if [[ "$deps_management" = "conan" && "$external_tools" = false ]]; then
     # shellcheck source=/dev/null
     source ./scripts/setup_conan_env.sh
     setup_python_conan_env $venv_dir $conan_package_name $conan_package_version
+fi
+if [[ "$deps_management" = "fetch" && "$external_tools" = false ]]; then
+    # shellcheck source=/dev/null
+    source ./scripts/setup_fetch_env.sh
+    setup_python_fetch_env $venv_dir $transport $meson_package_name $meson_package_version
 fi
 
 # --- Clean previous builds ---
