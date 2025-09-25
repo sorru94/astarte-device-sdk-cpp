@@ -120,6 +120,8 @@ if(NOT ASTARTE_USE_SYSTEM_SPDLOG)
 endif()
 if(ASTARTE_TRANSPORT_GRPC)
     astarte_sdk_add_grpc_install_targets(INSTALL_TARGETS_LIST)
+else()
+    astarte_sdk_add_mqtt_install_targets(INSTALL_TARGETS_LIST)
 endif()
 
 install(

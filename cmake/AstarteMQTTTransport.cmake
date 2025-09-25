@@ -17,19 +17,37 @@ function(astarte_sdk_configure_mqtt_dependencies)
     # Fetch and configure the Paho C++ library
     if(ASTARTE_USE_SYSTEM_MQTT)
         find_package(PahoMqttCpp REQUIRED)
+        find_package(cpr REQUIRED)
+        find_package(nlohmann_json REQUIRED)
+        find_package(ada REQUIRED)
     else()
+        # MQTT library
         FetchContent_Declare(
             paho-mqtt-cpp
             GIT_REPOSITORY https://github.com/eclipse/paho.mqtt.cpp.git
             GIT_TAG v1.5.3
         )
-
-        # Set build options
         set(PAHO_BUILD_EXAMPLES OFF CACHE BOOL "")
         set(PAHO_BUILD_TESTS OFF CACHE BOOL "")
         set(PAHO_WITH_MQTT_C ON CACHE BOOL "")
-
         FetchContent_MakeAvailable(paho-mqtt-cpp)
+
+        # Library to manage url
+        set(URL_GIT_REPOSITORY https://github.com/ada-url/ada.git)
+        set(URL_GIT_TAG v3.2.4)
+        FetchContent_Declare(url GIT_REPOSITORY ${URL_GIT_REPOSITORY} GIT_TAG ${URL_GIT_TAG})
+        FetchContent_MakeAvailable(url)
+
+        # Library to handle HTTP requests
+        set(CPR_GIT_REPOSITORY https://github.com/libcpr/cpr.git)
+        set(CPR_GIT_TAG 1.12.0)
+        FetchContent_Declare(cpr GIT_REPOSITORY ${CPR_GIT_REPOSITORY} GIT_TAG ${CPR_GIT_TAG})
+        FetchContent_MakeAvailable(cpr)
+
+        # Library to manage json
+        set(JSON_GIT_URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+        FetchContent_Declare(json URL ${JSON_GIT_URL})
+        FetchContent_MakeAvailable(json)
     endif()
 endfunction()
 
@@ -45,7 +63,24 @@ function(astarte_sdk_add_mqtt_transport)
     else()
         target_link_libraries(astarte_device_sdk PRIVATE PahoMqttCpp::paho-mqttpp3)
     endif()
+
+    # Link with cpr HTTP library
+    target_link_libraries(
+        astarte_device_sdk
+        PRIVATE cpr::cpr
+        PRIVATE nlohmann_json::nlohmann_json
+        PRIVATE ada::ada
+    )
 endfunction()
+
+# Adds gRPC-specific targets to the installation list.
+function(astarte_sdk_add_mqtt_install_targets TARGET_LIST_VAR)
+    if(NOT ASTARTE_USE_SYSTEM_MQTT)
+        list(APPEND ${TARGET_LIST_VAR} ada)
+    endif()
+    set(${TARGET_LIST_VAR} ${${TARGET_LIST_VAR}} PARENT_SCOPE)
+endfunction()
+
 
 # Creates and installs the pkg-config file for the mqtt-enabled SDK.
 function(astarte_sdk_install_mqtt_pkgconfig)
