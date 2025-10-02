@@ -12,6 +12,7 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 include(FetchContent)
 
 # Configuration options for this library
+option(ASTARTE_LOGGER_SPDLOG "Use spdlog as the library logger" ON)
 option(ASTARTE_USE_SYSTEM_SPDLOG "Use system installed spdlog" OFF)
 option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
@@ -40,6 +41,7 @@ endif()
 
 message(STATUS "--------------------------------------------------")
 message(STATUS "Astarte SDK configuration:")
+message(STATUS "  ASTARTE_LOGGER_SPDLOG:           ${ASTARTE_LOGGER_SPDLOG}")
 message(STATUS "  ASTARTE_USE_SYSTEM_SPDLOG:       ${ASTARTE_USE_SYSTEM_SPDLOG}")
 message(STATUS "  ASTARTE_PUBLIC_SPDLOG_DEP:       ${ASTARTE_PUBLIC_SPDLOG_DEP}")
 message(STATUS "  ASTARTE_PUBLIC_PROTO_DEP:        ${ASTARTE_PUBLIC_PROTO_DEP}")
@@ -48,18 +50,20 @@ message(STATUS "--------------------------------------------------")
 
 # Logging library
 
-if(NOT ASTARTE_USE_SYSTEM_SPDLOG)
-    set(SPDLOG_GITHUB_URL https://github.com/gabime/spdlog.git)
-    set(SPDLOG_GIT_TAG v1.15.3)
-    FetchContent_Declare(
-        spdlog
-        GIT_REPOSITORY ${SPDLOG_GITHUB_URL}
-        GIT_TAG ${SPDLOG_GIT_TAG}
-        SYSTEM
-    )
-    FetchContent_MakeAvailable(spdlog)
-else()
-    find_package(spdlog REQUIRED)
+if(ASTARTE_LOGGER_SPDLOG)
+    if(NOT ASTARTE_USE_SYSTEM_SPDLOG)
+        set(SPDLOG_GITHUB_URL https://github.com/gabime/spdlog.git)
+        set(SPDLOG_GIT_TAG v1.15.3)
+        FetchContent_Declare(
+            spdlog
+            GIT_REPOSITORY ${SPDLOG_GITHUB_URL}
+            GIT_TAG ${SPDLOG_GIT_TAG}
+            SYSTEM
+        )
+        FetchContent_MakeAvailable(spdlog)
+    else()
+        find_package(spdlog REQUIRED)
+    endif()
 endif()
 
 # Astarte message hub protos
@@ -130,10 +134,12 @@ target_link_libraries(
     PRIVATE ${_GRPC_CPP} ${_REFLECTION} ${_PROTOBUF_LIBPROTOBUF}
 )
 
-if(ASTARTE_PUBLIC_SPDLOG_DEP)
-    target_link_libraries(astarte_device_sdk PUBLIC spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
-else()
-    target_link_libraries(astarte_device_sdk PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
+if(ASTARTE_LOGGER_SPDLOG)
+    if(ASTARTE_PUBLIC_SPDLOG_DEP)
+        target_link_libraries(astarte_device_sdk PUBLIC spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
+    else()
+        target_link_libraries(astarte_device_sdk PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
+    endif()
 endif()
 if(ASTARTE_PUBLIC_PROTO_DEP)
     target_link_libraries(astarte_device_sdk PUBLIC astarte_msghub_proto)
@@ -152,7 +158,7 @@ set_target_properties(
 )
 
 # Installation of the library is only avaliable when the system installed dependencies are used
-if(ASTARTE_USE_SYSTEM_GRPC AND ASTARTE_USE_SYSTEM_SPDLOG)
+if(ASTARTE_USE_SYSTEM_GRPC AND ((NOT ASTARTE_LOGGER_SPDLOG) OR ASTARTE_USE_SYSTEM_SPDLOG))
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
 
@@ -196,7 +202,11 @@ if(ASTARTE_USE_SYSTEM_GRPC AND ASTARTE_USE_SYSTEM_SPDLOG)
     set(PC_NAME "astarte_device_sdk")
     set(PC_DESCRIPTION "Astarte Device SDK Cpp")
     set(PC_VERSION ${PROJECT_VERSION})
-    set(PC_REQUIRES "spdlog astarte_msghub_proto grpc++ protobuf")
+    if(ASTARTE_LOGGER_SPDLOG)
+        set(PC_REQUIRES "spdlog astarte_msghub_proto grpc++ protobuf")
+    else()
+        set(PC_REQUIRES "astarte_msghub_proto grpc++ protobuf")
+    endif()
     set(PC_REQUIRES_PRIVATE "")
     set(PC_LIB "-lastarte_device_sdk -lgrpc++_reflection -laddress_sorting -lre2 -lupb --as-needed")
     set(PC_LIBS_PRIVATE "")

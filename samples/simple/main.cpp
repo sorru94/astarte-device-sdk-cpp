@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <spdlog/spdlog.h>
-
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -28,30 +26,29 @@ void reception_handler(std::stop_token token, std::shared_ptr<AstarteDeviceGRPC>
     auto incoming = msghub_client->poll_incoming(100ms);
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
-      spdlog::info("Received message.");
-      spdlog::info("Interface name: {}", msg.get_interface());
-      spdlog::info("Path: {}", msg.get_path());
+      std::cout << "[-] " << "Received message." << std::endl;
+      std::cout << "[-] " << std::format("Interface name: {}", msg.get_interface()) << std::endl;
+      std::cout << "[-] " << std::format("Path: {}", msg.get_path()) << std::endl;
       if (msg.is_datastream()) {
         if (msg.is_individual()) {
-          spdlog::info("Type: individual datastream");
+          std::cout << "[-] " << "Type: individual datastream" << std::endl;
           const auto& data(msg.into<AstarteDatastreamIndividual>());
-          spdlog::info("Value: {}", data);
+          std::cout << "[-] " << std::format("Value: {}", data) << std::endl;
         } else {
-          spdlog::info("Type: object datastream");
+          std::cout << "[-] " << "Type: object datastream" << std::endl;
           const auto& data(msg.into<AstarteDatastreamObject>());
-          spdlog::info("Value: {}", data);
+          std::cout << "[-] " << std::format("Value: {}", data) << std::endl;
         }
       } else {
-        spdlog::info("Type: individual property");
+        std::cout << "[-] " << "Type: individual property" << std::endl;
         const auto& data(msg.into<AstartePropertyIndividual>());
-        spdlog::info("Value: {}", data);
+        std::cout << "[-] " << std::format("Value: {}", data) << std::endl;
       }
     }
   }
 }
 
 int main(int argc, char** argv) {
-  spdlog::set_level(spdlog::level::debug);
   std::string server_addr = "localhost:50051";
   std::string node_id("aa04dade-9401-4c37-8c6a-d8da15b083ae");
   std::shared_ptr<AstarteDeviceGRPC> msghub_client =

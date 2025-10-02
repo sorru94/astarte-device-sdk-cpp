@@ -8,6 +8,7 @@
 sample_to_build=""
 fresh_mode=false
 deps_management="conan"
+logger="spdlog"
 external_tools=false
 qt_version=6
 qt_path="$HOME/Qt/6.5.3/gcc_64/lib/cmake/Qt6"
@@ -25,6 +26,7 @@ Usage: $0 <sample_name> [OPTIONS]
 Common options:
   --fresh        Build the sample from scratch (removes its build directory).
   --deps-mgmt    Select a possible dependency management strategy. One of: conan (default), fetch, system.
+  --logger       Select the logger to use. One of: spdlog (default), none.
   -h, --help     Display this help message.
 
 Conan options:
@@ -68,6 +70,16 @@ while [[ "$#" -gt 0 ]]; do
                 deps_management="system"
             else
                 error_exit "Invalid dependency management: $2 (expected conan, fetch or system)."
+            fi
+            shift 2
+            ;;
+        --logger)
+            if [[ "$2" == "spdlog" ]]; then
+                logger="spdlog"
+            elif [[ "$2" == "none" ]]; then
+                logger="none"
+            else
+                error_exit "Invalid logger choice: $2 (expected spdlog or none)."
             fi
             shift 2
             ;;
@@ -123,11 +135,11 @@ if [[ "$deps_management" == "conan" ]]; then
 elif [[ "$deps_management" == "fetch" ]]; then
     # shellcheck source=/dev/null
     source ./scripts/build_sample_cmake.sh
-    build_sample_with_cmake "$(pwd)" "$sample_to_build" "false" "$(nproc --all)" "$qt_path" "$qt_version"
+    build_sample_with_cmake "$(pwd)" "$sample_to_build" "$logger" "false" "$(nproc --all)" "$qt_path" "$qt_version"
 else # "system"
     # shellcheck source=/dev/null
     source ./scripts/build_sample_cmake.sh
-    build_sample_with_cmake "$(pwd)" "$sample_to_build" "true" "$(nproc --all)" "$qt_path" "$qt_version"
+    build_sample_with_cmake "$(pwd)" "$sample_to_build" "$logger" "true" "$(nproc --all)" "$qt_path" "$qt_version"
 fi
 
 echo "Build complete for $sample_to_build sample. Executable should be in: $build_dir/"

@@ -9,17 +9,48 @@
 #include <cstddef>
 #include <type_traits>
 
-// TODO(rgallor): stop using spdlog formatter once C++20 will become the minimu required version
-#if (__cplusplus >= 202002L) && (__has_include(<format>))
+#if __has_include(<format>)
 #include <format>
 #define ASTARTE_NS_FORMAT std
-#else                        // (__cplusplus >= 202002L) && (__has_include(<format>))
-#include <spdlog/fmt/fmt.h>  // NOLINT: avoid clang-tidy warning regarding fmt library not used directly
+#else  // __has_include(<format>)
+#include <iterator>
+#include <string>
+
+namespace mock_format {
+
+// A mock formatter struct is needed so the specializations below will compile.
+template <typename T, typename CharT = char>
+struct formatter {
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) const {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const T&, FormatContext& ctx) const {
+    return ctx.out();
+  }
+};
+
+// Mock format_to: does nothing and returns the output iterator unmodified.
+template <typename OutputIt, typename... Args>
+OutputIt format_to(OutputIt out, const char*, const Args&...) {
+  return out;
+}
+
+// Mock format: always returns an empty string.
+template <typename... Args>
+std::string format(const char*, const Args&...) {
+  return std::string();
+}
+
+}  // namespace mock_format
+
+#define ASTARTE_NS_FORMAT mock_format
 
 #include <iomanip>
 #include <sstream>
-#define ASTARTE_NS_FORMAT fmt
-#endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
+#endif  // __has_include(<format>)
 
 #include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
@@ -90,18 +121,14 @@ void format_base64(OutputIt& out, const std::vector<uint8_t>& data) {
 template <typename OutputIt>
 void format_timestamp(OutputIt& out, const std::chrono::system_clock::time_point& data) {
   out = ASTARTE_NS_FORMAT::format_to(out, "\"");
-#if (__cplusplus >= 202002L) && (__has_include(<format>))
+#if __has_include(<format>)
   out = ASTARTE_NS_FORMAT::format_to(
       out, "{}",
       ASTARTE_NS_FORMAT::format("{0:%F}T{0:%T}Z",
                                 std::chrono::time_point_cast<std::chrono::milliseconds>(data)));
-#else   // (__cplusplus >= 202002L) && (__has_include(<format>))
-  const std::time_t time = std::chrono::system_clock::to_time_t(data);
-  const std::tm utc_tm = *std::gmtime(&time);
-  std::stringstream stream;
-  stream << std::put_time(&utc_tm, "%FT%T.000Z");
-  out = ASTARTE_NS_FORMAT::format_to(out, "{}", stream.str());
-#endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
+#else   // __has_include(<format>)
+  (void)data;
+#endif  // __has_include(<format>)
   out = ASTARTE_NS_FORMAT::format_to(out, "\"");
 }
 

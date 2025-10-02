@@ -15,21 +15,23 @@ error_exit() {
 # Arguments:
 #   $1: lib_src_dir - The path to the library source directory.
 #   $2: sample_to_build - The name of the sample being built.
-#   $3: system_grpc - 'true' to use system gRPC, 'false' otherwise.
-#   $4: jobs - The number of parallel jobs for 'make'.
-#   $5: qt_path (optional) - The path to the Qt installation.
-#   $6: qt_version (optional) - The major version of Qt to use.
+#   $3: logger - 'spdlog' to use spdlog, 'none' to use standard out.
+#   $4: system_grpc - 'true' to use system gRPC, 'false' otherwise.
+#   $5: jobs - The number of parallel jobs for 'make'.
+#   $6: qt_path (optional) - The path to the Qt installation.
+#   $7: qt_version (optional) - The major version of Qt to use.
 #
 # Example Usage:
-#   build_sample_with_cmake "$(pwd)" "qt" "false" $(nproc --all) "$HOME/Qt/6.8.1/gcc_64/lib/cmake/Qt6" "6"
+#   build_sample_with_cmake "$(pwd)" "qt" "none" "false" $(nproc --all) "$HOME/Qt/6.8.1/gcc_64/lib/cmake/Qt6" "6"
 #
 build_sample_with_cmake() {
     local lib_src_dir="$1"
     local sample_to_build="$2"
-    local system_grpc="$3"
-    local jobs="$4"
-    local qt_path="$5"
-    local qt_version="$6"
+    local logger="$3"
+    local system_grpc="$4"
+    local jobs="$5"
+    local qt_path="$6"
+    local qt_version="$7"
 
     # --- Argument Validation ---
     if [ -z "$lib_src_dir" ]; then
@@ -37,6 +39,9 @@ build_sample_with_cmake() {
     fi
     if [ -z "$sample_to_build" ]; then
         error_exit "Sample to build not provided."
+    fi
+    if [[ "$logger" != "spdlog" && "$logger" != "none" ]]; then
+        error_exit "Invalid logger choice."
     fi
     if [ -z "$system_grpc" ]; then
         error_exit "System grpc option not provided."
@@ -65,6 +70,10 @@ build_sample_with_cmake() {
     cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
     cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
     cmake_options_array+=("-DSAMPLE_USE_SYSTEM_ASTARTE_LIB=OFF")
+
+    if [[ "$logger" == "none" ]]; then
+        cmake_options_array+=("-DASTARTE_LOGGER_SPDLOG=OFF")
+    fi
 
     if [ "$system_grpc" = true ]; then
         cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
