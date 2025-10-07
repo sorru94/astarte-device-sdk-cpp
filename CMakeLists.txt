@@ -117,8 +117,9 @@ else()
     target_link_libraries(astarte_device_sdk PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
 endif()
 
+target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_TRANSPORT_GRPC)
+
 if(ASTARTE_TRANSPORT_GRPC)
-    target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_TRANSPORT_GRPC)
     astarte_sdk_add_grpc_transport()
 else()
     astarte_sdk_add_mqtt_transport()

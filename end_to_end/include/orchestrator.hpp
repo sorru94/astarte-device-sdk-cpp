@@ -75,28 +75,28 @@ class TestOrchestrator {
 
       // Create a new device of the correct transport type
 #if defined(ASTARTE_TRANSPORT_GRPC)
-          auto config_grpc = std::get<struct GrpcTestConfig>(transport_config_.value());
-    
-          std::shared_ptr<AstarteDeviceGRPC> device_grpc =
-              std::make_shared<AstarteDeviceGRPC>(config_grpc.server_addr, config_grpc.node_id);
-    
-          for (const std::filesystem::path& interface_path : config_grpc.interfaces) {
-            device_grpc->add_interface_from_file(interface_path);
-          }
-          test_case.attach_device(device_grpc);
-    #else
-          auto config_mqtt = std::get<struct MqttTestConfig>(transport_config_.value());
-    
-          std::shared_ptr<AstarteDeviceMQTT> device_mqtt =
-              std::make_shared<AstarteDeviceMQTT>(config_mqtt.cfg);
-    
-          // TODO: decomment once the add_interface functionality has been implemented
-          //   for (const std::filesystem::path& interface_path : config_mqtt.interfaces) {
-          // device_mqtt->add_interface_from_file(interface_path);
-          // }
-    
-          test_case.attach_device(device_mqtt);
-    #endif
+      auto config_grpc = std::get<struct GrpcTestConfig>(transport_config_.value());
+
+      std::shared_ptr<AstarteDeviceGRPC> device_grpc =
+          std::make_shared<AstarteDeviceGRPC>(config_grpc.server_addr, config_grpc.node_id);
+
+      for (const std::filesystem::path& interface_path : config_grpc.interfaces) {
+        device_grpc->add_interface_from_file(interface_path);
+      }
+      test_case.attach_device(device_grpc);
+#else
+      auto config_mqtt = std::get<struct MqttTestConfig>(transport_config_.value());
+
+      std::shared_ptr<AstarteDeviceMQTT> device_mqtt =
+          std::make_shared<AstarteDeviceMQTT>(config_mqtt.cfg);
+
+      // TODO: decomment once the add_interface functionality has been implemented
+      //   for (const std::filesystem::path& interface_path : config_mqtt.interfaces) {
+      // device_mqtt->add_interface_from_file(interface_path);
+      // }
+
+      test_case.attach_device(device_mqtt);
+#endif
 
       // run the isolated test
       test_case.start();
