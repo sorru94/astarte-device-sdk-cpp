@@ -17,6 +17,7 @@ class Pkg(ConanFile):
 
     def requirements(self):
         self.requires("tomlplusplus/3.4.0")
+        self.requires("sqlitecpp/3.3.2", transitive_headers=True)
         self.requires("astarte-device-sdk/0.7.0")
 
     def generate(self):
