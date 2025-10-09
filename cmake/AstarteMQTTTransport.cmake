@@ -4,6 +4,8 @@
 #
 # This file contains all functions needed to add MQTT transport support.
 
+include_guard(GLOBAL)
+
 # Defines MQTT-specific CMake options and displays them.
 function(astarte_sdk_add_mqtt_options)
     option(ASTARTE_USE_SYSTEM_MQTT "Use the system installed MQTT library" OFF)

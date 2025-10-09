@@ -4,6 +4,8 @@
 #
 # This file contains all functions needed to add gRPC transport support.
 
+include_guard(GLOBAL)
+
 # Defines gRPC-specific CMake options and displays them.
 function(astarte_sdk_add_grpc_options)
     option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
