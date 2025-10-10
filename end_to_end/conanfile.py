@@ -19,7 +19,7 @@ class Pkg(ConanFile):
         self.requires("cpr/1.12.0")
         self.requires("nlohmann_json/3.12.0")
         self.requires("tomlplusplus/3.4.0")
-        self.requires("astarte-device-sdk/0.7.0")
+        self.requires("astarte-device-sdk/0.8.0")
 
     def generate(self):
         tc = CMakeToolchain(self)
