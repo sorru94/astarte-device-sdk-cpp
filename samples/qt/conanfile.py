@@ -22,7 +22,7 @@ class Pkg(ConanFile):
         else:
             self.requires("qt/5.15.16")
             self.output.info("Qt5 added as a requirement.")
-        self.requires("astarte-device-sdk/0.7.0")
+        self.requires("astarte-device-sdk/0.8.0")
 
     def generate(self):
         tc = CMakeToolchain(self)

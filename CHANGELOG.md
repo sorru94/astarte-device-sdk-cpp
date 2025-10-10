@@ -10,9 +10,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0] - 2025-10-10
 ### Added
 - Support for the [Conan](https://conan.io/) package manager. Users can build the library as a conan package and import it in their Conan projects.
+
+### Fixed
+- Bug preventing build with the Microsoft compiler [#113](https://github.com/astarte-platform/astarte-device-sdk-cpp/pull/131).
 
 ## [0.7.0] - 2025-08-13
 ### Added
