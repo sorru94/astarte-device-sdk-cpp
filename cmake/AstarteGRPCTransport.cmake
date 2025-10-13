@@ -83,6 +83,8 @@ function(astarte_sdk_add_grpc_transport)
     else()
         target_link_libraries(astarte_device_sdk PRIVATE astarte_msghub_proto)
     endif()
+
+    target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_TRANSPORT_GRPC)
 endfunction()
 
 # Adds gRPC-specific targets to the installation list.
