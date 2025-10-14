@@ -49,6 +49,7 @@ class Pkg(ConanFile):
         self.cpp_info.libs = ["astarte_device_sdk"]
         if self.options.transport == "grpc":
             self.cpp_info.libs.append("astarte_msghub_proto")
+            self.cpp_info.defines.append("ASTARTE_TRANSPORT_GRPC")
         self.cpp_info.set_property("cmake_file_name", "astarte_device_sdk")
         self.cpp_info.set_property("cmake_target_name", "astarte_device_sdk::astarte_device_sdk")
 
