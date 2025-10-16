@@ -117,8 +117,6 @@ else()
     target_link_libraries(astarte_device_sdk PRIVATE spdlog::spdlog $<$<BOOL:${MINGW}>:ws2_32>)
 endif()
 
-target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_TRANSPORT_GRPC)
-
 if(ASTARTE_TRANSPORT_GRPC)
     astarte_sdk_add_grpc_transport()
 else()
@@ -158,8 +156,6 @@ else()
     astarte_sdk_add_mqtt_install_targets(INSTALL_TARGETS_LIST)
 endif()
 
-set_target_properties(astarte_device_sdk PROPERTIES POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS})
-
 install(
     TARGETS ${INSTALL_TARGETS_LIST}
     EXPORT astarte_device_sdk-target
@@ -176,10 +172,6 @@ install(
 #     NAMESPACE astarte_device_sdk::
 #     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/astarte_device_sdk
 # )
-
-# # install the entire public include directory, preserving its structure.
-# # This way we don't miss out any header file, such as those in subdirecotries
-# install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
     FILES

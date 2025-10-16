@@ -20,7 +20,7 @@ class TestActionPairingApiRegistration : public TestAction {
 
   void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Pairing device...", case_name);
-    auto pairing_api = PairingApi(realm_, device_id_, std::format("{}/pairing", astarte_base_url_));
+    auto pairing_api = PairingApi(realm_, device_id_, astarte_base_url_);
     auto credential_secret = pairing_api.register_device(pairing_token_);
 
     // check that the credential secret has the correct lenght

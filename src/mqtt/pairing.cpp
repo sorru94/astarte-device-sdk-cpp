@@ -7,6 +7,7 @@
 #include <cpr/cpr.h>
 #include <spdlog/spdlog.h>
 
+#include <chrono>
 #include <format>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -18,20 +19,11 @@ using json = nlohmann::json;
 
 namespace AstarteDeviceSdk {
 
-auto PairingApi::parse_and_validate_url(std::string_view url) -> ada::url_aggregator {
-  auto parsed_url = ada::parse(url);
-  if (!parsed_url) {
-    throw InvalidUrlException(
-        std::format("Failed to register device. Provided wrong pairing URL: {}", url));
-  }
-  return std::move(parsed_url.value());
-}
-
 // check if the response code of an HTTP is successfull (i.e., 2XX) or not
 auto is_successful(long status_code) -> bool { return (status_code / 100) == 2; }
 
-auto PairingApi::register_device(std::string_view pairing_token, int timeout_ms) const
-    -> std::string {
+auto PairingApi::register_device(std::string_view pairing_token,
+                                 std::chrono::milliseconds timeout_ms) const -> std::string {
   auto request_url = pairing_url;
   std::string pathname = std::format("{}/v1/{}/agent/devices", request_url.get_pathname(), realm);
   request_url.set_pathname(pathname);
@@ -66,6 +58,19 @@ auto PairingApi::register_device(std::string_view pairing_token, int timeout_ms)
     throw JsonAccessErrorException(
         std::format("Failed to parse JSON: {}. Body: {}", e.what(), res.text));
   }
+}
+
+auto PairingApi::create_pairing_url(std::string_view astarte_base_url) -> ada::url_aggregator {
+  auto parsed_url = ada::parse(astarte_base_url);
+  if (!parsed_url) {
+    throw InvalidUrlException(
+        std::format("Failed to register device. Provided invalid base URL: {}", astarte_base_url));
+  }
+
+  auto pairing_url = parsed_url.value();
+  pairing_url.set_pathname("pairing");
+
+  return std::move(pairing_url);
 }
 
 }  // namespace AstarteDeviceSdk

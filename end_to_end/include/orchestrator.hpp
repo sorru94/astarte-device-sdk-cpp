@@ -13,9 +13,9 @@
 #include <vector>
 
 #if defined(ASTARTE_TRANSPORT_GRPC)
-#include "astarte_device_sdk/device_grpc.hpp"
+#include "astarte_device_sdk/grpc/device_grpc.hpp"
 #else
-#include "astarte_device_sdk/device_mqtt.hpp"
+#include "astarte_device_sdk/mqtt/device_mqtt.hpp"
 #endif
 #include "case.hpp"
 #include "transport.hpp"

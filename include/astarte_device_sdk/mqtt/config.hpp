@@ -7,7 +7,7 @@
 
 /**
  * @file config.hpp
- * @brief Defines classes and parameters for configuring an MQTT connection to Astarte.
+ * @brief Classes and default values for configuring an MQTT connection to Astarte.
  *
  * This file provides the MqttConfig and Credential classes, which are used to set up all
  * necessary parameters for device authentication and communication with the Astarte
@@ -22,10 +22,10 @@
 namespace AstarteDeviceSdk {
 
 /** @brief Default keep alive interval in seconds for the MQTT connection. */
-constexpr int DEFAULT_KEEP_ALIVE = 30;
+constexpr u_int32_t DEFAULT_KEEP_ALIVE = 30;
 
 /** @brief Default connection timeout in seconds for the MQTT connection. */
-constexpr int DEFAULT_CONNECTION_TIMEOUT = 5;
+constexpr u_int32_t DEFAULT_CONNECTION_TIMEOUT = 5;
 
 /**
  * @brief Configuration for the Astarte MQTT connection.
@@ -39,7 +39,7 @@ class MqttConfig {
    * @param realm The Astarte realm the device belongs to.
    * @param device_id The unique identifier for the device.
    * @param credential_secret The credential secret for this device.
-   * @param pairing_url The base URL of the Astarte Pairing API.
+   * @param pairing_url The base URL of the Astarte pairing API.
    * @param store_dir Path to a local directory for persisting certificates and state.
    */
   MqttConfig(std::string_view realm, std::string_view device_id, std::string_view credential_secret,
@@ -88,7 +88,7 @@ class MqttConfig {
    * @param duration The keep-alive duration in seconds.
    * @return A reference to the MqttConfig object for chaining.
    */
-  auto keepalive(int duration) -> MqttConfig&;
+  auto keepalive(u_int32_t duration) -> MqttConfig&;
 
   /**
    * @brief Configure the client to ignore TLS/SSL certificate validation errors.
@@ -101,7 +101,7 @@ class MqttConfig {
    * @param duration The timeout duration in seconds.
    * @return A reference to the MqttConfig object for chaining.
    */
-  auto connection_timeout(int duration) -> MqttConfig&;
+  auto connection_timeout(u_int32_t duration) -> MqttConfig&;
 
  private:
   // The Astarte realm.
@@ -117,9 +117,9 @@ class MqttConfig {
   // Flag to ignore SSL/TLS certificate errors.
   bool ignore_ssl_;
   // Keep-alive interval in seconds.
-  int keepalive_;
+  u_int32_t keepalive_;
   // Connection timeout in seconds.
-  int conn_timeout_;
+  u_int32_t conn_timeout_;
 };
 
 }  // namespace AstarteDeviceSdk

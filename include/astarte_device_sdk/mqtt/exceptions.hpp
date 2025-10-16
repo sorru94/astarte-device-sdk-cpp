@@ -2,9 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef ASTARTE_MQTT_EXCEPTIONS_HPP
+#define ASTARTE_MQTT_EXCEPTIONS_HPP
+
 /**
  * @file exceptions.hpp
- * @brief Defines a hierarchy of custom exceptions used throughout the Astarte Device SDK.
+ * @brief Hierarchy of custom exceptions used throughout the Astarte device SDK.
  */
 
 #pragma once
@@ -12,29 +15,21 @@
 #include <exception>
 #include <string>
 
+#include "astarte_device_sdk/exceptions.hpp"
+
 /**
  * @brief A base exception class for all SDK-related errors.
  * @details This is the root exception from which all other custom exceptions in the SDK inherit.
  * It extends std::exception to provide a consistent error handling mechanism.
  */
-class MqttException : public std::exception {
+class MqttException : public AstarteDeviceSdk::AstarteException {
  public:
   /**
    * @brief Construct the MqttException object.
    * @param message A descriptive error message explaining the reason for the exception.
    */
-  explicit MqttException(std::string message) : message_(std::move(message)) {}
-
-  /**
-   * @brief Return the exception message.
-   * @details Overrides the base std::exception::what() method.
-   * @return A constant C-style string containing the error message.
-   */
-  [[nodiscard]] auto what() const noexcept -> const char* override { return message_.c_str(); }
-
- private:
-  /// @brief The error message associated with the exception.
-  std::string message_;
+  explicit MqttException(std::string message)
+      : AstarteDeviceSdk::AstarteException("MqttException(" + std::move(message) + ")") {}
 };
 
 /**
@@ -47,7 +42,8 @@ class PairingApiException : public MqttException {
    * @brief Construct the PairingApiException object.
    * @param err_message A descriptive error message.
    */
-  explicit PairingApiException(const std::string& err_message) : MqttException(err_message) {}
+  explicit PairingApiException(const std::string& err_message)
+      : MqttException("PairingApiException(" + err_message + ")") {}
 };
 
 /**
@@ -61,7 +57,8 @@ class InvalidUrlException : public PairingApiException {
    * @brief Construct the InvalidUrlException object.
    * @param err_message A descriptive error message.
    */
-  explicit InvalidUrlException(const std::string& err_message) : PairingApiException(err_message) {}
+  explicit InvalidUrlException(const std::string& err_message)
+      : PairingApiException("InvalidUrlException(" + err_message + ")") {}
 };
 
 /**
@@ -76,7 +73,7 @@ class DeviceRegistrationException : public PairingApiException {
    * @param err_message A descriptive error message.
    */
   explicit DeviceRegistrationException(const std::string& err_message)
-      : PairingApiException(err_message) {}
+      : PairingApiException("DeviceRegistrationException(" + err_message + ")") {}
 };
 
 /**
@@ -91,5 +88,7 @@ class JsonAccessErrorException : public PairingApiException {
    * @param err_message A descriptive error message.
    */
   explicit JsonAccessErrorException(const std::string& err_message)
-      : PairingApiException(err_message) {}
+      : PairingApiException("JsonAccessErrorException(" + err_message + ")") {}
 };
+
+#endif  // ASTARTE_MQTT_EXCEPTIONS_HPP

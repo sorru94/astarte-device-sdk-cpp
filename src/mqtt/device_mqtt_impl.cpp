@@ -18,8 +18,8 @@
 #include <string_view>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/device_mqtt.hpp"
 #include "astarte_device_sdk/mqtt/config.hpp"
+#include "astarte_device_sdk/mqtt/device_mqtt.hpp"
 #include "astarte_device_sdk/mqtt/pairing.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"

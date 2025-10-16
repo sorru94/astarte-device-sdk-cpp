@@ -47,7 +47,7 @@ class Config {
     }
   }
 
-  std::string pairing_url;
+  std::string astarte_base_url;
   std::string realm;
   std::string device_id;
   std::optional<std::string> pairing_token;
@@ -56,11 +56,10 @@ class Config {
 
  private:
   void general_config(Config& cfg, toml::table& toml) {
-    auto astarte_base_url = toml.at("astarte_base_url").value<std::string>().value();
-    auto pairing_url = ada::parse(astarte_base_url).value();
-    pairing_url.set_pathname("pairing");
+    auto cfg_astarte_base_url = toml.at("astarte_base_url").value<std::string>().value();
+    auto astarte_base_url = ada::parse(cfg_astarte_base_url).value();
 
-    cfg.pairing_url = pairing_url.get_href();
+    cfg.astarte_base_url = astarte_base_url.get_href();
     cfg.realm = toml.at("realm").value<std::string>().value();
     cfg.device_id = toml.at("device_id").value<std::string>().value();
     cfg.pairing_token = toml.at("pairing_token").value<std::string>();

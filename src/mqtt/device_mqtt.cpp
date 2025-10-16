@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device_sdk/device_mqtt.hpp"
+#include "astarte_device_sdk/mqtt/device_mqtt.hpp"
 
 #include <chrono>
 #include <filesystem>

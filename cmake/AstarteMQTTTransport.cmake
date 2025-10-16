@@ -50,16 +50,6 @@ function(astarte_sdk_configure_mqtt_dependencies)
         FetchContent_Declare(json URL ${JSON_GIT_URL})
         FetchContent_MakeAvailable(json)
 
-        # Library to manage toml files
-        set(TOML_GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git)
-        set(TOML_GIT_TAG v3.4.0)
-        FetchContent_Declare(
-            tomlplusplus
-            GIT_REPOSITORY ${TOML_GIT_REPOSITORY}
-            GIT_TAG ${TOML_GIT_TAG}
-        )
-        FetchContent_MakeAvailable(tomlplusplus)
-
         # Library to manage url
         set(URL_GIT_REPOSITORY https://github.com/ada-url/ada.git)
         set(URL_GIT_TAG v3.2.4)
@@ -82,7 +72,7 @@ function(
     list(
         APPEND
         ${ASTARTE_MQTT_PUBLIC_HEADERS}
-        "include/astarte_device_sdk/device_mqtt.hpp"
+        "include/astarte_device_sdk/mqtt/device_mqtt.hpp"
         "include/astarte_device_sdk/mqtt/pairing.hpp"
         "include/astarte_device_sdk/mqtt/exceptions.hpp"
         "include/astarte_device_sdk/mqtt/config.hpp"

@@ -12,12 +12,12 @@
 
 // include headers
 #ifdef ASTARTE_TRANSPORT_GRPC
-#include "astarte_device_sdk/device_grpc.hpp"
+#include "astarte_device_sdk/grpc/device_grpc.hpp"
 
 using AstarteDeviceSdk::AstarteDeviceGRPC;
 #else  // ASTARTE_TRANSPORT_GRPC
-#include "astarte_device_sdk/device_mqtt.hpp"
 #include "astarte_device_sdk/mqtt/config.hpp"
+#include "astarte_device_sdk/mqtt/device_mqtt.hpp"
 
 using AstarteDeviceSdk::AstarteDeviceMQTT;
 using AstarteDeviceSdk::MqttConfig;
