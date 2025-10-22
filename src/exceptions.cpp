@@ -13,16 +13,17 @@ AstarteException::AstarteException(std::string_view message) : message_(message)
 auto AstarteException::what() const noexcept -> const char* { return message_.c_str(); }
 
 AstarteFileOpenException::AstarteFileOpenException(std::string_view filename)
-    : AstarteException("Failed to open file: " + std::string(filename)), filename_(filename) {}
+    : AstarteException("AstarteFileOpenException(" + std::string(filename) + ")"),
+      filename_(filename) {}
 auto AstarteFileOpenException::get_filename() const -> const std::string& { return filename_; }
 
 AstarteInvalidInputException::AstarteInvalidInputException(std::string_view err_message)
-    : AstarteException(err_message) {}
+    : AstarteException("AstarteInvalidInputException(" + std::string(err_message) + ")") {}
 
 AstarteInternalException::AstarteInternalException(std::string_view err_message)
-    : AstarteException(err_message) {}
+    : AstarteException("AstarteInternalException(" + std::string(err_message) + ")") {}
 
 AstarteOperationRefusedException::AstarteOperationRefusedException(std::string_view err_message)
-    : AstarteException(err_message) {}
+    : AstarteException("AstarteOperationRefusedException(" + std::string(err_message) + ")") {}
 
 }  // namespace AstarteDeviceSdk

@@ -10,19 +10,19 @@
  * @brief Hierarchy of custom exceptions used throughout the Astarte device SDK.
  */
 
-#pragma once
-
 #include <exception>
 #include <string>
 
 #include "astarte_device_sdk/exceptions.hpp"
+
+namespace AstarteDeviceSdk {
 
 /**
  * @brief A base exception class for all SDK-related errors.
  * @details This is the root exception from which all other custom exceptions in the SDK inherit.
  * It extends std::exception to provide a consistent error handling mechanism.
  */
-class MqttException : public AstarteDeviceSdk::AstarteException {
+class MqttException : public AstarteException {
  public:
   /**
    * @brief Construct the MqttException object.
@@ -90,5 +90,7 @@ class JsonAccessErrorException : public PairingApiException {
   explicit JsonAccessErrorException(const std::string& err_message)
       : PairingApiException("JsonAccessErrorException(" + err_message + ")") {}
 };
+
+}  // namespace AstarteDeviceSdk
 
 #endif  // ASTARTE_MQTT_EXCEPTIONS_HPP
