@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device_sdk/device_grpc.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -18,6 +17,7 @@
 #include "astarte_device_sdk/ownership.hpp"
 #include "astarte_device_sdk/property.hpp"
 #include "astarte_device_sdk/stored_property.hpp"
+#include "astarte_device_sdk/grpc/device_grpc.hpp"
 #include "grpc/device_grpc_impl.hpp"
 
 namespace AstarteDeviceSdk {

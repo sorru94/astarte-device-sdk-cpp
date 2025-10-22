@@ -2,58 +2,46 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef DEVICE_GRPC_IMPL_H
-#define DEVICE_GRPC_IMPL_H
+#ifndef DEVICE_MQTT_IMPL_H
+#define DEVICE_MQTT_IMPL_H
 
-#include <astarteplatform/msghub/astarte_message.pb.h>
-#include <astarteplatform/msghub/message_hub_service.grpc.pb.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/support/client_interceptor.h>
-
-#include <atomic>
 #include <chrono>
 #include <filesystem>
-#include <list>
-#include <memory>
-#include <optional>
-#include <stop_token>
 #include <string>
 #include <string_view>
-#include <thread>
-#include <vector>
+#include <optional>
+#include <list>
+#include <atomic>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/grpc/device_grpc.hpp"
 #include "astarte_device_sdk/msg.hpp"
+#include "astarte_device_sdk/stored_property.hpp"
 #include "astarte_device_sdk/object.hpp"
+#include "astarte_device_sdk/mqtt/config.hpp"
 #include "astarte_device_sdk/ownership.hpp"
 #include "astarte_device_sdk/property.hpp"
-#include "astarte_device_sdk/stored_property.hpp"
-#include "shared_queue.hpp"
+#include "astarte_device_sdk/mqtt/device_mqtt.hpp"
+
 
 namespace AstarteDeviceSdk {
 
-using gRPCMessageHub = astarteplatform::msghub::MessageHub;
-using gRPCMessageHubEvent = astarteplatform::msghub::MessageHubEvent;
-
-struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
+struct AstarteDeviceMQTT::AstarteDeviceMQTTImpl {
  public:
   /**
-   * @brief Construct an AstarteDeviceGRPCImpl instance.
-   * @param server_addr The gRPC server address for the Astarte message hub.
-   * @param node_uuid The unique identifier for the device connection.
+   * @brief Construct an AstarteDeviceMQTTImpl instance.
+   * @param cfg set of MQTT configuration options used to connect a device to Astarte.
    */
-  AstarteDeviceGRPCImpl(std::string server_addr, std::string node_uuid);
+  AstarteDeviceMQTTImpl(const MqttConfig cfg);
   /** @brief Destructor for the Astarte device class. */
-  ~AstarteDeviceGRPCImpl();
+  ~AstarteDeviceMQTTImpl();
   /** @brief Copy constructor for the Astarte device class. */
-  AstarteDeviceGRPCImpl(AstarteDeviceGRPCImpl& other) = delete;
+  AstarteDeviceMQTTImpl(AstarteDeviceMQTTImpl& other) = delete;
   /** @brief Move constructor for the Astarte device class. */
-  AstarteDeviceGRPCImpl(AstarteDeviceGRPCImpl&& other) = delete;
+  AstarteDeviceMQTTImpl(AstarteDeviceMQTTImpl&& other) = delete;
   /** @brief Copy assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceGRPCImpl& other) -> AstarteDeviceGRPCImpl& = delete;
+  auto operator=(AstarteDeviceMQTTImpl& other) -> AstarteDeviceMQTTImpl& = delete;
   /** @brief Move assignment operator for the Astarte device class. */
-  auto operator=(AstarteDeviceGRPCImpl&& other) -> AstarteDeviceGRPCImpl& = delete;
+  auto operator=(AstarteDeviceMQTTImpl&& other) -> AstarteDeviceMQTTImpl& = delete;
 
   /**
    * @brief Parse an interface definition from a JSON file and adds it to the device.
@@ -79,11 +67,11 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
   void connect();
   /**
    * @brief Check if the device is connected.
-   * @return True if the device is connected to the message hub, false otherwise.
+   * @return True if the device is connected to Astarte, false otherwise.
    */
   [[nodiscard]] auto is_connected() const -> bool;
   /**
-   * @brief Disconnect from the Astarte message hub.
+   * @brief Disconnect from Astarte.
    * @details Gracefully terminates the connection by sending a Detach message.
    */
   void disconnect();
@@ -123,7 +111,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    */
   void unset_property(std::string_view interface_name, std::string_view path);
   /**
-   * @brief Poll for a new message received from the message hub.
+   * @brief Poll for a new message received from Astarte.
    * @details This method checks an internal queue for parsed messages from the server.
    * @param timeout Will block for this timeout if no message is present.
    * @return An std::optional containing an AstarteMessage if one was available, otherwise
@@ -133,51 +121,30 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
   /**
    * @brief Get all stored properties matching the input filter.
    * @param ownership Optional ownership filter.
-   * @return A list of stored properties, as returned by the message hub.
+   * @return A list of stored properties, as returned by Astarte.
    */
   auto get_all_properties(const std::optional<AstarteOwnership>& ownership)
       -> std::list<AstarteStoredProperty>;
   /**
    * @brief Get stored propertied matching the interface.
    * @param interface_name The name of the interface for the property.
-   * @return A list of stored properties, as returned by the message hub.
+   * @return A list of stored properties, as returned by Astarte.
    */
   auto get_properties(std::string_view interface_name) -> std::list<AstarteStoredProperty>;
   /**
    * @brief Get a single stored property matching the interface name and path.
    * @param interface_name The name of the interface for the property.
    * @param path Exact path for the property.
-   * @return The stored property, as returned by the message hub.
+   * @return The stored property, as returned by Astarte.
    */
   auto get_property(std::string_view interface_name, std::string_view path)
       -> AstartePropertyIndividual;
 
  private:
-  // Helper struct to hold the results of the Attach RPC call
-  struct AttachResult {
-    std::unique_ptr<grpc::ClientContext> context;
-    std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader;
-  };
-  void setup_grpc_channel();
-  auto perform_attach() -> std::optional<AttachResult>;
-  void connection_attempt(const std::stop_token& token);
-  void handle_events(const std::stop_token& token, std::unique_ptr<grpc::ClientContext> context,
-                     std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
-  static auto parse_message_hub_event(const gRPCMessageHubEvent& event)
-      -> std::optional<AstarteMessage>;
-  void connection_loop(const std::stop_token& token);
-
-  std::string server_addr_;
-  std::string node_uuid_;
-  std::unique_ptr<gRPCMessageHub::Stub> stub_;
-  std::vector<std::string> interfaces_bins_;
-  std::optional<std::jthread> connection_thread_;
+  MqttConfig cfg_;
   std::atomic_bool connected_{false};
-  std::stop_source ssource_;
-  std::atomic_bool grpc_stream_error_{false};
-  SharedQueue<AstarteMessage> rcv_queue_;
 };
 
 }  // namespace AstarteDeviceSdk
 
-#endif  // DEVICE_GRPC_IMPL_H
+#endif  // DEVICE_MQTT_IMPL_H

@@ -118,7 +118,6 @@ else()
 endif()
 
 if(ASTARTE_TRANSPORT_GRPC)
-    target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_TRANSPORT_GRPC)
     astarte_sdk_add_grpc_transport()
 else()
     astarte_sdk_add_mqtt_transport()
@@ -153,6 +152,8 @@ write_basic_package_version_file(
 set(INSTALL_TARGETS_LIST astarte_device_sdk)
 if(ASTARTE_TRANSPORT_GRPC)
     astarte_sdk_add_grpc_install_targets(INSTALL_TARGETS_LIST)
+else()
+    astarte_sdk_add_mqtt_install_targets(INSTALL_TARGETS_LIST)
 endif()
 
 install(

@@ -48,7 +48,7 @@ function(
     ASTARTE_GRPC_SOURCES
     ASTARTE_GRPC_PRIVATE_HEADERS
 )
-    list(APPEND ${ASTARTE_GRPC_PUBLIC_HEADERS} "include/astarte_device_sdk/device_grpc.hpp")
+    list(APPEND ${ASTARTE_GRPC_PUBLIC_HEADERS} "include/astarte_device_sdk/grpc/device_grpc.hpp")
     list(
         APPEND
         ${ASTARTE_GRPC_SOURCES}
