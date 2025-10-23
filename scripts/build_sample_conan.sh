@@ -64,12 +64,13 @@ build_sample_with_conan() {
     local sample_src_dir="${lib_src_dir}/samples/${sample_to_build}"
     cd "${sample_src_dir}" || error_exit "Failed to navigate to $sample_src_dir"
 
-    # Build the sample, adding specific options if needed
+	# Build the sample, adding specific options if needed
+    conan_options_array+=("--build=missing")
     if [[ "$sample_to_build" == "grpc/qt" ]]; then
-        conan_options_array+=("--build=missing")
         conan_options_array+=("--options=qt6=$([ "$qt_version" == "6" ] && echo "True" || echo "False")")
     fi
-    if ! conan build . --output-folder=build --options=astarte-device-sdk/*:transport=$transport "${conan_options_array[@]}"; then
+
+	if ! conan build . --output-folder=build --options=astarte-device-sdk/*:transport=$transport "${conan_options_array[@]}"; then
         error_exit "Conan build failed for $sample_to_build sample."
     fi
 
