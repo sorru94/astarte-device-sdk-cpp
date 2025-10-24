@@ -21,7 +21,6 @@ function(astarte_sdk_configure_mqtt_dependencies)
         find_package(PahoMqttCpp REQUIRED)
         find_package(cpr REQUIRED)
         find_package(nlohmann_json REQUIRED)
-
         if(NOT TARGET ada::ada)
             find_package(ada REQUIRED)
         endif()
