@@ -17,7 +17,13 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(unit_test conversion_test.cpp data_test.cpp msg_test.cpp)
+add_executable(
+    unit_test
+    conversion_test.cpp
+    data_test.cpp
+    exponential_backoff_test.cpp
+    msg_test.cpp
+)
 
 # Add the Astarte sdk root directory
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
