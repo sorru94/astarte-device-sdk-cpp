@@ -58,16 +58,17 @@ function(astarte_sdk_configure_mqtt_dependencies)
         FetchContent_MakeAvailable(ada)
 
         # Cryptographic library
-        set(CRYPTO_GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git)
-        set(CRYPTO_GIT_TAG v3.6.5)
+        set(MBEDTLS_GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git)
+        set(MBEDTLS_GIT_TAG v4.0.0)
         FetchContent_Declare(
             MbedTLS
-            GIT_REPOSITORY ${CRYPTO_GIT_REPOSITORY}
-            GIT_TAG ${CRYPTO_GIT_TAG}
+            GIT_REPOSITORY ${MBEDTLS_GIT_REPOSITORY}
+            GIT_TAG ${MBEDTLS_GIT_TAG}
         )
         # Disable programs and tests to keep the build fast and minimal.
         set(ENABLE_TESTING OFF CACHE BOOL "Disable Mbed TLS tests")
         set(ENABLE_PROGRAMS OFF CACHE BOOL "Disable Mbed TLS example programs")
+        set(CONFIG_MBEDTLS_PSA_CRYPTO_C ON CACHE BOOL "Enable PSA in Mbed TLS")
         FetchContent_MakeAvailable(MbedTLS)
     endif()
 endfunction()

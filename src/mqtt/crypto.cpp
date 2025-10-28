@@ -4,6 +4,8 @@
 
 #include "astarte_device_sdk/mqtt/crypto.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <cstring>
 #include <format>
 #include <stdexcept>
@@ -12,18 +14,18 @@
 #include "astarte_device_sdk/mqtt/exceptions.hpp"
 
 // Mbed TLS Headers
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/ecp.h"
-#include "mbedtls/entropy.h"
+// #include "mbedtls/ctr_drbg.h"
+// #include "mbedtls/ecp.h"
+// #include "mbedtls/entropy.h"
 #include "mbedtls/error.h"
 #include "mbedtls/oid.h"
-#include "mbedtls/pk.h"
+#include "mbedtls/pk.h"  // reduced functionality
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
 
 namespace AstarteDeviceSdk {
 
-// Define wrappers for Mbed TLS Resources and exploit RAII principle by ensuring that
+// Wrappers for Mbed TLS Resources and exploit RAII principle by ensuring that
 // mbedtls_*_free is always called automatically.
 class MbedPk {
  public:
@@ -46,19 +48,9 @@ class MbedX509Crt {
   ~MbedX509Crt() { mbedtls_x509_crt_free(&ctx); }
 };
 
-class MbedEntropy {
- public:
-  mbedtls_entropy_context ctx;
-  MbedEntropy() { mbedtls_entropy_init(&ctx); }
-  ~MbedEntropy() { mbedtls_entropy_free(&ctx); }
-};
+// the entropy is now internally handled by PSA
 
-class MbedCtrDrbg {
- public:
-  mbedtls_ctr_drbg_context ctx;
-  MbedCtrDrbg() { mbedtls_ctr_drbg_init(&ctx); }
-  ~MbedCtrDrbg() { mbedtls_ctr_drbg_free(&ctx); }
-};
+// ctr_drbg is now nternally handled by PSA
 
 // Helper to convert Mbed TLS errors into C++ exceptions
 void mbedtls_check(int ret, const std::string& function_name) {
@@ -70,29 +62,33 @@ void mbedtls_check(int ret, const std::string& function_name) {
 }
 
 auto Crypto::create_key() -> std::string {
-  MbedPk key;
-  MbedEntropy entropy;
-  MbedCtrDrbg ctr_drbg;
+  // seeding the RNG is no longer necessary, it is handled by the following PSA init function
+  mbedtls_check(psa_crypto_init(), "psa_crypto_init");
 
-  const std::string pers = "astarte_credentials_create_key";
+  // It is no longer possible to directly inspect a PK context to act on its underlying ECC context.
+  // The type mbedtls_pk_type_t has been removed from the API.
 
-  // seed the RNG
-  mbedtls_check(
-      mbedtls_ctr_drbg_seed(&ctr_drbg.ctx, mbedtls_entropy_func, &entropy.ctx,
-                            reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),
-      "mbedtls_ctr_drbg_seed");
+  // generate the PSA EC key
+  psa_key_attributes_t key_attributes = psa_key_attributes_init();
+  psa_set_key_algorithm(&key_attributes, PSA_ECC_FAMILY_SECP_R1);
+  psa_key_usage_t usage_flags = PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT;
+  psa_set_key_usage_flags(&key_attributes,
+                          usage_flags);  // used to sign CSR. TODO: IDENTIFY OTHER USAGES
+  psa_set_key_type(&key_attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+  psa_set_key_bits(&key_attributes, 256);
 
-  // setup and generate the EC key
-  mbedtls_check(mbedtls_pk_setup(&key.ctx, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)),
-                "mbedtls_pk_setup");
+  mbedtls_svc_key_id_t psa_key;
+  mbedtls_check(psa_generate_key(&key_attributes, &psa_key), "psa_generate_key");
 
-  mbedtls_check(mbedtls_ecp_gen_key(MBEDTLS_ECP_DP_SECP256R1, mbedtls_pk_ec(key.ctx),
-                                    mbedtls_ctr_drbg_random, &ctr_drbg.ctx),
-                "mbedtls_ecp_gen_key");
+  psa_reset_key_attributes(&key_attributes);
+
+  // exposing a PSA key via PK
+  MbedPk pk_key;
+  mbedtls_check(mbedtls_pk_copy_from_psa(psa_key, &pk_key.ctx), "mbedtls_pk_copy_from_psa");
 
   // write the key to a PEM string
   std::vector<unsigned char> buf(1024, 0);
-  mbedtls_check(mbedtls_pk_write_key_pem(&key.ctx, buf.data(), buf.size()),
+  mbedtls_check(mbedtls_pk_write_key_pem(&pk_key.ctx, buf.data(), buf.size()),
                 "mbedtls_pk_write_key_pem");
 
   return std::string(reinterpret_cast<const char*>(buf.data()));
@@ -101,22 +97,15 @@ auto Crypto::create_key() -> std::string {
 auto Crypto::create_csr(std::string_view privkey_pem) -> std::string {
   MbedX509WriteCsr req;
   MbedPk key;
-  MbedEntropy entropy;
-  MbedCtrDrbg ctr_drbg;
 
-  const std::string pers = "astarte_credentials_create_csr";
-
-  // seed the RNG
-  mbedtls_check(
-      mbedtls_ctr_drbg_seed(&ctr_drbg.ctx, mbedtls_entropy_func, &entropy.ctx,
-                            reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),
-      "mbedtls_ctr_drbg_seed");
+  // seeding the RNG is no longer necessary, it is handled by the following PSA init function
+  mbedtls_check(psa_crypto_init(), "psa_crypto_init");
 
   // parse the private key (+1 for null terminator)
-  mbedtls_check(mbedtls_pk_parse_key(
-                    &key.ctx, reinterpret_cast<const unsigned char*>(privkey_pem.data()),
-                    privkey_pem.length() + 1, nullptr, 0, mbedtls_ctr_drbg_random, &ctr_drbg.ctx),
-                "mbedtls_pk_parse_key");
+  mbedtls_check(
+      mbedtls_pk_parse_key(&key.ctx, reinterpret_cast<const unsigned char*>(privkey_pem.data()),
+                           privkey_pem.length() + 1, nullptr, 0),
+      "mbedtls_pk_parse_key");
 
   // configure the CSR
   mbedtls_x509write_csr_set_key(&req.ctx, &key.ctx);
@@ -126,10 +115,10 @@ auto Crypto::create_csr(std::string_view privkey_pem) -> std::string {
 
   // write the CSR to a PEM string
   std::vector<unsigned char> buf(2048, 0);
-  mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx, buf.data(), buf.size(), mbedtls_ctr_drbg_random,
-                                          &ctr_drbg.ctx),
+  mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx, buf.data(), buf.size()),
                 "mbedtls_x509write_csr_pem");
 
   return std::string(reinterpret_cast<const char*>(buf.data()));
 }
+
 }  // namespace AstarteDeviceSdk
