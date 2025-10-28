@@ -75,7 +75,7 @@ include(FetchContent)
 FetchContent_Declare(
     astarte_device_sdk
   GIT_REPOSITORY git@github.com:secomind/astarte-device-sdk-cpp.git
-  GIT_TAG v0.8.0
+  GIT_TAG v0.8.1
 )
 FetchContent_MakeAvailable(astarte_device_sdk)
 ```
@@ -97,7 +97,7 @@ conan create . --build=missing --settings=compiler.cppstd=20
 The created package can then be added to the conanfile of a project.
 ```toml
 [requires]
-astarte-device-sdk/0.8.0
+astarte-device-sdk/0.8.1
 ```
 
 Additionally remember to import and link the library with your executable.
