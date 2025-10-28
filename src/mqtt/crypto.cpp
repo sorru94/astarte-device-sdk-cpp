@@ -12,14 +12,9 @@
 #include <vector>
 
 #include "astarte_device_sdk/mqtt/exceptions.hpp"
-
-// Mbed TLS Headers
-// #include "mbedtls/ctr_drbg.h"
-// #include "mbedtls/ecp.h"
-// #include "mbedtls/entropy.h"
 #include "mbedtls/error.h"
 #include "mbedtls/oid.h"
-#include "mbedtls/pk.h"  // reduced functionality
+#include "mbedtls/pk.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
 
@@ -48,10 +43,6 @@ class MbedX509Crt {
   ~MbedX509Crt() { mbedtls_x509_crt_free(&ctx); }
 };
 
-// the entropy is now internally handled by PSA
-
-// ctr_drbg is now nternally handled by PSA
-
 // Helper to convert Mbed TLS errors into C++ exceptions
 void mbedtls_check(int ret, const std::string& function_name) {
   if (ret != 0) {
@@ -62,18 +53,14 @@ void mbedtls_check(int ret, const std::string& function_name) {
 }
 
 auto Crypto::create_key() -> std::string {
-  // seeding the RNG is no longer necessary, it is handled by the following PSA init function
-  mbedtls_check(psa_crypto_init(), "psa_crypto_init");
-
-  // It is no longer possible to directly inspect a PK context to act on its underlying ECC context.
-  // The type mbedtls_pk_type_t has been removed from the API.
+  mbedtls_check(psa_crypto_init(), "psa_crypto_init");.
 
   // generate the PSA EC key
   psa_key_attributes_t key_attributes = psa_key_attributes_init();
   psa_set_key_algorithm(&key_attributes, PSA_ECC_FAMILY_SECP_R1);
   psa_key_usage_t usage_flags = PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT;
   psa_set_key_usage_flags(&key_attributes,
-                          usage_flags);  // used to sign CSR. TODO: IDENTIFY OTHER USAGES
+                          usage_flags);
   psa_set_key_type(&key_attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
   psa_set_key_bits(&key_attributes, 256);
 
@@ -97,9 +84,6 @@ auto Crypto::create_key() -> std::string {
 auto Crypto::create_csr(std::string_view privkey_pem) -> std::string {
   MbedX509WriteCsr req;
   MbedPk key;
-
-  // seeding the RNG is no longer necessary, it is handled by the following PSA init function
-  mbedtls_check(psa_crypto_init(), "psa_crypto_init");
 
   // parse the private key (+1 for null terminator)
   mbedtls_check(
