@@ -43,3 +43,25 @@ TEST(AstarteTestExponentialBackoff, OrdinaryBackoff) {
                 AllOf(Ge(std::chrono::minutes(17)), Le(std::chrono::minutes(19))));
   }
 }
+
+TEST(AstarteTestExponentialBackoff, VeryLargeBackoff) {
+  ExponentialBackoff backoff(
+      std::chrono::hours(1),
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::years(100)));
+  EXPECT_THAT(backoff.getNextDelay(),
+              AllOf(Ge(std::chrono::milliseconds::zero()), Le(std::chrono::hours(2))));
+  EXPECT_THAT(backoff.getNextDelay(), AllOf(Ge(std::chrono::hours(1)), Le(std::chrono::hours(3))));
+  EXPECT_THAT(backoff.getNextDelay(), AllOf(Ge(std::chrono::hours(3)), Le(std::chrono::hours(5))));
+  EXPECT_THAT(backoff.getNextDelay(), AllOf(Ge(std::chrono::hours(7)), Le(std::chrono::hours(9))));
+  // A lot of calls in between
+  for (size_t i = 0; i < 1000000u; i++) {
+    backoff.getNextDelay();
+  }
+  // Check it settled around the proper value
+  for (size_t i = 0; i < 100u; i++) {
+    EXPECT_THAT(
+        backoff.getNextDelay(),
+        AllOf(Ge(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::years(99))),
+              Le(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::years(101)))));
+  }
+}
