@@ -11,51 +11,93 @@
 #include <cstdint>
 #include <random>
 
+#include "astarte_device_sdk/exceptions.hpp"
+
 namespace AstarteDeviceSdk {
 
 class ExponentialBackoff {
  public:
   /**
    * @brief Construct an ExponentialBackoff instance.
-   * @param initial_delay The value for the first backoff delay.
-   * @param max_delay The upper bound for all the backoff delays.
+   *
+   * @details The exponential backoff will will compute an exponential delay using
+   * 2 as the base for the power operation and @p mul_coeff as the multiplier coefficient.
+   * The values returned by calls to getNextDelay will follow the formula:
+   * min( @p mul_coeff * 2 ^ ( number of calls ) , @p cutoff_coeff ) + random jitter
+   * The random jitter will be in the range [ - @p mul_coeff , + @p mul_coeff ]
+   *
+   * @note The jitter will be applied also once the @p cutoff_coeff has been reached. Effectively
+   * the maximum delay produced will be @p cutoff_coeff + @p mul_coeff.
+   *
+   * @param mul_coeff Multiplier coefficient used in the exponential delay calculation.
+   * @param cutoff_coeff The cut-off coefficient, an upper bound for the exponential curve.
    */
-  ExponentialBackoff(std::chrono::milliseconds initial_delay, std::chrono::milliseconds max_delay)
-      : initial_delay_(initial_delay), max_delay_(max_delay) {}
+  ExponentialBackoff(std::chrono::milliseconds mul_coeff, std::chrono::milliseconds cutoff_coeff)
+      : mul_coeff_(mul_coeff), cutoff_coeff_(cutoff_coeff) {
+    if ((mul_coeff <= std::chrono::milliseconds::zero()) ||
+        (cutoff_coeff <= std::chrono::milliseconds::zero())) {
+      throw AstarteInvalidInputException("Received zero or negative coefficients.");
+    }
+    if (cutoff_coeff < mul_coeff) {
+      throw AstarteInvalidInputException(
+          "The multiplier coefficient is larger than the cuttoff coefficient");
+    }
+  }
 
   /**
    * @brief Calculate and returns the next backoff delay.
-   * @details Computes the appropriate delay for the current backoff generation and increments the
-   * internal generation counter for the next call.
+   * @details See the documentation of the constructor of this class for an explanation on how
+   * this delay is computed.
    * @return The calculated delay duration.
    */
   auto getNextDelay() -> std::chrono::milliseconds {
-    constexpr double BACKOFF_FACTOR = 2.0;
+    const ChronoMillisRep mul_coeff = mul_coeff_.count();
+    const ChronoMillisRep max_milliseconds = std::chrono::milliseconds::max().count();
+    const ChronoMillisRep max_allowed_final_delay = max_milliseconds - mul_coeff;
 
-    const auto initial_delay_ms = static_cast<double>(initial_delay_.count());
+    // Update last delay value with the new value
+    ChronoMillisRep delay = 0;
+    if (prev_delay_ == 0) {
+      delay = mul_coeff;
+    } else if (prev_delay_ <= (max_allowed_final_delay / 2)) {
+      delay = 2 * prev_delay_;
+    } else {
+      delay = max_allowed_final_delay;
+    }
 
-    const auto delay_ms = initial_delay_ms * std::pow(BACKOFF_FACTOR, generated_delays_);
-    // Apply a positive jitter (a random value between 0 and initial_delay_)
-    const auto jitter = dist_(gen_) * initial_delay_ms;
+    // Bound the delay to the maximum
+    ChronoMillisRep bounded_delay = std::min(delay, cutoff_coeff_.count());
 
-    const auto total_delay_ms = static_cast<int64_t>(delay_ms + jitter);
-    const auto jittery_delay = std::chrono::milliseconds(total_delay_ms);
+    // Store the new delay before jitter application
+    prev_delay_ = bounded_delay;
 
-    generated_delays_++;
+    // Insert some jitter
+    ChronoMillisRep jitter_minimum = -mul_coeff;
+    if (bounded_delay - mul_coeff < 0) {
+      jitter_minimum = 0;
+    }
+    ChronoMillisRep jitter_maximum = mul_coeff;
+    if (bounded_delay > max_milliseconds - mul_coeff) {
+      jitter_maximum = max_milliseconds - bounded_delay;
+    }
+    std::uniform_int_distribution<ChronoMillisRep> dist(jitter_minimum, jitter_maximum);
+    ChronoMillisRep jittered_delay = bounded_delay + dist(gen_);
 
-    return std::min(jittery_delay, max_delay_);
+    // Convert to a chrono object
+    return std::chrono::milliseconds(jittered_delay);
   }
 
   /** @brief Reset the backoff generator. */
-  void reset() { generated_delays_ = 0; }
+  void reset() { prev_delay_ = 0; }
 
  private:
-  std::chrono::milliseconds initial_delay_;
-  std::chrono::milliseconds max_delay_;
-  int generated_delays_{0};
+  using ChronoMillisRep = std::chrono::milliseconds::rep;
+
+  std::chrono::milliseconds mul_coeff_;
+  std::chrono::milliseconds cutoff_coeff_;
   std::random_device rd_;
   std::mt19937 gen_{rd_()};
-  std::uniform_real_distribution<> dist_{0.0, 1.0};
+  ChronoMillisRep prev_delay_{0};
 };
 
 }  // namespace AstarteDeviceSdk
