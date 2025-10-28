@@ -19,6 +19,14 @@
 #include "mbedtls/x509_csr.h"
 
 namespace AstarteDeviceSdk {
+// Helper to convert Mbed TLS errors into C++ exceptions
+void mbedtls_check(int ret, const std::string& function_name) {
+  if (ret != 0) {
+    char error_buf[100];
+    mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+    throw CryptoException(std::format("{} failed: {}", function_name, error_buf));
+  }
+}
 
 // Wrappers for Mbed TLS Resources and exploit RAII principle by ensuring that
 // mbedtls_*_free is always called automatically.
@@ -27,6 +35,28 @@ class MbedPk {
   mbedtls_pk_context ctx;
   MbedPk() { mbedtls_pk_init(&ctx); }
   ~MbedPk() { mbedtls_pk_free(&ctx); }
+};
+
+class PsaKeyAttr {
+ public:
+  PsaKeyAttr() : attributes(psa_key_attributes_init()) {}
+  ~PsaKeyAttr() { psa_reset_key_attributes(&attributes); }
+
+  void setup(psa_algorithm_t algorithm, psa_key_usage_t usage_flags, psa_key_type_t key_type,
+             size_t key_bits) {
+    psa_set_key_algorithm(&attributes, algorithm);
+    psa_set_key_usage_flags(&attributes, usage_flags);
+    psa_set_key_type(&attributes, key_type);
+    psa_set_key_bits(&attributes, key_bits);
+  }
+
+  auto generate_key() -> mbedtls_svc_key_id_t {
+    mbedtls_svc_key_id_t key;
+    mbedtls_check(psa_generate_key(&attributes, &key), "psa_generate_key");
+    return std::move(key);
+  }
+
+  psa_key_attributes_t attributes;
 };
 
 class MbedX509WriteCsr {
@@ -43,31 +73,15 @@ class MbedX509Crt {
   ~MbedX509Crt() { mbedtls_x509_crt_free(&ctx); }
 };
 
-// Helper to convert Mbed TLS errors into C++ exceptions
-void mbedtls_check(int ret, const std::string& function_name) {
-  if (ret != 0) {
-    char error_buf[100];
-    mbedtls_strerror(ret, error_buf, sizeof(error_buf));
-    throw CryptoException(std::format("{} failed: {}", function_name, error_buf));
-  }
-}
-
 auto Crypto::create_key() -> std::string {
-  mbedtls_check(psa_crypto_init(), "psa_crypto_init");.
+  mbedtls_check(psa_crypto_init(), "psa_crypto_init");
 
   // generate the PSA EC key
-  psa_key_attributes_t key_attributes = psa_key_attributes_init();
-  psa_set_key_algorithm(&key_attributes, PSA_ECC_FAMILY_SECP_R1);
+  PsaKeyAttr key_attributes;
   psa_key_usage_t usage_flags = PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT;
-  psa_set_key_usage_flags(&key_attributes,
-                          usage_flags);
-  psa_set_key_type(&key_attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
-  psa_set_key_bits(&key_attributes, 256);
-
-  mbedtls_svc_key_id_t psa_key;
-  mbedtls_check(psa_generate_key(&key_attributes, &psa_key), "psa_generate_key");
-
-  psa_reset_key_attributes(&key_attributes);
+  key_attributes.setup(PSA_ECC_FAMILY_SECP_R1, usage_flags,
+                       PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1), 256);
+  mbedtls_svc_key_id_t psa_key = key_attributes.generate_key();
 
   // exposing a PSA key via PK
   MbedPk pk_key;
