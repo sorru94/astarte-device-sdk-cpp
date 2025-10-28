@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2025-10-28
+### Fixed
+- An integer overflow in the exponential backoff module. The bug caused the calculated reconnection delay to wrap around to a negative value, leading to zero delay connection attempts during a network outage.
+
 ## [0.7.0] - 2025-08-13
 ### Added
 - API calls to fetch stored device properties in the gRPC Astarte device.
