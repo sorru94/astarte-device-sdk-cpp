@@ -117,7 +117,8 @@ auto PairingApi::get_device_cert(std::string_view credential_secret, int timeout
   cpr::Header header{{"Content-Type", "application/json"},
                      {"Authorization", std::format("Bearer {}", credential_secret)}};
 
-  auto device_csr = PairingApi::get_device_csr();
+  auto priv_key = Crypto::create_key();
+  auto device_csr = Crypto::create_csr(std::move(priv_key));
 
   json body;
   body["data"] = {{"csr", device_csr}};
@@ -183,11 +184,6 @@ auto PairingApi::device_cert_valid(std::string_view certificate, std::string_vie
     throw JsonAccessErrorException(
         std::format("Failed to parse JSON: {}. Body: {}", e.what(), res.text));
   }
-}
-
-auto PairingApi::get_device_csr() const -> std::string {
-  auto priv_key = Crypto::create_key();
-  return Crypto::create_csr(priv_key);
 }
 
 }  // namespace AstarteDeviceSdk

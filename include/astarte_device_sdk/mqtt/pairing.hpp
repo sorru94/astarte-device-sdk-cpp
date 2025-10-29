@@ -73,12 +73,6 @@ class PairingApi {
    */
   static auto create_pairing_url(std::string_view astarte_base_url) -> ada::url_aggregator;
 
-  /**
-   * @brief Retrieve the Astarte device CSR.
-   * @return The device CSR.
-   */
-  auto get_device_csr() const -> std::string;
-
   /** @brief The Astarte realm name. */
   const std::string realm;
   /** @brief The Astarte device id. */

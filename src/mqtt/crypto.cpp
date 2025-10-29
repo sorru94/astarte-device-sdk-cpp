@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "astarte_device_sdk/mqtt/exceptions.hpp"
+#include "psa/crypto.h"
 #include "mbedtls/error.h"
 #include "mbedtls/oid.h"
 #include "mbedtls/pk.h"
@@ -28,52 +29,101 @@ void mbedtls_check(int ret, const std::string& function_name) {
   }
 }
 
+PsaKey::PsaKey() : key_id(PSA_KEY_ID_NULL) {}
+PsaKey::PsaKey(mbedtls_svc_key_id_t key_id) : key_id(key_id) {}
+PsaKey::~PsaKey() {
+  if (key_id != PSA_KEY_ID_NULL) {
+    try {
+      // Attempt to destroy the key
+      mbedtls_check(psa_destroy_key(key_id), "psa_destroy_key");
+    } catch (const std::exception& e) {
+      spdlog::error("Exception in PsaKey destructor. Key ID {} may be leaked. Error: {}", key_id,
+                    e.what());
+    } catch (...) {
+      spdlog::error("CRITICAL: Unknown exception in PsaKey destructor. Key ID {} may be leaked",
+                    key_id);
+    }
+  }
+}
+
+PsaKey::PsaKey(PsaKey&& other) noexcept : key_id(other.key_id) { other.key_id = PSA_KEY_ID_NULL; }
+
+auto PsaKey::operator=(PsaKey&& other) -> PsaKey& {
+  if (this != &other) {
+    // destroy the key
+    if (key_id != PSA_KEY_ID_NULL) {
+      mbedtls_check(psa_destroy_key(key_id), "psa_destroy_key");
+    }
+    // if the destroy succeeded, we move the key from the other object
+    key_id = other.key_id;
+    other.key_id = PSA_KEY_ID_NULL;
+  }
+  return *this;
+}
+
+auto PsaKey::get() const -> mbedtls_svc_key_id_t { return key_id; }
+
 // Wrappers for Mbed TLS Resources and exploit RAII principle by ensuring that
 // mbedtls_*_free is always called automatically.
 class MbedPk {
  public:
-  mbedtls_pk_context ctx;
-  MbedPk() { mbedtls_pk_init(&ctx); }
-  ~MbedPk() { mbedtls_pk_free(&ctx); }
+  MbedPk() : psa_key_(PSA_KEY_ID_NULL) { mbedtls_pk_init(&ctx_); }
+  MbedPk(PsaKey psa_key) : psa_key_(std::move(psa_key)) {
+    mbedtls_pk_init(&ctx_);
+    mbedtls_check(mbedtls_pk_copy_from_psa(psa_key_.get(), &ctx_), "mbedtls_pk_copy_from_psa");
+  }
+  ~MbedPk() { mbedtls_pk_free(&ctx_); }
+
+  auto ctx() -> mbedtls_pk_context& { return ctx_; }
+
+ private:
+  mbedtls_pk_context ctx_;
+  PsaKey psa_key_;
 };
 
 class PsaKeyAttr {
  public:
-  PsaKeyAttr() : attributes(psa_key_attributes_init()) {}
-  ~PsaKeyAttr() { psa_reset_key_attributes(&attributes); }
+  PsaKeyAttr() : attributes_(psa_key_attributes_init()) {}
+  ~PsaKeyAttr() { psa_reset_key_attributes(&attributes_); }
 
   void setup(psa_algorithm_t algorithm, psa_key_usage_t usage_flags, psa_key_type_t key_type,
              size_t key_bits) {
-    psa_set_key_algorithm(&attributes, algorithm);
-    psa_set_key_usage_flags(&attributes, usage_flags);
-    psa_set_key_type(&attributes, key_type);
-    psa_set_key_bits(&attributes, key_bits);
+    psa_set_key_algorithm(&attributes_, algorithm);
+    psa_set_key_usage_flags(&attributes_, usage_flags);
+    psa_set_key_type(&attributes_, key_type);
+    psa_set_key_bits(&attributes_, key_bits);
   }
 
-  auto generate_key() -> mbedtls_svc_key_id_t {
+  auto generate_key() -> PsaKey {
     mbedtls_svc_key_id_t key;
-    mbedtls_check(psa_generate_key(&attributes, &key), "psa_generate_key");
-    return std::move(key);
+    mbedtls_check(psa_generate_key(&attributes_, &key), "psa_generate_key");
+    return PsaKey(key);
   }
 
-  psa_key_attributes_t attributes;
+  psa_key_attributes_t attributes_;
 };
 
 class MbedX509WriteCsr {
  public:
-  mbedtls_x509write_csr ctx;
-  MbedX509WriteCsr() { mbedtls_x509write_csr_init(&ctx); }
-  ~MbedX509WriteCsr() { mbedtls_x509write_csr_free(&ctx); }
+  MbedX509WriteCsr() { mbedtls_x509write_csr_init(&ctx_); }
+  ~MbedX509WriteCsr() { mbedtls_x509write_csr_free(&ctx_); }
+  auto ctx() -> mbedtls_x509write_csr& { return ctx_; }
+
+ private:
+  mbedtls_x509write_csr ctx_;
 };
 
 class MbedX509Crt {
  public:
-  mbedtls_x509_crt ctx;
-  MbedX509Crt() { mbedtls_x509_crt_init(&ctx); }
-  ~MbedX509Crt() { mbedtls_x509_crt_free(&ctx); }
+  MbedX509Crt() { mbedtls_x509_crt_init(&ctx_); }
+  ~MbedX509Crt() { mbedtls_x509_crt_free(&ctx_); }
+  auto ctx() -> mbedtls_x509_crt& { return ctx_; }
+
+ private:
+  mbedtls_x509_crt ctx_;
 };
 
-auto Crypto::create_key() -> std::string {
+auto Crypto::create_key() -> PsaKey {
   mbedtls_check(psa_crypto_init(), "psa_crypto_init");
 
   // generate the PSA EC key
@@ -81,39 +131,23 @@ auto Crypto::create_key() -> std::string {
   psa_key_usage_t usage_flags = PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT;
   key_attributes.setup(PSA_ECC_FAMILY_SECP_R1, usage_flags,
                        PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1), 256);
-  mbedtls_svc_key_id_t psa_key = key_attributes.generate_key();
 
-  // exposing a PSA key via PK
-  MbedPk pk_key;
-  mbedtls_check(mbedtls_pk_copy_from_psa(psa_key, &pk_key.ctx), "mbedtls_pk_copy_from_psa");
-
-  // write the key to a PEM string
-  std::vector<unsigned char> buf(1024, 0);
-  mbedtls_check(mbedtls_pk_write_key_pem(&pk_key.ctx, buf.data(), buf.size()),
-                "mbedtls_pk_write_key_pem");
-
-  return std::string(reinterpret_cast<const char*>(buf.data()));
+  return key_attributes.generate_key();
 }
 
-auto Crypto::create_csr(std::string_view privkey_pem) -> std::string {
-  MbedX509WriteCsr req;
-  MbedPk key;
-
-  // parse the private key (+1 for null terminator)
-  mbedtls_check(
-      mbedtls_pk_parse_key(&key.ctx, reinterpret_cast<const unsigned char*>(privkey_pem.data()),
-                           privkey_pem.length() + 1, nullptr, 0),
-      "mbedtls_pk_parse_key");
+auto Crypto::create_csr(PsaKey priv_key) -> std::string {
+  auto key = MbedPk(std::move(priv_key));
 
   // configure the CSR
-  mbedtls_x509write_csr_set_key(&req.ctx, &key.ctx);
-  mbedtls_x509write_csr_set_md_alg(&req.ctx, MBEDTLS_MD_SHA256);
-  mbedtls_check(mbedtls_x509write_csr_set_subject_name(&req.ctx, "CN=temporary"),
+  MbedX509WriteCsr req;
+  mbedtls_x509write_csr_set_key(&req.ctx(), &key.ctx());
+  mbedtls_x509write_csr_set_md_alg(&req.ctx(), MBEDTLS_MD_SHA256);
+  mbedtls_check(mbedtls_x509write_csr_set_subject_name(&req.ctx(), "CN=temporary"),
                 "mbedtls_x509write_csr_set_subject_name");
 
   // write the CSR to a PEM string
   std::vector<unsigned char> buf(2048, 0);
-  mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx, buf.data(), buf.size()),
+  mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx(), buf.data(), buf.size()),
                 "mbedtls_x509write_csr_pem");
 
   return std::string(reinterpret_cast<const char*>(buf.data()));
