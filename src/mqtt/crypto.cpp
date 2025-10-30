@@ -13,6 +13,9 @@
 
 #include "astarte_device_sdk/mqtt/exceptions.hpp"
 #include "psa/crypto.h"
+#if MBEDTLS_VERSION_MAJOR < 0x04
+#include "mbedtls/ctr_drbg.h"
+#endif
 #include "mbedtls/error.h"
 #include "mbedtls/oid.h"
 #include "mbedtls/pk.h"
@@ -147,8 +150,30 @@ auto Crypto::create_csr(PsaKey priv_key) -> std::string {
 
   // write the CSR to a PEM string
   std::vector<unsigned char> buf(2048, 0);
+
+#if MBEDTLS_VERSION_MAJOR < 0x04
+  mbedtls_ctr_drbg_context ctr_drbg_ctx;
+  mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
+  mbedtls_entropy_context entropy_ctx;
+  mbedtls_entropy_init(&entropy_ctx);
+
+  // seed the RNG
+  std::string pers = "";
+  mbedtls_check(
+      mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
+                            reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),
+      "mbedtls_ctr_drbg_seed");
+
+  mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx(), buf.data(), buf.size(),
+                                          mbedtls_ctr_drbg_random, &ctr_drbg_ctx),
+                "mbedtls_x509write_csr_pem");
+
+  mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
+  mbedtls_entropy_free(&entropy_ctx);
+#else
   mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx(), buf.data(), buf.size()),
                 "mbedtls_x509write_csr_pem");
+#endif
 
   return std::string(reinterpret_cast<const char*>(buf.data()));
 }
