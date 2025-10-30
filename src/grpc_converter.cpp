@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "astarte_device_sdk/data.hpp"
-#include "astarte_device_sdk/exceptions.hpp"
 #include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"

@@ -40,7 +40,6 @@
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device_grpc.hpp"
 #include "astarte_device_sdk/errors.hpp"
-#include "astarte_device_sdk/exceptions.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 #include "astarte_device_sdk/ownership.hpp"
@@ -513,7 +512,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::parse_message_hub_event(
   std::optional<AstarteMessage> res = std::nullopt;
   if (event.has_message()) {
     const gRPCAstarteMessage& astarteMessage = event.message();
-    // TODO: propagate the error to the callers
+    // TODO: propagate the error to the
     res = GrpcConverterFrom{}(astarteMessage).value();
   } else if (event.has_error()) {
     const gRPCMessageHubError& error = event.error();
