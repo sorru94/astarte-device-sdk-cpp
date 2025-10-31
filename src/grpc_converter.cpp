@@ -276,7 +276,8 @@ auto GrpcConverterTo::operator()(const std::optional<AstarteData>& value)
 }
 
 // NOLINTBEGIN(readability-function-size)
-auto GrpcConverterFrom::operator()(const gRPCAstarteData& value) -> AstarteData {
+auto GrpcConverterFrom::operator()(const gRPCAstarteData& value)
+    -> std_alt_tl::expected<AstarteData, AstarteError> {
   spdlog::trace("Converting Astarte data from gRPC, message: \n{}", value);
   switch (value.astarte_data_case()) {
     case gRPCAstarteData::kDouble:
@@ -351,63 +352,68 @@ auto GrpcConverterFrom::operator()(const gRPCAstarteData& value) -> AstarteData 
       spdlog::trace("Case for gRPCAstarteData goes to default statement: ASTARTE_DATA_NOT_SET");
       break;
   }
-  throw AstarteInternalException("Found an unrecognized gRPC gRPCAstarteData.");
+  return std_alt_tl::unexpected(
+      AstarteInternalError{"Found an unrecognized gRPC gRPCAstarteData."});
 }
 // NOLINTEND(readability-function-size)
 
 auto GrpcConverterFrom::operator()(const gRPCAstarteDatastreamIndividual& value)
-    -> AstarteDatastreamIndividual {
+    -> std_alt_tl::expected<AstarteDatastreamIndividual, AstarteError> {
   spdlog::trace("Converting Astarte datastream individual from gRPC, message: \n{}", value);
   const gRPCAstarteData& grpc_data(value.data());
-  return AstarteDatastreamIndividual((*this)(grpc_data));
+  return (*this)(grpc_data).transform(
+      [](const AstarteData& data) { return AstarteDatastreamIndividual(data); });
 }
 
 auto GrpcConverterFrom::operator()(const gRPCAstarteDatastreamObject& value)
-    -> AstarteDatastreamObject {
+    -> std_alt_tl::expected<AstarteDatastreamObject, AstarteError> {
   spdlog::trace("Converting Astarte datastream object from gRPC, message: \n{}", value);
   AstarteDatastreamObject object;
   const google::protobuf::Map<std::string, gRPCAstarteData>& grpc_data = value.data();
   for (const auto& [key, data] : grpc_data) {
-    object.insert(key, (*this)(data));
+    auto converted_data = (*this)(data);
+    if (!converted_data) {
+      return std_alt_tl::unexpected(converted_data.error());
+    }
+    object.insert(key, converted_data.value());
   }
   return object;
 }
 
 auto GrpcConverterFrom::operator()(const gRPCAstartePropertyIndividual& value)
-    -> AstartePropertyIndividual {
+    -> std_alt_tl::expected<AstartePropertyIndividual, AstarteError> {
   spdlog::trace("Converting Astarte property individual from gRPC, message: \n{}", value);
   if (value.has_data()) {
     const gRPCAstarteData& grpc_data(value.data());
-    return AstartePropertyIndividual((*this)(grpc_data));
+    return (*this)(grpc_data).transform(
+        [](const AstarteData& data) { return AstartePropertyIndividual(data); });
   }
   return AstartePropertyIndividual(std::nullopt);
 }
 
-auto GrpcConverterFrom::operator()(const gRPCAstarteMessage& value) -> AstarteMessage {
+auto GrpcConverterFrom::operator()(const gRPCAstarteMessage& value)
+    -> std_alt_tl::expected<AstarteMessage, AstarteError> {
   spdlog::trace("Converting Astarte message from gRPC, message: \n{}", value);
-  if (value.has_datastream_individual()) {
-    const gRPCAstarteDatastreamIndividual& grpc_datastream_individual =
-        value.datastream_individual();
+
+  auto make_message = [&](auto&& val) {
     const std::variant<AstarteDatastreamIndividual, AstarteDatastreamObject,
                        AstartePropertyIndividual>
-        parsed_data((*this)(grpc_datastream_individual));
-    return {value.interface_name(), value.path(), parsed_data};
+        parsed_data(std::forward<decltype(val)>(val));
+    return AstarteMessage{value.interface_name(), value.path(), parsed_data};
+  };
+
+  if (value.has_datastream_individual()) {
+    return (*this)(value.datastream_individual()).transform(make_message);
   }
   if (value.has_datastream_object()) {
-    const gRPCAstarteDatastreamObject& grpc_datastream_object = value.datastream_object();
-    const std::variant<AstarteDatastreamIndividual, AstarteDatastreamObject,
-                       AstartePropertyIndividual>
-        parsed_data((*this)(grpc_datastream_object));
-    return {value.interface_name(), value.path(), parsed_data};
+    return (*this)(value.datastream_object()).transform(make_message);
   }
   if (value.has_property_individual()) {
-    const gRPCAstartePropertyIndividual& grpc_property_individual = value.property_individual();
-    const std::variant<AstarteDatastreamIndividual, AstarteDatastreamObject,
-                       AstartePropertyIndividual>
-        parsed_data((*this)(grpc_property_individual));
-    return {value.interface_name(), value.path(), parsed_data};
+    return (*this)(value.property_individual()).transform(make_message);
   }
-  throw AstarteInternalException("Found an unrecognized gRPC gRPCAstarteDataType.");
+
+  return std_alt_tl::unexpected(
+      AstarteInternalError{"Found an unrecognized gRPC gRPCAstarteDataType."});
 }
 
 auto GrpcConverterFrom::operator()(const gRPCOwnership& value) -> AstarteOwnership {
@@ -416,13 +422,17 @@ auto GrpcConverterFrom::operator()(const gRPCOwnership& value) -> AstarteOwnersh
 }
 
 auto GrpcConverterFrom::operator()(const gRPCStoredProperties& value)
-    -> std::list<AstarteStoredProperty> {
+    -> std_alt_tl::expected<std::list<AstarteStoredProperty>, AstarteError> {
   spdlog::trace("Converting Astarte stored property from gRPC.");
   std::list<AstarteStoredProperty> stored_properties;
   for (const gRPCProperty& stored_property : value.properties()) {
-    stored_properties.emplace_back(
-        stored_property.interface_name(), stored_property.path(), stored_property.version_major(),
-        (*this)(stored_property.ownership()), (*this)(stored_property.data()));
+    auto converted_data = (*this)(stored_property.data());
+    if (!converted_data) {
+      return std_alt_tl::unexpected(converted_data.error());
+    }
+    stored_properties.emplace_back(stored_property.interface_name(), stored_property.path(),
+                                   stored_property.version_major(),
+                                   (*this)(stored_property.ownership()), converted_data.value());
   }
   return stored_properties;
 }

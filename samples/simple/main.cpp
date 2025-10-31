@@ -18,6 +18,8 @@ using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteDatastreamIndividual;
 using AstarteDeviceSdk::AstarteDatastreamObject;
 using AstarteDeviceSdk::AstarteDeviceGRPC;
+using AstarteDeviceSdk::AstarteFileOpenError;
+using AstarteDeviceSdk::AstarteInvalidInputError;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstartePropertyIndividual;
 
@@ -58,24 +60,26 @@ int main(int argc, char** argv) {
       std::make_shared<AstarteDeviceGRPC>(server_addr, node_id);
 
   // Those paths assume the user is calling the Astarte executable from the root of this project.
-  std::filesystem::path device_individual_interface_file_path =
-      "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceDatastream.json";
-  msghub_client->add_interface_from_file(device_individual_interface_file_path);
-  std::filesystem::path server_individual_interface_file_path =
-      "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerDatastream.json";
-  msghub_client->add_interface_from_file(server_individual_interface_file_path);
-  std::filesystem::path device_property_interface_file_path =
-      "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceProperty.json";
-  msghub_client->add_interface_from_file(device_property_interface_file_path);
-  std::filesystem::path device_aggregated_interface_file_path =
-      "samples/simple/interfaces/org.astarte-platform.cpp.examples.DeviceAggregate.json";
-  msghub_client->add_interface_from_file(device_aggregated_interface_file_path);
-  std::filesystem::path server_aggregated_interface_file_path =
-      "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerAggregate.json";
-  msghub_client->add_interface_from_file(server_aggregated_interface_file_path);
-  std::filesystem::path server_property_interface_file_path =
-      "samples/simple/interfaces/org.astarte-platform.cpp.examples.ServerProperty.json";
-  msghub_client->add_interface_from_file(server_property_interface_file_path);
+  const std::filesystem::path base_path = "samples/simple/interfaces";
+  const std::vector<std::string> interface_files = {
+      "org.astarte-platform.cpp.examples.DeviceDatastream.json",
+      "org.astarte-platform.cpp.examples.ServerDatastream.json",
+      "org.astarte-platform.cpp.examples.DeviceProperty.json",
+      "org.astarte-platform.cpp.examples.DeviceAggregate.json",
+      "org.astarte-platform.cpp.examples.ServerAggregate.json",
+      "org.astarte-platform.cpp.examples.ServerProperty.json"};
+
+  spdlog::info("Loading interfaces from {}...", base_path.string());
+  for (const auto& file_name : interface_files) {
+    std::filesystem::path full_path = base_path / file_name;
+    auto res = msghub_client->add_interface_from_file(full_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteFileOpenError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
+    spdlog::debug("Successfully added interface: {}", full_path.string());
+  }
+  spdlog::info("All interfaces loaded successfully.");
 
   msghub_client->connect();
 
@@ -92,71 +96,131 @@ int main(int argc, char** argv) {
 
     std::string integer_path("/integer_endpoint");
     AstarteData integer_value = AstarteData(43);
-    msghub_client->send_individual(interface_name, integer_path, integer_value, &now);
+    auto res = msghub_client->send_individual(interface_name, integer_path, integer_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longinteger_path("/longinteger_endpoint");
     AstarteData longinteger_value = AstarteData(8589934592);
-    msghub_client->send_individual(interface_name, longinteger_path, longinteger_value, &now);
+    res = msghub_client->send_individual(interface_name, longinteger_path, longinteger_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string double_path("/double_endpoint");
     AstarteData double_value = AstarteData(43.5);
-    msghub_client->send_individual(interface_name, double_path, double_value, &now);
+    res = msghub_client->send_individual(interface_name, double_path, double_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string boolean_path("/boolean_endpoint");
     AstarteData boolean_value = AstarteData(true);
-    msghub_client->send_individual(interface_name, boolean_path, boolean_value, &now);
+    res = msghub_client->send_individual(interface_name, boolean_path, boolean_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string string_path("/string_endpoint");
     std::string hello_string("Hello from cpp!");
     AstarteData string_value = AstarteData(hello_string);
-    msghub_client->send_individual(interface_name, string_path, string_value, &now);
+    res = msghub_client->send_individual(interface_name, string_path, string_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblob_path("/binaryblob_endpoint");
     std::vector<uint8_t> binaryblob = {10, 20, 30, 40, 50};
     AstarteData binaryblob_value = AstarteData(binaryblob);
-    msghub_client->send_individual(interface_name, binaryblob_path, binaryblob_value, &now);
+    res = msghub_client->send_individual(interface_name, binaryblob_path, binaryblob_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetime_path("/datetime_endpoint");
     AstarteData datetime_value = AstarteData(std::chrono::system_clock::now());
-    msghub_client->send_individual(interface_name, datetime_path, datetime_value, &now);
+    res = msghub_client->send_individual(interface_name, datetime_path, datetime_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string integerarray_path("/integerarray_endpoint");
     std::vector<int32_t> integerarray = {10, 20, 30, 40, 50};
     AstarteData integerarray_value = AstarteData(integerarray);
-    msghub_client->send_individual(interface_name, integerarray_path, integerarray_value, &now);
+    res =
+        msghub_client->send_individual(interface_name, integerarray_path, integerarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longintegerarray_path("/longintegerarray_endpoint");
     std::vector<int64_t> longintegerarray = {8589934592, 8589934593, 8589939592};
     AstarteData longintegerarray_value = AstarteData(longintegerarray);
-    msghub_client->send_individual(interface_name, longintegerarray_path, longintegerarray_value,
-                                   &now);
+    res = msghub_client->send_individual(interface_name, longintegerarray_path,
+                                         longintegerarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string doubleararray_path("/doublearray_endpoint");
     std::vector<double> doublearray = {0.0};
     AstarteData doublearray_value = AstarteData(doublearray);
-    msghub_client->send_individual(interface_name, doubleararray_path, doublearray_value, &now);
+    res =
+        msghub_client->send_individual(interface_name, doubleararray_path, doublearray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string booleanarray_path("/booleanarray_endpoint");
     std::vector<bool> booleanarray = {true, false, true};
     AstarteData booleanarray_value = AstarteData(booleanarray);
-    msghub_client->send_individual(interface_name, booleanarray_path, booleanarray_value, &now);
+    res =
+        msghub_client->send_individual(interface_name, booleanarray_path, booleanarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string stringarray_path("/stringarray_endpoint");
     std::vector<std::string> stringarray = {"Hello ", "world ", "from ", "C++"};
     AstarteData stringarray_value = AstarteData(stringarray);
-    msghub_client->send_individual(interface_name, stringarray_path, stringarray_value, &now);
+    res = msghub_client->send_individual(interface_name, stringarray_path, stringarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblobarray_path("/binaryblobarray_endpoint");
     std::vector<std::vector<uint8_t>> binaryblobarray = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     AstarteData binaryblobarray_value = AstarteData(binaryblobarray);
-    msghub_client->send_individual(interface_name, binaryblobarray_path, binaryblobarray_value,
-                                   &now);
+    res = msghub_client->send_individual(interface_name, binaryblobarray_path,
+                                         binaryblobarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetimearray_path("/datetimearray_endpoint");
     std::vector<std::chrono::system_clock::time_point> datetimearray = {
         std::chrono::system_clock::now(), std::chrono::system_clock::now()};
     AstarteData datetimearray_value = AstarteData(datetimearray);
-    msghub_client->send_individual(interface_name, datetimearray_path, datetimearray_value, &now);
+    res = msghub_client->send_individual(interface_name, datetimearray_path, datetimearray_value,
+                                         &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
@@ -185,7 +249,11 @@ int main(int argc, char** argv) {
         {"datetimearray_endpoint",
          AstarteData(std::vector<std::chrono::system_clock::time_point>{
              std::chrono::system_clock::now(), std::chrono::system_clock::now()})}};
-    msghub_client->send_object(interface_name, common_path, data, NULL);
+    auto res = msghub_client->send_object(interface_name, common_path, data, NULL);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
@@ -195,68 +263,125 @@ int main(int argc, char** argv) {
 
     std::string integer_path("/integer_endpoint");
     AstarteData integer_value = AstarteData(43);
-    msghub_client->set_property(interface_name, integer_path, integer_value);
+    auto res = msghub_client->set_property(interface_name, integer_path, integer_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longinteger_path("/longinteger_endpoint");
     AstarteData longinteger_value = AstarteData(8589934592);
-    msghub_client->set_property(interface_name, longinteger_path, longinteger_value);
+    res = msghub_client->set_property(interface_name, longinteger_path, longinteger_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string double_path("/double_endpoint");
     AstarteData double_value = AstarteData(43.5);
-    msghub_client->set_property(interface_name, double_path, double_value);
+    res = msghub_client->set_property(interface_name, double_path, double_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string boolean_path("/boolean_endpoint");
     AstarteData boolean_value = AstarteData(true);
-    msghub_client->set_property(interface_name, boolean_path, boolean_value);
+    res = msghub_client->set_property(interface_name, boolean_path, boolean_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string string_path("/string_endpoint");
     AstarteData string_value = AstarteData(std::string("Hello from cpp!"));
-    msghub_client->set_property(interface_name, string_path, string_value);
+    res = msghub_client->set_property(interface_name, string_path, string_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblob_path("/binaryblob_endpoint");
     std::vector<uint8_t> binaryblob = {10, 20, 30, 40, 50};
     AstarteData binaryblob_value = AstarteData(binaryblob);
-    msghub_client->set_property(interface_name, binaryblob_path, binaryblob_value);
+    res = msghub_client->set_property(interface_name, binaryblob_path, binaryblob_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetime_path("/datetime_endpoint");
     AstarteData datetime_value = AstarteData(std::chrono::system_clock::now());
-    msghub_client->set_property(interface_name, datetime_path, datetime_value);
+    res = msghub_client->set_property(interface_name, datetime_path, datetime_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string integerarray_path("/integerarray_endpoint");
     std::vector<int32_t> integerarray = {10, 20, 30, 40, 50};
     AstarteData integerarray_value = AstarteData(integerarray);
-    msghub_client->set_property(interface_name, integerarray_path, integerarray_value);
+    res = msghub_client->set_property(interface_name, integerarray_path, integerarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longintegerarray_path("/longintegerarray_endpoint");
     std::vector<int64_t> longintegerarray = {8589934592, 8589934593, 8589939592};
     AstarteData longintegerarray_value = AstarteData(longintegerarray);
-    msghub_client->set_property(interface_name, longintegerarray_path, longintegerarray_value);
+    res =
+        msghub_client->set_property(interface_name, longintegerarray_path, longintegerarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string doubleararray_path("/doublearray_endpoint");
     std::vector<double> doublearray = {0.0};
     AstarteData doublearray_value = AstarteData(doublearray);
-    msghub_client->set_property(interface_name, doubleararray_path, doublearray_value);
+    res = msghub_client->set_property(interface_name, doubleararray_path, doublearray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string booleanarray_path("/booleanarray_endpoint");
     std::vector<bool> booleanarray = {true, false, true};
     AstarteData booleanarray_value = AstarteData(booleanarray);
-    msghub_client->set_property(interface_name, booleanarray_path, booleanarray_value);
+    res = msghub_client->set_property(interface_name, booleanarray_path, booleanarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string stringarray_path("/stringarray_endpoint");
     std::vector<std::string> stringarray = {"Hello ", "world ", "from ", "C++"};
     AstarteData stringarray_value = AstarteData(stringarray);
-    msghub_client->set_property(interface_name, stringarray_path, stringarray_value);
+    res = msghub_client->set_property(interface_name, stringarray_path, stringarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblobarray_path("/binaryblobarray_endpoint");
     std::vector<std::vector<uint8_t>> binaryblobarray = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     AstarteData binaryblobarray_value = AstarteData(binaryblobarray);
-    msghub_client->set_property(interface_name, binaryblobarray_path, binaryblobarray_value);
+    res = msghub_client->set_property(interface_name, binaryblobarray_path, binaryblobarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetimearray_path("/datetimearray_endpoint");
     std::vector<std::chrono::system_clock::time_point> datetimearray = {
         std::chrono::system_clock::now(), std::chrono::system_clock::now()};
     AstarteData datetimearray_value = AstarteData(datetimearray);
-    msghub_client->set_property(interface_name, datetimearray_path, datetimearray_value);
+    res = msghub_client->set_property(interface_name, datetimearray_path, datetimearray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
@@ -265,46 +390,102 @@ int main(int argc, char** argv) {
     std::string interface_name("org.astarte-platform.cpp.examples.DeviceProperty");
 
     std::string integer_path("/integer_endpoint");
-    msghub_client->unset_property(interface_name, integer_path);
+    auto res = msghub_client->unset_property(interface_name, integer_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longinteger_path("/longinteger_endpoint");
-    msghub_client->unset_property(interface_name, longinteger_path);
+    res = msghub_client->unset_property(interface_name, longinteger_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string double_path("/double_endpoint");
-    msghub_client->unset_property(interface_name, double_path);
+    res = msghub_client->unset_property(interface_name, double_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string boolean_path("/boolean_endpoint");
-    msghub_client->unset_property(interface_name, boolean_path);
+    res = res = msghub_client->unset_property(interface_name, boolean_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string string_path("/string_endpoint");
-    msghub_client->unset_property(interface_name, string_path);
+    res = msghub_client->unset_property(interface_name, string_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblob_path("/binaryblob_endpoint");
-    msghub_client->unset_property(interface_name, binaryblob_path);
+    res = msghub_client->unset_property(interface_name, binaryblob_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetime_path("/datetime_endpoint");
-    msghub_client->unset_property(interface_name, datetime_path);
+    res = msghub_client->unset_property(interface_name, datetime_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string integerarray_path("/integerarray_endpoint");
-    msghub_client->unset_property(interface_name, integerarray_path);
+    res = msghub_client->unset_property(interface_name, integerarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longintegerarray_path("/longintegerarray_endpoint");
-    msghub_client->unset_property(interface_name, longintegerarray_path);
+    res = msghub_client->unset_property(interface_name, longintegerarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string doubleararray_path("/doublearray_endpoint");
-    msghub_client->unset_property(interface_name, doubleararray_path);
+    res = msghub_client->unset_property(interface_name, doubleararray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string booleanarray_path("/booleanarray_endpoint");
-    msghub_client->unset_property(interface_name, booleanarray_path);
+    res = msghub_client->unset_property(interface_name, booleanarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string stringarray_path("/stringarray_endpoint");
-    msghub_client->unset_property(interface_name, stringarray_path);
+    res = msghub_client->unset_property(interface_name, stringarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblobarray_path("/binaryblobarray_endpoint");
-    msghub_client->unset_property(interface_name, binaryblobarray_path);
+    res = msghub_client->unset_property(interface_name, binaryblobarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetimearray_path("/datetimearray_endpoint");
-    msghub_client->unset_property(interface_name, datetimearray_path);
+    res = msghub_client->unset_property(interface_name, datetimearray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
