@@ -33,15 +33,14 @@ class ExponentialBackoff {
    * @param cutoff_coeff The cut-off coefficient, an upper bound for the exponential curve.
    */
   static auto create(std::chrono::milliseconds mul_coeff, std::chrono::milliseconds cutoff_coeff)
-      -> std_alt_tl::expected<ExponentialBackoff, AstarteError> {
+      -> outcome::outcome<ExponentialBackoff, AstarteError> {
     if ((mul_coeff <= std::chrono::milliseconds::zero()) ||
         (cutoff_coeff <= std::chrono::milliseconds::zero())) {
-      return std_alt_tl::unexpected(
-          AstarteInvalidInputError{"Received zero or negative coefficients."});
+      return AstarteInvalidInputError{"Received zero or negative coefficients."};
     }
     if (cutoff_coeff < mul_coeff) {
-      return std_alt_tl::unexpected(AstarteInvalidInputError{
-          "The multiplier coefficient is larger than the cuttoff coefficient"});
+      return AstarteInvalidInputError{
+          "The multiplier coefficient is larger than the cuttoff coefficient"};
     }
     return ExponentialBackoff(mul_coeff, cutoff_coeff);
   }

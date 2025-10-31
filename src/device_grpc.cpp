@@ -29,7 +29,7 @@ AstarteDeviceGRPC::AstarteDeviceGRPC(const std::string& server_addr, const std::
 AstarteDeviceGRPC::~AstarteDeviceGRPC() = default;
 
 auto AstarteDeviceGRPC::add_interface_from_file(const std::filesystem::path& json_file)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   return astarte_device_impl_->add_interface_from_file(json_file);
 }
 
@@ -52,25 +52,25 @@ void AstarteDeviceGRPC::disconnect() { astarte_device_impl_->disconnect(); }
 auto AstarteDeviceGRPC::send_individual(std::string_view interface_name, std::string_view path,
                                         const AstarteData& data,
                                         const std::chrono::system_clock::time_point* timestamp)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   return astarte_device_impl_->send_individual(interface_name, path, data, timestamp);
 }
 
 auto AstarteDeviceGRPC::send_object(std::string_view interface_name, std::string_view path,
                                     const AstarteDatastreamObject& object,
                                     const std::chrono::system_clock::time_point* timestamp)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   return astarte_device_impl_->send_object(interface_name, path, object, timestamp);
 }
 
 auto AstarteDeviceGRPC::set_property(std::string_view interface_name, std::string_view path,
                                      const AstarteData& data)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   return astarte_device_impl_->set_property(interface_name, path, data);
 }
 
 auto AstarteDeviceGRPC::unset_property(std::string_view interface_name, std::string_view path)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   return astarte_device_impl_->unset_property(interface_name, path);
 }
 
@@ -80,17 +80,17 @@ auto AstarteDeviceGRPC::poll_incoming(const std::chrono::milliseconds& timeout)
 }
 
 auto AstarteDeviceGRPC::get_all_properties(const std::optional<AstarteOwnership>& ownership)
-    -> std_alt_tl::expected<std::list<AstarteStoredProperty>, AstarteError> {
+    -> outcome::outcome<std::list<AstarteStoredProperty>, AstarteError> {
   return astarte_device_impl_->get_all_properties(ownership);
 }
 
 auto AstarteDeviceGRPC::get_properties(std::string_view interface_name)
-    -> std_alt_tl::expected<std::list<AstarteStoredProperty>, AstarteError> {
+    -> outcome::outcome<std::list<AstarteStoredProperty>, AstarteError> {
   return astarte_device_impl_->get_properties(interface_name);
 }
 
 auto AstarteDeviceGRPC::get_property(std::string_view interface_name, std::string_view path)
-    -> std_alt_tl::expected<AstartePropertyIndividual, AstarteError> {
+    -> outcome::outcome<AstartePropertyIndividual, AstarteError> {
   return astarte_device_impl_->get_property(interface_name, path);
 }
 

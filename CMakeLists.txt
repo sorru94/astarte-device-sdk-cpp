@@ -13,6 +13,7 @@ include(FetchContent)
 
 # Configuration options for this library
 option(ASTARTE_USE_SYSTEM_SPDLOG "Use system installed spdlog" OFF)
+option(ASTARTE_USE_SYSTEM_OUTCOME "Use system installed outcome" OFF)
 option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 option(ASTARTE_PUBLIC_PROTO_DEP "Make message hub proto dependency public" OFF)
 set(ASTARTE_MESSAGE_HUB_PROTO_DIR
@@ -56,6 +57,7 @@ endif()
 message(STATUS "--------------------------------------------------")
 message(STATUS "Astarte SDK configuration:")
 message(STATUS "  ASTARTE_USE_SYSTEM_SPDLOG:       ${ASTARTE_USE_SYSTEM_SPDLOG}")
+message(STATUS "  ASTARTE_USE_SYSTEM_OUTCOME:      ${ASTARTE_USE_SYSTEM_OUTCOME}")
 if(NOT HAS_STD_EXPECTED)
     message(STATUS "  ASTARTE_USE_SYSTEM_TL_EXPECTED:  ${ASTARTE_USE_SYSTEM_TL_EXPECTED}")
 endif()
@@ -78,6 +80,19 @@ if(NOT ASTARTE_USE_SYSTEM_SPDLOG)
     FetchContent_MakeAvailable(spdlog)
 else()
     find_package(spdlog REQUIRED)
+endif()
+
+if(NOT ASTARTE_USE_SYSTEM_OUTCOME)
+    set(BOOST_OUTCOME_GITHUB_URL https://github.com/ned14/outcome.git)
+    set(BOOST_OUTCOME_GIT_TAG v2.2.9)
+    FetchContent_Declare(
+        outcome
+        GIT_REPOSITORY ${BOOST_OUTCOME_GITHUB_URL}
+        GIT_TAG ${BOOST_OUTCOME_GIT_TAG}
+    )
+    FetchContent_MakeAvailable(outcome)
+else()
+    find_package(outcome REQUIRED)
 endif()
 
 if(NOT HAS_STD_EXPECTED)
@@ -178,6 +193,11 @@ endif()
 if(NOT HAS_STD_EXPECTED)
     target_link_libraries(astarte_device_sdk PUBLIC tl::expected)
     target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_USE_TL_EXPECTED)
+endif()
+if(NOT ASTARTE_USE_SYSTEM_OUTCOME)
+    target_link_libraries(astarte_device_sdk PUBLIC outcome::hl)
+else()
+    target_link_libraries(astarte_device_sdk PUBLIC outcome::outcome)
 endif()
 
 # Set target properties

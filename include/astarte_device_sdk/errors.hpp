@@ -5,6 +5,7 @@
 #ifndef ASTARTE_DEVICE_SDK_ERRORS_H
 #define ASTARTE_DEVICE_SDK_ERRORS_H
 
+#include <exception>
 #include <string>
 #include <variant>
 
@@ -14,6 +15,8 @@
 #include <expected>
 #endif
 
+#include <outcome.hpp>
+
 namespace AstarteDeviceSdk {
 
 #if defined(ASTARTE_USE_TL_EXPECTED)
@@ -21,6 +24,8 @@ namespace std_alt_tl = ::tl;
 #else
 namespace std_alt_tl = ::std;
 #endif
+
+namespace outcome = OUTCOME_V2_NAMESPACE;
 
 /**
  * @brief Base error class representing any possible error from the Astarte device library.
@@ -100,7 +105,7 @@ class AstarteOperationRefusedError : public AstarteErrorBase {
  *
  * This type is intended to be used as the error type 'E' in std::expected<T, E>.
  */
-using AstarteError = std::variant<AstarteFileOpenError, AstarteInvalidInputError,
+using AstarteError = std::variant<std::monostate, AstarteFileOpenError, AstarteInvalidInputError,
                                   AstarteInternalError, AstarteOperationRefusedError>;
 
 }  // namespace AstarteDeviceSdk

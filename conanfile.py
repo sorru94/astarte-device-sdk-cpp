@@ -32,6 +32,7 @@ class Pkg(ConanFile):
     def requirements(self):
         self.requires("grpc/1.72.0")
         self.requires("tl-expected/1.2.0", transitive_headers=True)
+        self.requires("outcome/2.2.9", transitive_headers=True)
         self.requires("protobuf/6.30.1", override = True)
         self.requires("spdlog/1.15.3", options={"use_std_fmt": "True"}, transitive_headers=True, transitive_libs=True)
 
@@ -53,6 +54,7 @@ class Pkg(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["ASTARTE_USE_SYSTEM_TL_EXPECTED"] = "ON"
         tc.variables["ASTARTE_USE_SYSTEM_SPDLOG"] = "ON"
+        tc.variables["ASTARTE_USE_SYSTEM_OUTCOME"] = "ON"
         tc.variables["ASTARTE_USE_SYSTEM_GRPC"] = "ON"
         tc.generate()
         cmake_deps = CMakeDeps(self)

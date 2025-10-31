@@ -85,14 +85,14 @@ AstarteDeviceGRPC::AstarteDeviceGRPCImpl::AstarteDeviceGRPCImpl(std::string serv
 AstarteDeviceGRPC::AstarteDeviceGRPCImpl::~AstarteDeviceGRPCImpl() { ssource_.request_stop(); }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_file(
-    const std::filesystem::path& json_file) -> std_alt_tl::expected<void, AstarteError> {
+    const std::filesystem::path& json_file) -> outcome::outcome<void, AstarteError> {
   spdlog::debug("Adding interface from file: {}", json_file.string());
 
   // Check file validity
   std::ifstream interface_file(json_file, std::ios::in);
   if (!interface_file.is_open()) {
     spdlog::error("Could not open the interface file: {}", json_file.string());
-    return std_alt_tl::unexpected(AstarteFileOpenError{json_file.string()});
+    return AstarteFileOpenError{json_file.string()};
   }
 
   // Read the entire JSON file content into a string
@@ -104,7 +104,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_file(
 
   // Add the interface from the fetched string
   add_interface_from_str(interface_json);
-  return {};
+  return outcome::success();
 }
 
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_str(std::string_view json) {
@@ -210,12 +210,12 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::disconnect() {
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_individual(
     std::string_view interface_name, std::string_view path, const AstarteData& data,
     const std::chrono::system_clock::time_point* timestamp)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   spdlog::debug("Sending individual: {} {}", interface_name, path);
   if (!connected_.load()) {
     const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
-    return std_alt_tl::unexpected(AstarteOperationRefusedError{msg});
+    return AstarteOperationRefusedError{msg};
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -232,20 +232,20 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_individual(
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    return std_alt_tl::unexpected(AstarteInvalidInputError{status.error_message()});
+    return AstarteInvalidInputError{status.error_message()};
   }
-  return {};
+  return outcome::success();
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_object(
     std::string_view interface_name, std::string_view path, const AstarteDatastreamObject& object,
     const std::chrono::system_clock::time_point* timestamp)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   spdlog::debug("Sending object: {} {}", interface_name, path);
   if (!connected_.load()) {
     const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
-    return std_alt_tl::unexpected(AstarteOperationRefusedError{msg});
+    return AstarteOperationRefusedError{msg};
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -262,20 +262,20 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::send_object(
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    return std_alt_tl::unexpected(AstarteInvalidInputError{status.error_message()});
+    return AstarteInvalidInputError{status.error_message()};
   }
-  return {};
+  return outcome::success();
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(std::string_view interface_name,
                                                             std::string_view path,
                                                             const AstarteData& data)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   spdlog::debug("Setting property: {} {}", interface_name, path);
   if (!connected_.load()) {
     const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
-    return std_alt_tl::unexpected(AstarteOperationRefusedError{msg});
+    return AstarteOperationRefusedError{msg};
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -292,19 +292,19 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::set_property(std::string_view int
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    return std_alt_tl::unexpected(AstarteInvalidInputError{status.error_message()});
+    return AstarteInvalidInputError{status.error_message()};
   }
-  return {};
+  return outcome::success();
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::unset_property(std::string_view interface_name,
                                                               std::string_view path)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   spdlog::debug("Unsetting property: {} {}", interface_name, path);
   if (!connected_.load()) {
     const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
-    return std_alt_tl::unexpected(AstarteOperationRefusedError{msg});
+    return AstarteOperationRefusedError{msg};
   }
   gRPCAstarteMessage message;
   message.set_interface_name(interface_name);
@@ -320,9 +320,9 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::unset_property(std::string_view i
   const Status status = stub_->Send(&context, message, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    return std_alt_tl::unexpected(AstarteInvalidInputError{status.error_message()});
+    return AstarteInvalidInputError{status.error_message()};
   }
-  return {};
+  return outcome::success();
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::poll_incoming(
@@ -332,7 +332,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::poll_incoming(
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_all_properties(
     const std::optional<AstarteOwnership>& ownership)
-    -> std_alt_tl::expected<std::list<AstarteStoredProperty>, AstarteError> {
+    -> outcome::outcome<std::list<AstarteStoredProperty>, AstarteError> {
   if (ownership.has_value()) {
     spdlog::debug("Getting all stored properties {} owned.", ownership_as_str(ownership.value()));
   } else {
@@ -342,7 +342,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_all_properties(
   if (!connected_.load()) {
     const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
-    return std_alt_tl::unexpected(AstarteOperationRefusedError{msg});
+    return AstarteOperationRefusedError{msg};
   }
 
   gRPCPropertyFilter filter;
@@ -356,19 +356,19 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_all_properties(
   const Status status = stub_->GetAllProperties(&context, filter, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    return std_alt_tl::unexpected(AstarteInvalidInputError(status.error_message()));
+    return AstarteInvalidInputError(status.error_message());
   }
 
   return GrpcConverterFrom{}(response);
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_properties(std::string_view interface_name)
-    -> std_alt_tl::expected<std::list<AstarteStoredProperty>, AstarteError> {
+    -> outcome::outcome<std::list<AstarteStoredProperty>, AstarteError> {
   spdlog::debug("Getting stored properties for interface: {}", interface_name);
   if (!connected_.load()) {
     const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
-    return std_alt_tl::unexpected(AstarteOperationRefusedError{msg});
+    return AstarteOperationRefusedError{msg};
   }
 
   gRPCInterfaceName grpc_interface_name;
@@ -379,7 +379,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_properties(std::string_view i
   const Status status = stub_->GetProperties(&context, grpc_interface_name, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    return std_alt_tl::unexpected(AstarteInvalidInputError(status.error_message()));
+    return AstarteInvalidInputError(status.error_message());
   }
 
   return GrpcConverterFrom{}(response);
@@ -387,12 +387,12 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_properties(std::string_view i
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_property(std::string_view interface_name,
                                                             std::string_view path)
-    -> std_alt_tl::expected<AstartePropertyIndividual, AstarteError> {
+    -> outcome::outcome<AstartePropertyIndividual, AstarteError> {
   spdlog::debug("Getting stored property for interface '{}' and path '{}'", interface_name, path);
   if (!connected_.load()) {
     const std::string_view msg("Device disconnected, operation aborted.");
     spdlog::warn(msg);
-    return std_alt_tl::unexpected(AstarteOperationRefusedError{msg});
+    return AstarteOperationRefusedError{msg};
   }
 
   gRPCPropertyIdentifier identifier;
@@ -404,7 +404,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::get_property(std::string_view int
   const Status status = stub_->GetProperty(&context, identifier, &response);
   if (!status.ok()) {
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
-    return std_alt_tl::unexpected(AstarteInvalidInputError(status.error_message()));
+    return AstarteInvalidInputError(status.error_message());
   }
 
   return GrpcConverterFrom{}(response);
@@ -536,12 +536,10 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::parse_message_hub_event(
 }
 
 auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connection_loop(const std::stop_token& token)
-    -> std_alt_tl::expected<void, AstarteError> {
+    -> outcome::outcome<void, AstarteError> {
   spdlog::trace("Connection loop started.");
-  auto exp_backoff = ExponentialBackoff::create(std::chrono::seconds(2), std::chrono::minutes(1));
-  if (!exp_backoff) {
-    return std_alt_tl::unexpected(exp_backoff.error());
-  }
+  OUTCOME_TRY(auto exp_backoff,
+              ExponentialBackoff::create(std::chrono::seconds(2), std::chrono::minutes(1)));
 
   while (!token.stop_requested()) {
     connection_attempt(token);
@@ -551,14 +549,14 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connection_loop(const std::stop_t
       break;
     }
 
-    auto delay = exp_backoff.value().getNextDelay();
+    auto delay = exp_backoff.getNextDelay();
     spdlog::info("Will attempt to reconnect in {} seconds.",
                  std::chrono::duration_cast<std::chrono::seconds>(delay).count());
     std::this_thread::sleep_for(delay);
   }
 
   spdlog::info("Connection loop has been terminated.");
-  return {};
+  return outcome::success();
 }
 
 }  // namespace AstarteDeviceSdk

@@ -56,7 +56,7 @@ class AstarteDevice {
    * @param json_file The path to the .json interface file.
    */
   virtual auto add_interface_from_file(const std::filesystem::path& json_file)
-      -> std_alt_tl::expected<void, AstarteError> = 0;
+      -> outcome::outcome<void, AstarteError> = 0;
   /**
    * @brief Add an interface for the device from a JSON string view.
    * @param json The interface definition as a JSON string view.
@@ -92,7 +92,7 @@ class AstarteDevice {
   virtual auto send_individual(std::string_view interface_name, std::string_view path,
                                const AstarteData& data,
                                const std::chrono::system_clock::time_point* timestamp)
-      -> std_alt_tl::expected<void, AstarteError> = 0;
+      -> outcome::outcome<void, AstarteError> = 0;
   /**
    * @brief Send an aggregate object data payload to Astarte.
    * @param interface_name The name of the target interface.
@@ -103,7 +103,7 @@ class AstarteDevice {
   virtual auto send_object(std::string_view interface_name, std::string_view path,
                            const AstarteDatastreamObject& object,
                            const std::chrono::system_clock::time_point* timestamp)
-      -> std_alt_tl::expected<void, AstarteError> = 0;
+      -> outcome::outcome<void, AstarteError> = 0;
   /**
    * @brief Set a device property on Astarte.
    * @param interface_name The name of the interface containing the property.
@@ -111,15 +111,14 @@ class AstarteDevice {
    * @param data The value to set for the property.
    */
   virtual auto set_property(std::string_view interface_name, std::string_view path,
-                            const AstarteData& data)
-      -> std_alt_tl::expected<void, AstarteError> = 0;
+                            const AstarteData& data) -> outcome::outcome<void, AstarteError> = 0;
   /**
    * @brief Unset a device property on Astarte.
    * @param interface_name The name of the interface containing the property.
    * @param path The full path to the property to unset.
    */
   virtual auto unset_property(std::string_view interface_name, std::string_view path)
-      -> std_alt_tl::expected<void, AstarteError> = 0;
+      -> outcome::outcome<void, AstarteError> = 0;
   /**
    * @brief Poll for incoming messages from Astarte.
    * @param timeout The maximum time to block waiting for a message.
