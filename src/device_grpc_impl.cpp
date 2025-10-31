@@ -119,6 +119,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::add_interface_from_str(std::strin
     const Status status = stub_->AddInterfaces(&context, grpc_interfaces_json, &response);
     if (!status.ok()) {
       spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+      // TODO: Return a meaningful error
       return;
     }
   }
@@ -147,6 +148,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::remove_interface(const std::strin
         const Status status = stub_->RemoveInterfaces(&context, grpc_interface_names, &response);
         if (!status.ok()) {
           spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+          // TODO: return a meaningful error
           return;
         }
       }
@@ -160,6 +162,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connect() {
   spdlog::info("Connection requested.");
   if (connection_thread_) {
     spdlog::warn("Connection process is already running.");
+    // TODO: return a meaningful error
     return;
   }
 
@@ -194,6 +197,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::disconnect() {
     const Status status = stub_->Detach(&context, google::protobuf::Empty(), &response);
     if (!status.ok()) {
       spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+      // TODO: return a meaningful error
     }
     grpc_stream_error_.store(false);
   }
@@ -438,6 +442,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::perform_attach() -> std::optional
   if (server_metadata.empty()) {
     spdlog::warn("No metadata from server");
     grpc_stream_error_.store(true);
+    // TODO: return a meaningful error
     return std::nullopt;
   }
 
@@ -449,6 +454,7 @@ auto AstarteDeviceGRPC::AstarteDeviceGRPCImpl::perform_attach() -> std::optional
 void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connection_attempt(const std::stop_token& token) {
   if (connected_.load()) {
     spdlog::warn("Device is already connected.");
+    // TODO: return a meaningful error
     return;
   }
   spdlog::debug("Attempting to connect to the message hub at {}", server_addr_);
@@ -460,6 +466,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::connection_attempt(const std::sto
   auto attach_res = perform_attach();
   if (!attach_res) {
     spdlog::error("Failed to attach to the message hub");
+    // TODO: return a meaningful error
     return;
   }
 
@@ -503,6 +510,7 @@ void AstarteDeviceGRPC::AstarteDeviceGRPCImpl::handle_events(
   if (!status.ok() && !token.stop_requested()) {
     grpc_stream_error_.store(true);
     spdlog::error("{}: {}", static_cast<int>(status.error_code()), status.error_message());
+    // TODO: store a meaningful error
   }
 }
 
