@@ -24,11 +24,6 @@ class PsaKey {
    */
   PsaKey();
   /**
-   * @brief Constructs a PsaKey that takes ownership of an existing key ID.
-   * @param key_id The PSA key identifier to manage.
-   */
-  explicit PsaKey(mbedtls_svc_key_id_t key_id);
-  /**
    * @brief Destroys the PsaKey.
    */
   ~PsaKey();
@@ -53,16 +48,22 @@ class PsaKey {
    */
   auto operator=(PsaKey&& other) -> PsaKey&;
   /**
-   * @brief Gets read-only access to the underlying key ID
+   * @brief Get a reference to the underlying key ID
    * @return The managed mbedtls_svc_key_id_t. Returns PSA_KEY_ID_NULL if this object is empty.
    */
-  auto get() const -> mbedtls_svc_key_id_t;
+  auto get() const -> const mbedtls_svc_key_id_t&;
+
+  /**
+   * @brief Creates a new ECDSA (secp256r1) private key.
+   * @throws CryptoException on failure.
+   */
+  void generate();
 
  private:
   /**
    * @brief The managed PSA key identifier.
    */
-  mbedtls_svc_key_id_t key_id;
+  mbedtls_svc_key_id_t key_id_;
 };
 
 /**
@@ -71,13 +72,6 @@ class PsaKey {
 class Crypto {
  public:
   /**
-   * @brief Creates a new ECDSA (secp256r1) private key.
-   * @return A PsaKey object managing the newly created private key.
-   * @throws CryptoException on failure.
-   */
-  static auto create_key() -> PsaKey;
-
-  /**
    * @brief Creates a Certificate Signing Request (CSR) from a private key.
    *
    * @param priv_key A reference to the PsaKey holding the private key.
@@ -85,7 +79,7 @@ class Crypto {
    * @return A string containing the CSR in PEM format.
    * @throws CryptoException on failure.
    */
-  static auto create_csr(const PsaKey priv_key) -> std::string;
+  static auto create_csr(const PsaKey& priv_key) -> std::string;
 };
 
 }  // namespace AstarteDeviceSdk

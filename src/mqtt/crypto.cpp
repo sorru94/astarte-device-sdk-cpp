@@ -32,48 +32,59 @@ void mbedtls_check(int ret, const std::string& function_name) {
   }
 }
 
-PsaKey::PsaKey() : key_id(PSA_KEY_ID_NULL) {}
-PsaKey::PsaKey(mbedtls_svc_key_id_t key_id) : key_id(key_id) {}
+PsaKey::PsaKey() : key_id_(PSA_KEY_ID_NULL) { mbedtls_check(psa_crypto_init(), "psa_crypto_init"); }
 PsaKey::~PsaKey() {
-  if (key_id != PSA_KEY_ID_NULL) {
+  if (key_id_ != PSA_KEY_ID_NULL) {
     try {
       // Attempt to destroy the key
-      mbedtls_check(psa_destroy_key(key_id), "psa_destroy_key");
+      mbedtls_check(psa_destroy_key(key_id_), "psa_destroy_key");
     } catch (const std::exception& e) {
-      spdlog::error("Exception in PsaKey destructor. Key ID {} may be leaked. Error: {}", key_id,
+      spdlog::error("Exception in PsaKey destructor. Key ID {} may be leaked. Error: {}", key_id_,
                     e.what());
     } catch (...) {
       spdlog::error("CRITICAL: Unknown exception in PsaKey destructor. Key ID {} may be leaked",
-                    key_id);
+                    key_id_);
     }
   }
 }
 
-PsaKey::PsaKey(PsaKey&& other) noexcept : key_id(other.key_id) { other.key_id = PSA_KEY_ID_NULL; }
+PsaKey::PsaKey(PsaKey&& other) noexcept : key_id_(other.key_id_) {
+  other.key_id_ = PSA_KEY_ID_NULL;
+}
 
 auto PsaKey::operator=(PsaKey&& other) -> PsaKey& {
   if (this != &other) {
     // destroy the key
-    if (key_id != PSA_KEY_ID_NULL) {
-      mbedtls_check(psa_destroy_key(key_id), "psa_destroy_key");
+    if (key_id_ != PSA_KEY_ID_NULL) {
+      mbedtls_check(psa_destroy_key(key_id_), "psa_destroy_key");
     }
     // if the destroy succeeded, we move the key from the other object
-    key_id = other.key_id;
-    other.key_id = PSA_KEY_ID_NULL;
+    key_id_ = other.key_id_;
+    other.key_id_ = PSA_KEY_ID_NULL;
   }
   return *this;
 }
 
-auto PsaKey::get() const -> mbedtls_svc_key_id_t { return key_id; }
+auto PsaKey::get() const -> const mbedtls_svc_key_id_t& { return key_id_; }
+
+void PsaKey::generate() {
+  // generate the PSA EC key
+  psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+  psa_set_key_algorithm(&attributes, PSA_ECC_FAMILY_SECP_R1);
+  psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT);
+  psa_set_key_type(&attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+  psa_set_key_bits(&attributes, 256);
+
+  mbedtls_check(psa_generate_key(&attributes, &key_id_), "psa_generate_key");
+}
 
 // Wrappers for Mbed TLS Resources and exploit RAII principle by ensuring that
 // mbedtls_*_free is always called automatically.
 class MbedPk {
  public:
-  MbedPk() : psa_key_(PSA_KEY_ID_NULL) { mbedtls_pk_init(&ctx_); }
-  MbedPk(PsaKey psa_key) : psa_key_(std::move(psa_key)) {
+  explicit MbedPk(const PsaKey& psa_key) {
     mbedtls_pk_init(&ctx_);
-    mbedtls_check(mbedtls_pk_copy_from_psa(psa_key_.get(), &ctx_), "mbedtls_pk_copy_from_psa");
+    mbedtls_check(mbedtls_pk_copy_from_psa(psa_key.get(), &ctx_), "mbedtls_pk_copy_from_psa");
   }
   ~MbedPk() { mbedtls_pk_free(&ctx_); }
 
@@ -81,29 +92,6 @@ class MbedPk {
 
  private:
   mbedtls_pk_context ctx_;
-  PsaKey psa_key_;
-};
-
-class PsaKeyAttr {
- public:
-  PsaKeyAttr() : attributes_(psa_key_attributes_init()) {}
-  ~PsaKeyAttr() { psa_reset_key_attributes(&attributes_); }
-
-  void setup(psa_algorithm_t algorithm, psa_key_usage_t usage_flags, psa_key_type_t key_type,
-             size_t key_bits) {
-    psa_set_key_algorithm(&attributes_, algorithm);
-    psa_set_key_usage_flags(&attributes_, usage_flags);
-    psa_set_key_type(&attributes_, key_type);
-    psa_set_key_bits(&attributes_, key_bits);
-  }
-
-  auto generate_key() -> PsaKey {
-    mbedtls_svc_key_id_t key;
-    mbedtls_check(psa_generate_key(&attributes_, &key), "psa_generate_key");
-    return PsaKey(key);
-  }
-
-  psa_key_attributes_t attributes_;
 };
 
 class MbedX509WriteCsr {
@@ -126,20 +114,8 @@ class MbedX509Crt {
   mbedtls_x509_crt ctx_;
 };
 
-auto Crypto::create_key() -> PsaKey {
-  mbedtls_check(psa_crypto_init(), "psa_crypto_init");
-
-  // generate the PSA EC key
-  PsaKeyAttr key_attributes;
-  psa_key_usage_t usage_flags = PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT;
-  key_attributes.setup(PSA_ECC_FAMILY_SECP_R1, usage_flags,
-                       PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1), 256);
-
-  return key_attributes.generate_key();
-}
-
-auto Crypto::create_csr(PsaKey priv_key) -> std::string {
-  auto key = MbedPk(std::move(priv_key));
+auto Crypto::create_csr(const PsaKey& priv_key) -> std::string {
+  auto key = MbedPk(priv_key);
 
   // configure the CSR
   MbedX509WriteCsr req;
@@ -158,7 +134,7 @@ auto Crypto::create_csr(PsaKey priv_key) -> std::string {
   mbedtls_entropy_init(&entropy_ctx);
 
   // seed the RNG
-  std::string pers = "";
+  std::string pers = "astarte_credentials_create_key";
   mbedtls_check(
       mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
                             reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),

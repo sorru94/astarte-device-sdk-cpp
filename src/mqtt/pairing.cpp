@@ -117,7 +117,8 @@ auto PairingApi::get_device_cert(std::string_view credential_secret, int timeout
   cpr::Header header{{"Content-Type", "application/json"},
                      {"Authorization", std::format("Bearer {}", credential_secret)}};
 
-  auto priv_key = Crypto::create_key();
+  auto priv_key = PsaKey();
+  priv_key.generate();
   auto device_csr = Crypto::create_csr(std::move(priv_key));
 
   json body;
