@@ -17,7 +17,7 @@ template <typename T>
 concept ProtobufMessage = std::is_base_of_v<google::protobuf::Message, T>;
 
 template <ProtobufMessage T>
-struct ASTARTE_NS_FORMAT::formatter<T> {  // NOLINT
+struct astarte_fmt::formatter<T> {  // NOLINT
   template <typename ParseContext>
   constexpr auto parse(ParseContext& ctx) {
     return ctx.begin();
@@ -27,7 +27,7 @@ struct ASTARTE_NS_FORMAT::formatter<T> {  // NOLINT
   auto format(const T& obj, FormatContext& ctx) const {
     std::string obj_str;
     google::protobuf::TextFormat::PrintToString(obj, &obj_str);
-    return ASTARTE_NS_FORMAT::format_to(ctx.out(), "{}", obj_str);
+    return astarte_fmt::format_to(ctx.out(), "{}", obj_str);
   }
 };
 
