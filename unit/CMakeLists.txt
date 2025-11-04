@@ -17,11 +17,17 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(unit_test conversion_test.cpp data_test.cpp msg_test.cpp crypto_test.cpp)
+add_executable(unit_test data_test.cpp msg_test.cpp)
+
+if(ASTARTE_TRANSPORT_GRPC)
+    target_sources(unit_test PRIVATE conversion_test.cpp)
+else()
+    target_sources(unit_test PRIVATE crypto_test.cpp)
+endif()
 
 # Add the Astarte sdk root directory
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
-target_include_directories(unit_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../private) # ${CMAKE_CURRENT_SOURCE_DIR}/../include
+target_include_directories(unit_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../private)
 
 target_link_libraries(unit_test astarte_device_sdk GTest::gtest_main gmock)
 
