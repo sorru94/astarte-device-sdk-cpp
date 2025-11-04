@@ -122,8 +122,8 @@ function(astarte_sdk_add_mqtt_transport)
         astarte_device_sdk
         PRIVATE cpr::cpr
         PRIVATE nlohmann_json::nlohmann_json
-        PRIVATE MbedTLS::mbedtls
-        PRIVATE MbedTLS::mbedx509
+        PUBLIC MbedTLS::mbedtls
+        PUBLIC MbedTLS::mbedx509
         PUBLIC ada::ada
     )
 endfunction()
