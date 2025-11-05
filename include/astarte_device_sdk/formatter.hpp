@@ -13,13 +13,13 @@
      (!defined(_MSVC_LANG) && __cplusplus >= 202002L)) && \
     (__has_include(<format>))
 #include <format>
-#define ASTARTE_NS_FORMAT std
+namespace astarte_fmt = ::std;
 #else                        // (__cplusplus >= 202002L) && (__has_include(<format>))
 #include <spdlog/fmt/fmt.h>  // NOLINT: avoid clang-tidy warning regarding fmt library not used directly
 
 #include <iomanip>
 #include <sstream>
-#define ASTARTE_NS_FORMAT fmt
+namespace astarte_fmt = ::fmt;
 #endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
 
 #include "astarte_device_sdk/individual.hpp"
@@ -53,13 +53,13 @@ void format_base64(OutputIt& out, const std::vector<uint8_t>& data) {
   size_t idx = 0;
   const size_t len = data.size();
 
-  out = ASTARTE_NS_FORMAT::format_to(out, "\"");
+  out = astarte_fmt::format_to(out, "\"");
 
   while (idx + 2 < len) {
     const uint32_t chunk = (data[idx] << 16) | (data[idx + 1] << 8) | data[idx + 2];
-    out = ASTARTE_NS_FORMAT::format_to(
-        out, "{}{}{}{}", base64_chars[(chunk >> 18) & 0x3F], base64_chars[(chunk >> 12) & 0x3F],
-        base64_chars[(chunk >> 6) & 0x3F], base64_chars[chunk & 0x3F]);
+    out = astarte_fmt::format_to(out, "{}{}{}{}", base64_chars[(chunk >> 18) & 0x3F],
+                                 base64_chars[(chunk >> 12) & 0x3F],
+                                 base64_chars[(chunk >> 6) & 0x3F], base64_chars[chunk & 0x3F]);
     idx += 3;
   }
 
@@ -69,16 +69,16 @@ void format_base64(OutputIt& out, const std::vector<uint8_t>& data) {
       chunk |= data[idx + 1] << 8;
     }
 
-    out = ASTARTE_NS_FORMAT::format_to(out, "{}{}", base64_chars[(chunk >> 18) & 0x3F],
-                                       base64_chars[(chunk >> 12) & 0x3F]);
+    out = astarte_fmt::format_to(out, "{}{}", base64_chars[(chunk >> 18) & 0x3F],
+                                 base64_chars[(chunk >> 12) & 0x3F]);
     if (idx + 1 < len) {
-      out = ASTARTE_NS_FORMAT::format_to(out, "{}=", base64_chars[(chunk >> 6) & 0x3F]);
+      out = astarte_fmt::format_to(out, "{}=", base64_chars[(chunk >> 6) & 0x3F]);
     } else {
-      out = ASTARTE_NS_FORMAT::format_to(out, "==");
+      out = astarte_fmt::format_to(out, "==");
     }
   }
 
-  out = ASTARTE_NS_FORMAT::format_to(out, "\"");
+  out = astarte_fmt::format_to(out, "\"");
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
@@ -90,20 +90,20 @@ void format_base64(OutputIt& out, const std::vector<uint8_t>& data) {
  */
 template <typename OutputIt>
 void format_timestamp(OutputIt& out, const std::chrono::system_clock::time_point& data) {
-  out = ASTARTE_NS_FORMAT::format_to(out, "\"");
+  out = astarte_fmt::format_to(out, "\"");
 #if (__cplusplus >= 202002L) && (__has_include(<format>))
-  out = ASTARTE_NS_FORMAT::format_to(
+  out = astarte_fmt::format_to(
       out, "{}",
-      ASTARTE_NS_FORMAT::format("{0:%F}T{0:%T}Z",
-                                std::chrono::time_point_cast<std::chrono::milliseconds>(data)));
+      astarte_fmt::format("{0:%F}T{0:%T}Z",
+                          std::chrono::time_point_cast<std::chrono::milliseconds>(data)));
 #else   // (__cplusplus >= 202002L) && (__has_include(<format>))
   const std::time_t time = std::chrono::system_clock::to_time_t(data);
   const std::tm utc_tm = *std::gmtime(&time);
   std::stringstream stream;
   stream << std::put_time(&utc_tm, "%FT%T.000Z");
-  out = ASTARTE_NS_FORMAT::format_to(out, "{}", stream.str());
+  out = astarte_fmt::format_to(out, "{}", stream.str());
 #endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
-  out = ASTARTE_NS_FORMAT::format_to(out, "\"");
+  out = astarte_fmt::format_to(out, "\"");
 }
 
 /**
@@ -116,15 +116,15 @@ void format_timestamp(OutputIt& out, const std::chrono::system_clock::time_point
 template <typename OutputIt, typename T>
 void format_data(OutputIt& out, const T& data) {
   if constexpr (std::is_same_v<T, bool>) {
-    ASTARTE_NS_FORMAT::format_to(out, "{}", (data ? "true" : "false"));
+    astarte_fmt::format_to(out, "{}", (data ? "true" : "false"));
   } else if constexpr (std::is_same_v<T, std::string>) {
-    ASTARTE_NS_FORMAT::format_to(out, R"("{}")", data);
+    astarte_fmt::format_to(out, R"("{}")", data);
   } else if constexpr (std::is_same_v<T, std::vector<uint8_t>>) {
     format_base64(out, data);
   } else if constexpr (std::is_same_v<T, std::chrono::system_clock::time_point>) {
     format_timestamp(out, data);
   } else {  // default format case
-    ASTARTE_NS_FORMAT::format_to(out, "{}", data);
+    astarte_fmt::format_to(out, "{}", data);
   }
 }
 
@@ -137,27 +137,27 @@ void format_data(OutputIt& out, const T& data) {
  */
 template <typename OutputIt, typename T>
 void format_vector(OutputIt& out, const std::vector<T>& data) {
-  out = ASTARTE_NS_FORMAT::format_to(out, "[");
+  out = astarte_fmt::format_to(out, "[");
   for (size_t i = 0; i < data.size(); ++i) {
     format_data(out, data[i]);
     if (i != data.size() - 1) {
-      out = ASTARTE_NS_FORMAT::format_to(out, ", ");
+      out = astarte_fmt::format_to(out, ", ");
     }
   }
-  out = ASTARTE_NS_FORMAT::format_to(out, "]");
+  out = astarte_fmt::format_to(out, "]");
 }
 // NOLINTEND(concurrency-mt-unsafe)
 
 }  // namespace utils
 
-/// @cond Doxygen should skip checking ASTARTE_NS_FORMAT::formatter due to internal inconsistency
+/// @cond Doxygen should skip checking astarte_fmt::formatter due to internal inconsistency
 /// parsing
 
 /**
- * @brief ASTARTE_NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteData.
+ * @brief astarte_fmt::formatter specialization for AstarteDeviceSdk::AstarteData.
  */
 template <>
-struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteData> {
+struct astarte_fmt::formatter<AstarteDeviceSdk::AstarteData> {
   /**
    * @brief Parse the format string. Default implementation.
    * @param ctx The parse context.
@@ -179,17 +179,16 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteData> {
     auto out = ctx.out();
 
     if (std::holds_alternative<int32_t>(data.get_raw_data())) {
-      out = ASTARTE_NS_FORMAT::format_to(out, "{}", std::get<int32_t>(data.get_raw_data()));
+      out = astarte_fmt::format_to(out, "{}", std::get<int32_t>(data.get_raw_data()));
     } else if (std::holds_alternative<int64_t>(data.get_raw_data())) {
-      out = ASTARTE_NS_FORMAT::format_to(out, "{}", std::get<int64_t>(data.get_raw_data()));
+      out = astarte_fmt::format_to(out, "{}", std::get<int64_t>(data.get_raw_data()));
     } else if (std::holds_alternative<double>(data.get_raw_data())) {
-      out = ASTARTE_NS_FORMAT::format_to(out, "{}", std::get<double>(data.get_raw_data()));
+      out = astarte_fmt::format_to(out, "{}", std::get<double>(data.get_raw_data()));
     } else if (std::holds_alternative<bool>(data.get_raw_data())) {
       auto s = (std::get<bool>(data.get_raw_data()) ? "true" : "false");
-      out = ASTARTE_NS_FORMAT::format_to(out, "{}", s);
+      out = astarte_fmt::format_to(out, "{}", s);
     } else if (std::holds_alternative<std::string>(data.get_raw_data())) {
-      out =
-          ASTARTE_NS_FORMAT::format_to(out, R"("{}")", std::get<std::string>(data.get_raw_data()));
+      out = astarte_fmt::format_to(out, R"("{}")", std::get<std::string>(data.get_raw_data()));
     } else if (std::holds_alternative<std::vector<uint8_t>>(data.get_raw_data())) {
       utils::format_base64(out, std::get<std::vector<uint8_t>>(data.get_raw_data()));
     } else if (std::holds_alternative<std::chrono::system_clock::time_point>(data.get_raw_data())) {
@@ -218,15 +217,15 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteData> {
 };
 
 inline std::ostream& operator<<(std::ostream& out, const AstarteDeviceSdk::AstarteData data) {
-  out << ASTARTE_NS_FORMAT::format("{}", data);
+  out << astarte_fmt::format("{}", data);
   return out;
 }
 
 /**
- * @brief ASTARTE_NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteType.
+ * @brief astarte_fmt::formatter specialization for AstarteDeviceSdk::AstarteType.
  */
 template <>
-struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteType> {
+struct astarte_fmt::formatter<AstarteDeviceSdk::AstarteType> {
   /**
    * @brief Parse the format string. Default implementation.
    * @param ctx The parse context.
@@ -292,21 +291,21 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteType> {
         break;
     }
 
-    return ASTARTE_NS_FORMAT::format_to(ctx.out(), "{}", name);
+    return astarte_fmt::format_to(ctx.out(), "{}", name);
   }
 };
 
 inline std::ostream& operator<<(std::ostream& out, const AstarteDeviceSdk::AstarteType typ) {
-  out << ASTARTE_NS_FORMAT::format("{}", typ);
+  out << astarte_fmt::format("{}", typ);
   return out;
 }
 
 /**
- * @brief ASTARTE_NS_FORMAT::formatter specialization for
+ * @brief astarte_fmt::formatter specialization for
  * AstarteDeviceSdk::AstarteDatastreamIndividual.
  */
 template <>
-struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamIndividual> {
+struct astarte_fmt::formatter<AstarteDeviceSdk::AstarteDatastreamIndividual> {
   /**
    * @brief Parse the format string. Default implementation.
    * @param ctx The parse context.
@@ -325,21 +324,22 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamIndividua
    */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteDatastreamIndividual& data, FormatContext& ctx) const {
-    return ASTARTE_NS_FORMAT::format_to(ctx.out(), "{}", data.get_value());
+    return astarte_fmt::format_to(ctx.out(), "{}", data.get_value());
   }
 };
 
 inline std::ostream& operator<<(std::ostream& out,
                                 const AstarteDeviceSdk::AstarteDatastreamIndividual data) {
-  out << ASTARTE_NS_FORMAT::format("{}", data);
+  out << astarte_fmt::format("{}", data);
   return out;
 }
 
 /**
- * @brief ASTARTE_NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteDatastreamObject.
+ * @brief astarte_fmt::formatter specialization for
+ * AstarteDeviceSdk::AstarteDatastreamObject.
  */
 template <>
-struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamObject> {
+struct astarte_fmt::formatter<AstarteDeviceSdk::AstarteDatastreamObject> {
   /**
    * @brief Parse the format string. Default implementation.
    * @param ctx The parse context.
@@ -359,34 +359,34 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteDatastreamObject> {
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteDatastreamObject& data, FormatContext& ctx) const {
     auto out = ctx.out();
-    out = ASTARTE_NS_FORMAT::format_to(out, "{{");
+    out = astarte_fmt::format_to(out, "{{");
 
     bool first = true;
     for (const auto& pair : data.get_raw_data()) {
       if (!first) {
-        out = ASTARTE_NS_FORMAT::format_to(out, ", ");
+        out = astarte_fmt::format_to(out, ", ");
       }
-      out = ASTARTE_NS_FORMAT::format_to(out, R"("{}": {})", pair.first, pair.second);
+      out = astarte_fmt::format_to(out, R"("{}": {})", pair.first, pair.second);
       first = false;
     }
 
-    out = ASTARTE_NS_FORMAT::format_to(out, "}}");
+    out = astarte_fmt::format_to(out, "}}");
     return out;
   }
 };
 
 inline std::ostream& operator<<(std::ostream& out,
                                 const AstarteDeviceSdk::AstarteDatastreamObject data) {
-  out << ASTARTE_NS_FORMAT::format("{}", data);
+  out << astarte_fmt::format("{}", data);
   return out;
 }
 
 /**
- * @brief ASTARTE_NS_FORMAT::formatter specialization for
+ * @brief astarte_fmt::formatter specialization for
  * AstarteDeviceSdk::AstartePropertyIndividual.
  */
 template <>
-struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstartePropertyIndividual> {
+struct astarte_fmt::formatter<AstarteDeviceSdk::AstartePropertyIndividual> {
   /**
    * @brief Parse the format string. Default implementation.
    * @param ctx The parse context.
@@ -406,7 +406,7 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstartePropertyIndividual>
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstartePropertyIndividual& data, FormatContext& ctx) const {
     if (data.get_value().has_value()) {
-      return ASTARTE_NS_FORMAT::format_to(ctx.out(), "{}", data.get_value().value());
+      return astarte_fmt::format_to(ctx.out(), "{}", data.get_value().value());
     }
 
     return ctx.out();
@@ -415,15 +415,15 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstartePropertyIndividual>
 
 inline std::ostream& operator<<(std::ostream& out,
                                 const AstarteDeviceSdk::AstartePropertyIndividual data) {
-  out << ASTARTE_NS_FORMAT::format("{}", data);
+  out << astarte_fmt::format("{}", data);
   return out;
 }
 
 /**
- * @brief ASTARTE_NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteMessage.
+ * @brief astarte_fmt::formatter specialization for AstarteDeviceSdk::AstarteMessage.
  */
 template <>
-struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteMessage> {
+struct astarte_fmt::formatter<AstarteDeviceSdk::AstarteMessage> {
   /**
    * @brief Parse the format string. Default implementation.
    * @param ctx The parse context.
@@ -444,8 +444,8 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteMessage> {
   auto format(const AstarteDeviceSdk::AstarteMessage& msg, FormatContext& ctx) const {
     auto out = ctx.out();
 
-    out = ASTARTE_NS_FORMAT::format_to(out, "{{interface: {}, path: {}", msg.get_interface(),
-                                       msg.get_path());
+    out = astarte_fmt::format_to(out, "{{interface: {}, path: {}", msg.get_interface(),
+                                 msg.get_path());
 
     // check if the payload is an unset property, which is the only "empty" case
     bool is_unset_prop = false;
@@ -456,25 +456,25 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteMessage> {
     }
 
     if (!is_unset_prop) {
-      out = ASTARTE_NS_FORMAT::format_to(out, ", value: ");
-      std::visit([&out](const auto& arg) { out = ASTARTE_NS_FORMAT::format_to(out, "{}", arg); },
+      out = astarte_fmt::format_to(out, ", value: ");
+      std::visit([&out](const auto& arg) { out = astarte_fmt::format_to(out, "{}", arg); },
                  msg.get_raw_data());
     }
 
-    return ASTARTE_NS_FORMAT::format_to(out, "}}");
+    return astarte_fmt::format_to(out, "}}");
   }
 };
 
 inline std::ostream& operator<<(std::ostream& out, const AstarteDeviceSdk::AstarteMessage msg) {
-  out << ASTARTE_NS_FORMAT::format("{}", msg);
+  out << astarte_fmt::format("{}", msg);
   return out;
 }
 
 /**
- * @brief ASTARTE_NS_FORMAT::formatter specialization for AstarteDeviceSdk::AstarteStoredProperty.
+ * @brief astarte_fmt::formatter specialization for AstarteDeviceSdk::AstarteStoredProperty.
  */
 template <>
-struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteStoredProperty> {
+struct astarte_fmt::formatter<AstarteDeviceSdk::AstarteStoredProperty> {
   /**
    * @brief Parse the format string. Default implementation.
    * @param ctx The parse context.
@@ -493,7 +493,7 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteStoredProperty> {
    */
   template <typename FormatContext>
   auto format(const AstarteDeviceSdk::AstarteStoredProperty& prop, FormatContext& ctx) const {
-    return ASTARTE_NS_FORMAT::format_to(
+    return astarte_fmt::format_to(
         ctx.out(), "Interface: {} v{}, Path: {}, Ownership: {}, Value: {}",
         prop.get_interface_name(), prop.get_version_major(), prop.get_path(),
         (prop.get_ownership() == AstarteDeviceSdk::AstarteOwnership::kDevice ? "device" : "server"),
@@ -503,7 +503,7 @@ struct ASTARTE_NS_FORMAT::formatter<AstarteDeviceSdk::AstarteStoredProperty> {
 
 inline std::ostream& operator<<(std::ostream& out,
                                 const AstarteDeviceSdk::AstarteStoredProperty prop) {
-  out << ASTARTE_NS_FORMAT::format("{}", prop);
+  out << astarte_fmt::format("{}", prop);
   return out;
 }
 
