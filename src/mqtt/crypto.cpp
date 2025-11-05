@@ -42,8 +42,7 @@ PsaKey::~PsaKey() {
       spdlog::error("Exception in PsaKey destructor. Key ID {} may be leaked. Error: {}", key_id_,
                     e.what());
     } catch (...) {
-      spdlog::error("CRITICAL: Unknown exception in PsaKey destructor. Key ID {} may be leaked",
-                    key_id_);
+      spdlog::critical("Unknown exception in PsaKey destructor. Key ID {} may be leaked", key_id_);
     }
   }
 }
@@ -100,58 +99,51 @@ class MbedX509WriteCsr {
   ~MbedX509WriteCsr() { mbedtls_x509write_csr_free(&ctx_); }
   auto ctx() -> mbedtls_x509write_csr& { return ctx_; }
 
+  auto generate(MbedPk& key) -> std::string {
+    // configure the CSR
+    mbedtls_x509write_csr_set_key(&ctx_, &key.ctx());
+    mbedtls_x509write_csr_set_md_alg(&ctx_, MBEDTLS_MD_SHA256);
+    mbedtls_check(mbedtls_x509write_csr_set_subject_name(&ctx_, "CN=temporary"),
+                  "mbedtls_x509write_csr_set_subject_name");
+
+    // write the CSR to a PEM string
+    std::vector<unsigned char> buf(2048, 0);
+
+#if MBEDTLS_VERSION_MAJOR < 0x04
+    mbedtls_ctr_drbg_context ctr_drbg_ctx;
+    mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
+    mbedtls_entropy_context entropy_ctx;
+    mbedtls_entropy_init(&entropy_ctx);
+
+    // seed the RNG
+    std::string pers = "astarte_credentials_create_key";
+    mbedtls_check(
+        mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
+                              reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),
+        "mbedtls_ctr_drbg_seed");
+
+    mbedtls_check(mbedtls_x509write_csr_pem(&ctx_, buf.data(), buf.size(), mbedtls_ctr_drbg_random,
+                                            &ctr_drbg_ctx),
+                  "mbedtls_x509write_csr_pem");
+
+    mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
+    mbedtls_entropy_free(&entropy_ctx);
+#else
+    mbedtls_check(mbedtls_x509write_csr_pem(&ctx_, buf.data(), buf.size()),
+                  "mbedtls_x509write_csr_pem");
+#endif
+
+    return std::string(reinterpret_cast<const char*>(buf.data()));
+  }
+
  private:
   mbedtls_x509write_csr ctx_;
 };
 
-class MbedX509Crt {
- public:
-  MbedX509Crt() { mbedtls_x509_crt_init(&ctx_); }
-  ~MbedX509Crt() { mbedtls_x509_crt_free(&ctx_); }
-  auto ctx() -> mbedtls_x509_crt& { return ctx_; }
-
- private:
-  mbedtls_x509_crt ctx_;
-};
-
 auto Crypto::create_csr(const PsaKey& priv_key) -> std::string {
   auto key = MbedPk(priv_key);
-
-  // configure the CSR
-  MbedX509WriteCsr req;
-  mbedtls_x509write_csr_set_key(&req.ctx(), &key.ctx());
-  mbedtls_x509write_csr_set_md_alg(&req.ctx(), MBEDTLS_MD_SHA256);
-  mbedtls_check(mbedtls_x509write_csr_set_subject_name(&req.ctx(), "CN=temporary"),
-                "mbedtls_x509write_csr_set_subject_name");
-
-  // write the CSR to a PEM string
-  std::vector<unsigned char> buf(2048, 0);
-
-#if MBEDTLS_VERSION_MAJOR < 0x04
-  mbedtls_ctr_drbg_context ctr_drbg_ctx;
-  mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
-  mbedtls_entropy_context entropy_ctx;
-  mbedtls_entropy_init(&entropy_ctx);
-
-  // seed the RNG
-  std::string pers = "astarte_credentials_create_key";
-  mbedtls_check(
-      mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
-                            reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),
-      "mbedtls_ctr_drbg_seed");
-
-  mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx(), buf.data(), buf.size(),
-                                          mbedtls_ctr_drbg_random, &ctr_drbg_ctx),
-                "mbedtls_x509write_csr_pem");
-
-  mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
-  mbedtls_entropy_free(&entropy_ctx);
-#else
-  mbedtls_check(mbedtls_x509write_csr_pem(&req.ctx(), buf.data(), buf.size()),
-                "mbedtls_x509write_csr_pem");
-#endif
-
-  return std::string(reinterpret_cast<const char*>(buf.data()));
+  auto csr = MbedX509WriteCsr();
+  return csr.generate(key);
 }
 
 }  // namespace AstarteDeviceSdk
