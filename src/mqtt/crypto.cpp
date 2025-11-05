@@ -17,7 +17,6 @@
 #include "mbedtls/ctr_drbg.h"
 #endif
 #include "mbedtls/error.h"
-#include "mbedtls/oid.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
@@ -77,73 +76,61 @@ void PsaKey::generate() {
   mbedtls_check(psa_generate_key(&attributes, &key_id_), "psa_generate_key");
 }
 
-// Wrappers for Mbed TLS Resources and exploit RAII principle by ensuring that
-// mbedtls_*_free is always called automatically.
-class MbedPk {
- public:
-  explicit MbedPk(const PsaKey& psa_key) {
-    mbedtls_pk_init(&ctx_);
-    mbedtls_check(mbedtls_pk_copy_from_psa(psa_key.get(), &ctx_), "mbedtls_pk_copy_from_psa");
-  }
-  ~MbedPk() { mbedtls_pk_free(&ctx_); }
+MbedPk::MbedPk(const PsaKey& psa_key) {
+  mbedtls_pk_init(&ctx_);
+  mbedtls_check(mbedtls_pk_copy_from_psa(psa_key.get(), &ctx_), "mbedtls_pk_copy_from_psa");
+}
 
-  auto ctx() -> mbedtls_pk_context& { return ctx_; }
+MbedPk::~MbedPk() { mbedtls_pk_free(&ctx_); }
 
- private:
-  mbedtls_pk_context ctx_;
-};
+auto MbedPk::ctx() -> mbedtls_pk_context& { return ctx_; }
 
-class MbedX509WriteCsr {
- public:
-  MbedX509WriteCsr() { mbedtls_x509write_csr_init(&ctx_); }
-  ~MbedX509WriteCsr() { mbedtls_x509write_csr_free(&ctx_); }
-  auto ctx() -> mbedtls_x509write_csr& { return ctx_; }
+MbedX509WriteCsr::MbedX509WriteCsr() { mbedtls_x509write_csr_init(&ctx_); }
+MbedX509WriteCsr::~MbedX509WriteCsr() { mbedtls_x509write_csr_free(&ctx_); }
+auto MbedX509WriteCsr::ctx() -> mbedtls_x509write_csr& { return ctx_; }
 
-  auto generate(MbedPk& key) -> std::string {
-    // configure the CSR
-    mbedtls_x509write_csr_set_key(&ctx_, &key.ctx());
-    mbedtls_x509write_csr_set_md_alg(&ctx_, MBEDTLS_MD_SHA256);
-    mbedtls_check(mbedtls_x509write_csr_set_subject_name(&ctx_, "CN=temporary"),
-                  "mbedtls_x509write_csr_set_subject_name");
+auto MbedX509WriteCsr::generate(MbedPk& key) -> std::vector<unsigned char> {
+  // configure the CSR
+  mbedtls_x509write_csr_set_key(&ctx_, &key.ctx());
+  mbedtls_x509write_csr_set_md_alg(&ctx_, MBEDTLS_MD_SHA256);
+  mbedtls_check(mbedtls_x509write_csr_set_subject_name(&ctx_, "CN=temporary"),
+                "mbedtls_x509write_csr_set_subject_name");
 
-    // write the CSR to a PEM string
-    std::vector<unsigned char> buf(2048, 0);
+  // write the CSR to a PEM string
+  std::vector<unsigned char> buf(2048, 0);
 
 #if MBEDTLS_VERSION_MAJOR < 0x04
-    mbedtls_ctr_drbg_context ctr_drbg_ctx;
-    mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
-    mbedtls_entropy_context entropy_ctx;
-    mbedtls_entropy_init(&entropy_ctx);
+  mbedtls_ctr_drbg_context ctr_drbg_ctx;
+  mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
+  mbedtls_entropy_context entropy_ctx;
+  mbedtls_entropy_init(&entropy_ctx);
 
-    // seed the RNG
-    std::string pers = "astarte_credentials_create_key";
-    mbedtls_check(
-        mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
-                              reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),
-        "mbedtls_ctr_drbg_seed");
+  // seed the RNG
+  std::string pers = "astarte_credentials_create_key";
+  mbedtls_check(
+      mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
+                            reinterpret_cast<const unsigned char*>(pers.c_str()), pers.length()),
+      "mbedtls_ctr_drbg_seed");
 
-    mbedtls_check(mbedtls_x509write_csr_pem(&ctx_, buf.data(), buf.size(), mbedtls_ctr_drbg_random,
-                                            &ctr_drbg_ctx),
-                  "mbedtls_x509write_csr_pem");
+  mbedtls_check(mbedtls_x509write_csr_pem(&ctx_, buf.data(), buf.size(), mbedtls_ctr_drbg_random,
+                                          &ctr_drbg_ctx),
+                "mbedtls_x509write_csr_pem");
 
-    mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
-    mbedtls_entropy_free(&entropy_ctx);
+  mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
+  mbedtls_entropy_free(&entropy_ctx);
 #else
-    mbedtls_check(mbedtls_x509write_csr_pem(&ctx_, buf.data(), buf.size()),
-                  "mbedtls_x509write_csr_pem");
+  mbedtls_check(mbedtls_x509write_csr_pem(&ctx_, buf.data(), buf.size()),
+                "mbedtls_x509write_csr_pem");
 #endif
 
-    return std::string(reinterpret_cast<const char*>(buf.data()));
-  }
-
- private:
-  mbedtls_x509write_csr ctx_;
-};
+  return buf;
+}
 
 auto Crypto::create_csr(const PsaKey& priv_key) -> std::string {
   auto key = MbedPk(priv_key);
   auto csr = MbedX509WriteCsr();
-  return csr.generate(key);
+  auto buf = csr.generate(key);
+  return std::string(reinterpret_cast<const char*>(buf.data()));
 }
 
 }  // namespace AstarteDeviceSdk

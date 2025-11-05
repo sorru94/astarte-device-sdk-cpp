@@ -8,6 +8,8 @@
 #if !defined(ASTARTE_TRANSPORT_GRPC)
 #include "astarte_device_sdk/mqtt/crypto.hpp"
 
+using AstarteDeviceSdk::MbedPk;
+using AstarteDeviceSdk::MbedX509WriteCsr;
 using AstarteDeviceSdk::PsaKey;
 
 TEST(AstarteTestCrypto, ParseNullPsaKey) {
@@ -33,5 +35,23 @@ TEST(AstarteTestCrypto, ParsePsaKey) {
   EXPECT_EQ(key_bits, 256);
 
   psa_reset_key_attributes(&attr);
+}
+
+TEST(AstarteTestCrypto, ParseCsr) {
+  PsaKey psa_key = PsaKey();
+  psa_key.generate();
+
+  // generate a CSR
+  auto key = MbedPk(psa_key);
+  auto csr = MbedX509WriteCsr();
+  auto buf = csr.generate(key);
+
+  mbedtls_x509_csr csr_n;
+  mbedtls_x509_csr_init(&csr_n);
+  size_t pem_len = strlen(reinterpret_cast<const char*>(buf.data()));
+  auto ret = mbedtls_x509_csr_parse(&csr_n, buf.data(), pem_len + 1);
+  EXPECT_EQ(ret, 0);
+
+  mbedtls_x509_csr_free(&csr_n);
 }
 #endif
