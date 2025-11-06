@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 #if !defined(ASTARTE_TRANSPORT_GRPC)
-#include "astarte_device_sdk/mqtt/crypto.hpp"
+#include "mqtt/crypto.hpp"
 
 using AstarteDeviceSdk::MbedPk;
 using AstarteDeviceSdk::MbedX509WriteCsr;

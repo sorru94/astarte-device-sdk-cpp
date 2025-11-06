@@ -91,7 +91,6 @@ function(
         "include/astarte_device_sdk/mqtt/pairing.hpp"
         "include/astarte_device_sdk/mqtt/exceptions.hpp"
         "include/astarte_device_sdk/mqtt/config.hpp"
-        "include/astarte_device_sdk/mqtt/crypto.hpp"
     )
     list(
         APPEND
@@ -102,7 +101,12 @@ function(
         "src/mqtt/config.cpp"
         "src/mqtt/crypto.cpp"
     )
-    list(APPEND ${ASTARTE_MQTT_PRIVATE_HEADERS} "private/mqtt/device_mqtt_impl.hpp")
+    list(
+        APPEND
+        ${ASTARTE_MQTT_PRIVATE_HEADERS}
+        "private/mqtt/device_mqtt_impl.hpp"
+        "private/mqtt/crypto.hpp"
+    )
     set(${ASTARTE_MQTT_PUBLIC_HEADERS} ${${ASTARTE_MQTT_PUBLIC_HEADERS}} PARENT_SCOPE)
     set(${ASTARTE_MQTT_SOURCES} ${${ASTARTE_MQTT_SOURCES}} PARENT_SCOPE)
     set(${ASTARTE_MQTT_PRIVATE_HEADERS} ${${ASTARTE_MQTT_PRIVATE_HEADERS}} PARENT_SCOPE)

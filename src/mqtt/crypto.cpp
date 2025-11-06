@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "astarte_device_sdk/mqtt/crypto.hpp"
+#include "mqtt/crypto.hpp"
 
 #include <spdlog/spdlog.h>
 

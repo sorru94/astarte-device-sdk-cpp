@@ -14,7 +14,7 @@
 #include <string_view>
 
 #include "ada.h"
-#include "astarte_device_sdk/mqtt/crypto.hpp"
+#include "mqtt/crypto.hpp"
 
 using json = nlohmann::json;
 
