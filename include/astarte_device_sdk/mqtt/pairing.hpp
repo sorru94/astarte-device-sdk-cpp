@@ -39,6 +39,7 @@ class PairingApi {
   auto register_device(std::string_view pairing_token,
                        std::chrono::milliseconds timeout_ms = 0ms) const -> std::string;
 
+ private:
   /**
    * @brief Retrieve the URL of the Astarte MQTT broker.
    * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
@@ -47,16 +48,37 @@ class PairingApi {
    */
   auto get_broker_url(std::string_view credential_secret, int timeout_ms = 0) const -> std::string;
 
+  /**
+   * @brief Retrieve the Astarte device certificate.
+   * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
+   * @param timeout_ms A timeout value to perform the HTTP request.
+   * @return The device certificate.
+   */
+  auto get_device_cert(std::string_view credential_secret, int timeout_ms = 0) const -> std::string;
+
+  /**
+   * @brief Check if the Astarte device certificate is valid.
+   * @param certificate The Astarte device certificate.
+   * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
+   * @param timeout_ms A timeout value to perform the HTTP request.
+   * @return true if the cerficate is valid, false otherwise.
+   */
+  auto device_cert_valid(std::string_view certificate, std::string_view credential_secret,
+                         int timeout_ms = 0) const -> bool;
+
+  /**
+   * @brief Helper function to parse astarte base URL and create the pairing URL.
+   * @param astarte_base_url The Astarte base URL.
+   * @return The Astarte Pairing API broker URL.
+   */
+  static auto create_pairing_url(std::string_view astarte_base_url) -> ada::url_aggregator;
+
   /** @brief The Astarte realm name. */
   const std::string realm;
   /** @brief The Astarte device id. */
   const std::string device_id;
   /** @brief The Astarte pairing URL as a string. */
   const ada::url_aggregator pairing_url;
-
- private:
-  // static helper function used to parse astarte base URL and create the pairing URL.
-  static auto create_pairing_url(std::string_view astarte_base_url) -> ada::url_aggregator;
 };
 
 }  // namespace AstarteDeviceSdk

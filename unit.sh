@@ -95,6 +95,7 @@ cmake_options_array+=("-DCMAKE_CXX_STANDARD_REQUIRED=ON")
 cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
 cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
 cmake_options_array+=("-DASTARTE_PUBLIC_PROTO_DEP=ON")
+cmake_options_array+=("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
 
 if [[ "$transport" == "grpc" ]]; then
     cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
@@ -104,6 +105,8 @@ fi
 
 if [ "$system_transport" = true ] && [[ "$transport" == "grpc" ]]; then
     cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
+elif [ "$system_transport" = true ] && [[ "$transport" == "mqtt" ]]; then
+    cmake_options_array+=("-DASTARTE_USE_SYSTEM_MQTT=ON")
 fi
 
 echo "CMake options: ${cmake_options_array[*]}"

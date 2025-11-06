@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.23)
 project(unit)
 
 include(FetchContent)
@@ -17,7 +17,13 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(unit_test conversion_test.cpp data_test.cpp msg_test.cpp)
+add_executable(unit_test data_test.cpp msg_test.cpp)
+
+if(ASTARTE_TRANSPORT_GRPC)
+    target_sources(unit_test PRIVATE conversion_test.cpp)
+else()
+    target_sources(unit_test PRIVATE crypto_test.cpp)
+endif()
 
 # Add the Astarte sdk root directory
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR}/lib_build)
