@@ -4,7 +4,9 @@
 
 #include "astarte_device_sdk/errors.hpp"
 
+#include <cstdint>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <variant>
 

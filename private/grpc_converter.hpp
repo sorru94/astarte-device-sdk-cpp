@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "astarte_device_sdk/data.hpp"
+#include "astarte_device_sdk/errors.hpp"
 #include "astarte_device_sdk/individual.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
@@ -66,13 +67,18 @@ class GrpcConverterTo {
 
 class GrpcConverterFrom {
  public:
-  auto operator()(const gRPCAstarteData& value) -> AstarteData;
-  auto operator()(const gRPCAstarteDatastreamIndividual& value) -> AstarteDatastreamIndividual;
-  auto operator()(const gRPCAstarteDatastreamObject& value) -> AstarteDatastreamObject;
-  auto operator()(const gRPCAstartePropertyIndividual& value) -> AstartePropertyIndividual;
-  auto operator()(const gRPCAstarteMessage& value) -> AstarteMessage;
+  auto operator()(const gRPCAstarteData& value) -> astarte_tl::expected<AstarteData, AstarteError>;
+  auto operator()(const gRPCAstarteDatastreamIndividual& value)
+      -> astarte_tl::expected<AstarteDatastreamIndividual, AstarteError>;
+  auto operator()(const gRPCAstarteDatastreamObject& value)
+      -> astarte_tl::expected<AstarteDatastreamObject, AstarteError>;
+  auto operator()(const gRPCAstartePropertyIndividual& value)
+      -> astarte_tl::expected<AstartePropertyIndividual, AstarteError>;
+  auto operator()(const gRPCAstarteMessage& value)
+      -> astarte_tl::expected<AstarteMessage, AstarteError>;
   auto operator()(const gRPCOwnership& value) -> AstarteOwnership;
-  auto operator()(const gRPCStoredProperties& value) -> std::list<AstarteStoredProperty>;
+  auto operator()(const gRPCStoredProperties& value)
+      -> astarte_tl::expected<std::list<AstarteStoredProperty>, AstarteError>;
 };
 
 }  // namespace AstarteDeviceSdk

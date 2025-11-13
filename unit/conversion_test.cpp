@@ -21,6 +21,6 @@ TEST(AstarteTestConversion, DataToGRPC) {
   EXPECT_EQ(grpc_individual->astarte_data_case(), gRPCAstarteData::kInteger);
   EXPECT_EQ(grpc_individual->integer(), value);
   GrpcConverterFrom converter;
-  AstarteData original = converter(*grpc_individual);
+  AstarteData original = converter(*grpc_individual).value();
   EXPECT_EQ(original.into<int32_t>(), value);
 }
