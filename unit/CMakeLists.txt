@@ -21,6 +21,7 @@ add_executable(
     unit_test
     conversion_test.cpp
     data_test.cpp
+    errors_test.cpp
     exponential_backoff_test.cpp
     msg_test.cpp
 )

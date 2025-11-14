@@ -32,6 +32,21 @@ check_cxx_source_compiles(
   "
     HAS_STD_FORMAT
 )
+check_cxx_source_compiles(
+    "
+  #include <expected>
+  #include <string>
+  int main() {
+    std::expected<int, std::string> success(42);
+    return 0;
+  }
+  "
+    HAS_STD_EXPECTED
+)
+
+if(NOT HAS_STD_EXPECTED)
+    option(ASTARTE_USE_SYSTEM_TL_EXPECTED "Use system installed tl-expected" OFF)
+endif()
 
 if(HAS_STD_FORMAT)
     # C++20 with <format> available to compiler requires to enable the following spdlog feature
@@ -41,6 +56,9 @@ endif()
 message(STATUS "--------------------------------------------------")
 message(STATUS "Astarte SDK configuration:")
 message(STATUS "  ASTARTE_USE_SYSTEM_SPDLOG:       ${ASTARTE_USE_SYSTEM_SPDLOG}")
+if(NOT HAS_STD_EXPECTED)
+    message(STATUS "  ASTARTE_USE_SYSTEM_TL_EXPECTED:  ${ASTARTE_USE_SYSTEM_TL_EXPECTED}")
+endif()
 message(STATUS "  ASTARTE_PUBLIC_SPDLOG_DEP:       ${ASTARTE_PUBLIC_SPDLOG_DEP}")
 message(STATUS "  ASTARTE_PUBLIC_PROTO_DEP:        ${ASTARTE_PUBLIC_PROTO_DEP}")
 message(STATUS "  ASTARTE_MESSAGE_HUB_PROTO_DIR:   ${ASTARTE_MESSAGE_HUB_PROTO_DIR}")
@@ -60,6 +78,22 @@ if(NOT ASTARTE_USE_SYSTEM_SPDLOG)
     FetchContent_MakeAvailable(spdlog)
 else()
     find_package(spdlog REQUIRED)
+endif()
+
+if(NOT HAS_STD_EXPECTED)
+    message(STATUS "Standard expected not found. Using a custom library...")
+    if(NOT ASTARTE_USE_SYSTEM_TL_EXPECTED)
+        set(TL_EXPECTED_GITHUB_URL https://github.com/TartanLlama/expected.git)
+        set(TL_EXPECTED_GIT_TAG v1.2.0)
+        FetchContent_Declare(
+            tl-expected
+            GIT_REPOSITORY ${TL_EXPECTED_GITHUB_URL}
+            GIT_TAG ${TL_EXPECTED_GIT_TAG}
+        )
+        FetchContent_MakeAvailable(tl-expected)
+    else()
+        find_package(tl-expected REQUIRED)
+    endif()
 endif()
 
 # Astarte message hub protos
@@ -83,7 +117,7 @@ set(_ASTARTE_PUBLIC_HEADERS
     "include/astarte_device_sdk/data.hpp"
     "include/astarte_device_sdk/device_grpc.hpp"
     "include/astarte_device_sdk/device.hpp"
-    "include/astarte_device_sdk/exceptions.hpp"
+    "include/astarte_device_sdk/errors.hpp"
     "include/astarte_device_sdk/formatter.hpp"
     "include/astarte_device_sdk/individual.hpp"
     "include/astarte_device_sdk/msg.hpp"
@@ -97,7 +131,7 @@ set(_ASTARTE_SOURCES
     "src/data.cpp"
     "src/device_grpc_impl.cpp"
     "src/device_grpc.cpp"
-    "src/exceptions.cpp"
+    "src/errors.cpp"
     "src/grpc_converter.cpp"
     "src/grpc_interceptors.cpp"
     "src/individual.cpp"
@@ -141,6 +175,10 @@ if(ASTARTE_PUBLIC_PROTO_DEP)
     target_link_libraries(astarte_device_sdk PUBLIC astarte_msghub_proto)
 else()
     target_link_libraries(astarte_device_sdk PRIVATE astarte_msghub_proto)
+endif()
+if(NOT HAS_STD_EXPECTED)
+    target_link_libraries(astarte_device_sdk PUBLIC tl::expected)
+    target_compile_definitions(astarte_device_sdk PUBLIC ASTARTE_USE_TL_EXPECTED)
 endif()
 
 # Set target properties

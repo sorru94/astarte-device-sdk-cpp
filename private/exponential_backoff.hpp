@@ -11,14 +11,14 @@
 #include <cstdint>
 #include <random>
 
-#include "astarte_device_sdk/exceptions.hpp"
+#include "astarte_device_sdk/errors.hpp"
 
 namespace AstarteDeviceSdk {
 
 class ExponentialBackoff {
  public:
   /**
-   * @brief Construct an ExponentialBackoff instance.
+   * @brief Create an ExponentialBackoff instance.
    *
    * @details The exponential backoff will will compute an exponential delay using
    * 2 as the base for the power operation and @p mul_coeff as the multiplier coefficient.
@@ -32,16 +32,19 @@ class ExponentialBackoff {
    * @param mul_coeff Multiplier coefficient used in the exponential delay calculation.
    * @param cutoff_coeff The cut-off coefficient, an upper bound for the exponential curve.
    */
-  ExponentialBackoff(std::chrono::milliseconds mul_coeff, std::chrono::milliseconds cutoff_coeff)
-      : mul_coeff_(mul_coeff), cutoff_coeff_(cutoff_coeff) {
+  static auto create(std::chrono::milliseconds mul_coeff, std::chrono::milliseconds cutoff_coeff)
+      -> astarte_tl::expected<ExponentialBackoff, AstarteError> {
     if ((mul_coeff <= std::chrono::milliseconds::zero()) ||
         (cutoff_coeff <= std::chrono::milliseconds::zero())) {
-      throw AstarteInvalidInputException("Received zero or negative coefficients.");
+      return astarte_tl::unexpected(AstarteInvalidInputError{
+          "ExponentialBackoff create() received zero or negative coefficients"});
     }
     if (cutoff_coeff < mul_coeff) {
-      throw AstarteInvalidInputException(
-          "The multiplier coefficient is larger than the cuttoff coefficient");
+      return astarte_tl::unexpected(
+          AstarteInvalidInputError{"ExponentialBackoff create() received a multiplier coefficient "
+                                   "larger than the cuttoff coefficient"});
     }
+    return ExponentialBackoff(mul_coeff, cutoff_coeff);
   }
 
   /**
@@ -93,10 +96,17 @@ class ExponentialBackoff {
  private:
   using ChronoMillisRep = std::chrono::milliseconds::rep;
 
+  /**
+   * @brief Construct an ExponentialBackoff instance.
+   * @param mul_coeff Multiplier coefficient used in the exponential delay calculation.
+   * @param cutoff_coeff The cut-off coefficient, an upper bound for the exponential curve.
+   */
+  ExponentialBackoff(std::chrono::milliseconds mul_coeff, std::chrono::milliseconds cutoff_coeff)
+      : mul_coeff_(mul_coeff), cutoff_coeff_(cutoff_coeff) {}
+
   std::chrono::milliseconds mul_coeff_;
   std::chrono::milliseconds cutoff_coeff_;
-  std::random_device rd_;
-  std::mt19937 gen_{rd_()};
+  std::mt19937 gen_{std::random_device{}()};
   ChronoMillisRep prev_delay_{0};
 };
 

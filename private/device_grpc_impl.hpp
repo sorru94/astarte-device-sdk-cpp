@@ -24,6 +24,7 @@
 
 #include "astarte_device_sdk/data.hpp"
 #include "astarte_device_sdk/device_grpc.hpp"
+#include "astarte_device_sdk/errors.hpp"
 #include "astarte_device_sdk/msg.hpp"
 #include "astarte_device_sdk/object.hpp"
 #include "astarte_device_sdk/ownership.hpp"
@@ -60,23 +61,25 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @details The file content is read and stored internally for use during the connection phase.
    * @param json_file The filesystem path to the .json interface file.
    */
-  void add_interface_from_file(const std::filesystem::path& json_file);
+  auto add_interface_from_file(const std::filesystem::path& json_file)
+      -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Parse an interface definition from a JSON string and adds it to the device.
    * @param json The interface to add.
    */
-  void add_interface_from_str(std::string_view json);
+  auto add_interface_from_str(std::string_view json) -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Remove an installed interface.
    * @param interface_name The interface name.
    */
-  void remove_interface(const std::string& interface_name);
+  auto remove_interface(const std::string& interface_name)
+      -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Connect the device to Astarte.
    * @details This is an asynchronous funciton. It will start a management thread that will
    * manage the device connectivity.
    */
-  void connect();
+  auto connect() -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Check if the device is connected.
    * @return True if the device is connected to the message hub, false otherwise.
@@ -86,7 +89,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @brief Disconnect from the Astarte message hub.
    * @details Gracefully terminates the connection by sending a Detach message.
    */
-  void disconnect();
+  auto disconnect() -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Send an individual datastream value to an interface.
    * @param interface_name The name of the interface to send data to.
@@ -94,9 +97,10 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @param data The data point to send.
    * @param timestamp An optional timestamp for the data point.
    */
-  void send_individual(std::string_view interface_name, std::string_view path,
+  auto send_individual(std::string_view interface_name, std::string_view path,
                        const AstarteData& data,
-                       const std::chrono::system_clock::time_point* timestamp);
+                       const std::chrono::system_clock::time_point* timestamp)
+      -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Send a datastream object to an interface.
    * @param interface_name The name of the interface to send data to.
@@ -104,24 +108,26 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @param object The key-value map representing the object to send.
    * @param timestamp An optional timestamp for the data.
    */
-  void send_object(std::string_view interface_name, std::string_view path,
+  auto send_object(std::string_view interface_name, std::string_view path,
                    const AstarteDatastreamObject& object,
-                   const std::chrono::system_clock::time_point* timestamp);
+                   const std::chrono::system_clock::time_point* timestamp)
+      -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Set a device property on an interface.
    * @param interface_name The name of the interface where the property is defined.
    * @param path The path of the property to set.
    * @param data The value to set for the property.
    */
-  void set_property(std::string_view interface_name, std::string_view path,
-                    const AstarteData& data);
+  auto set_property(std::string_view interface_name, std::string_view path, const AstarteData& data)
+      -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Unset a device property on an interface.
    * @details This sends a message to the server to clear the value of a specific property.
    * @param interface_name The name of the interface where the property is defined.
    * @param path The path of the property to unset.
    */
-  void unset_property(std::string_view interface_name, std::string_view path);
+  auto unset_property(std::string_view interface_name, std::string_view path)
+      -> astarte_tl::expected<void, AstarteError>;
   /**
    * @brief Poll for a new message received from the message hub.
    * @details This method checks an internal queue for parsed messages from the server.
@@ -136,13 +142,14 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @return A list of stored properties, as returned by the message hub.
    */
   auto get_all_properties(const std::optional<AstarteOwnership>& ownership)
-      -> std::list<AstarteStoredProperty>;
+      -> astarte_tl::expected<std::list<AstarteStoredProperty>, AstarteError>;
   /**
    * @brief Get stored propertied matching the interface.
    * @param interface_name The name of the interface for the property.
    * @return A list of stored properties, as returned by the message hub.
    */
-  auto get_properties(std::string_view interface_name) -> std::list<AstarteStoredProperty>;
+  auto get_properties(std::string_view interface_name)
+      -> astarte_tl::expected<std::list<AstarteStoredProperty>, AstarteError>;
   /**
    * @brief Get a single stored property matching the interface name and path.
    * @param interface_name The name of the interface for the property.
@@ -150,7 +157,7 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
    * @return The stored property, as returned by the message hub.
    */
   auto get_property(std::string_view interface_name, std::string_view path)
-      -> AstartePropertyIndividual;
+      -> astarte_tl::expected<AstartePropertyIndividual, AstarteError>;
 
  private:
   // Helper struct to hold the results of the Attach RPC call
@@ -159,13 +166,14 @@ struct AstarteDeviceGRPC::AstarteDeviceGRPCImpl {
     std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader;
   };
   void setup_grpc_channel();
-  auto perform_attach() -> std::optional<AttachResult>;
-  void connection_attempt(const std::stop_token& token);
-  void handle_events(const std::stop_token& token, std::unique_ptr<grpc::ClientContext> context,
-                     std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader);
+  auto perform_attach() -> astarte_tl::expected<AttachResult, AstarteError>;
+  auto connection_attempt(const std::stop_token& token) -> astarte_tl::expected<void, AstarteError>;
+  auto handle_events(const std::stop_token& token, std::unique_ptr<grpc::ClientContext> context,
+                     std::unique_ptr<grpc::ClientReader<gRPCMessageHubEvent>> reader)
+      -> astarte_tl::expected<void, AstarteError>;
   static auto parse_message_hub_event(const gRPCMessageHubEvent& event)
-      -> std::optional<AstarteMessage>;
-  void connection_loop(const std::stop_token& token);
+      -> astarte_tl::expected<AstarteMessage, AstarteError>;
+  auto connection_loop(const std::stop_token& token) -> astarte_tl::expected<void, AstarteError>;
 
   std::string server_addr_;
   std::string node_uuid_;

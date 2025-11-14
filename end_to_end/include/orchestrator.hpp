@@ -50,7 +50,10 @@ class TestOrchestrator {
       std::shared_ptr<AstarteDeviceGRPC> device =
           std::make_shared<AstarteDeviceGRPC>(grpc_config_.server_addr, grpc_config_.node_id);
       for (const std::filesystem::path& interface_path : grpc_config_.interfaces) {
-        device->add_interface_from_file(interface_path);
+        auto res = device->add_interface_from_file(interface_path);
+        if (!res) {
+          throw EndToEndAstarteDeviceException(astarte_fmt::format("{}", res.error()));
+        }
       }
       test_case.attach_device(device);
       test_case.configure_curl(curl_config_.appengine_url, curl_config_.appengine_token,
