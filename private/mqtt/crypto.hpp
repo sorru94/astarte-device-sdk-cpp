@@ -88,6 +88,25 @@ class MbedPk {
    * @brief Destroys the MbedPk, freeing the mbedtls_pk_context.
    */
   ~MbedPk();
+  /**
+   * @brief MbedPk is not copy-constructible.
+   */
+  MbedPk(const MbedPk&) = delete;
+  /**
+   * @brief MbedPk is not copy-assignable.
+   */
+  MbedPk& operator=(const MbedPk&) = delete;
+  /**
+   * @brief Move-constructs a MbedPk.
+   * @param other The MbedPk to move from.
+   */
+  MbedPk(MbedPk&& other) noexcept;
+  /**
+   * @brief Move-assigns a MbedPk.
+   * @param other The MbedPk to move from.
+   * @return A reference to this object.
+   */
+ auto operator=(MbedPk&& other) noexcept -> MbedPk&;
 
   /**
    * @brief Gets a mutable reference to the underlying mbedtls_pk_context.
@@ -115,6 +134,22 @@ class MbedX509WriteCsr {
    * @brief Destroys the MbedX509WriteCsr, freeing the mbedtls_x509write_csr context.
    */
   ~MbedX509WriteCsr();
+  /**
+   * @brief MbedX509WriteCsr is not copy-constructible.
+   */
+  MbedX509WriteCsr(const MbedX509WriteCsr&) = delete;
+  /**
+   * @brief MbedX509WriteCsr is not copy-assignable.
+   */
+  MbedX509WriteCsr& operator=(const MbedX509WriteCsr&) = delete;
+  /**
+   * @brief MbedX509WriteCsr is not move-constructible.
+   */
+  MbedX509WriteCsr(MbedX509WriteCsr&& other) = delete;
+  /**
+   * @brief MbedX509WriteCsr is not move-assignable.
+   */
+  auto operator=(MbedPk&& other) -> MbedPk& = delete;
   /**
    * @brief Gets a mutable reference to the underlying mbedtls_x509write_csr context.
    * @return A reference to the managed context.
