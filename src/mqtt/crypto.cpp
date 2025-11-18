@@ -83,6 +83,17 @@ MbedPk::MbedPk(const PsaKey& psa_key) {
 
 MbedPk::~MbedPk() { mbedtls_pk_free(&ctx_); }
 
+MbedPk::MbedPk(MbedPk&& other) noexcept : ctx_(other.ctx_) { mbedtls_pk_init(&other.ctx_); }
+
+auto MbedPk::operator=(MbedPk&& other) noexcept -> MbedPk& {
+  if (this != &other) {
+    mbedtls_pk_free(&ctx_);
+    ctx_ = other.ctx_;
+    mbedtls_pk_init(&other.ctx_);
+  }
+  return *this;
+}
+
 auto MbedPk::ctx() -> mbedtls_pk_context& { return ctx_; }
 
 MbedX509WriteCsr::MbedX509WriteCsr() { mbedtls_x509write_csr_init(&ctx_); }
