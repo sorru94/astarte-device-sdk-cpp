@@ -10,8 +10,6 @@ transport=grpc
 system_transport=false
 jobs=$(nproc --all)
 project_root=$(pwd) # Assuming this script is always run from the root of this project
-sample_src_dir="samples/grpc/native"
-build_dir="${sample_src_dir}/build"
 venv_dir=".venv"
 clang_tidy_package_name="clang-tidy"
 clang_tidy_package_version="19.1.0"
@@ -103,6 +101,13 @@ fi
 
 # --- Build Logic ---
 
+if [[ "$transport" == "grpc" ]]; then
+    sample_src_dir="samples/grpc/native"
+else
+	sample_src_dir="samples/mqtt/native"
+fi
+build_dir="${sample_src_dir}/build"
+
 # Clean build if --fresh is set
 if [ "$fresh_mode" = true ]; then
     echo "Fresh mode enabled. Removing $build_dir..."
@@ -124,8 +129,18 @@ cmake_options_array+=("-DCMAKE_POLICY_VERSION_MINIMUM=3.15")
 cmake_options_array+=("-DASTARTE_PUBLIC_SPDLOG_DEP=ON")
 cmake_options_array+=("-DSAMPLE_USE_SYSTEM_ASTARTE_LIB=OFF")
 cmake_options_array+=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+cmake_options_array+=("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
+
+if [[ "$transport" == "grpc" ]]; then
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=ON")
+else
+    cmake_options_array+=("-DASTARTE_TRANSPORT_GRPC=OFF")
+fi
+
 if [[ "$transport" == "grpc" && "$system_transport" == true ]]; then
     cmake_options_array+=("-DASTARTE_USE_SYSTEM_GRPC=ON")
+elif [[ "$transport" == "mqtt" && "$system_transport" == true ]]; then
+    cmake_options_array+=("-DASTARTE_USE_SYSTEM_MQTT=ON")
 fi
 
 if ! cmake "${cmake_options_array[@]}" "$project_root/$sample_src_dir"; then
