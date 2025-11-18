@@ -71,6 +71,8 @@ if [ "$fresh_mode" = true ]; then
     rm -rf "$build_dir"
     rm -f "$cmake_user_presets"
     conan remove astarte-device-sdk -c
+    echo "Cleaning Conan build and source cache to free space..."
+    conan cache clean "*" --build --source --download
 fi
 
 # Detect the default conan profile
@@ -90,6 +92,11 @@ if ! conan create . "${conan_options_array[@]}"; then
     error_exit "Conan package creation failed for the library."
 fi
 
+echo "Cleaning intermediate build artifacts..."
+if ! conan cache clean "*" --build --source --download; then
+    error_exit "Conan cache cleaning failed for the end to end tests."
+fi
+
 # --- Run conan conan on the sample ---
 echo "Running Conan for the end to end tests..."
 
@@ -99,6 +106,11 @@ cd "${end_to_end_src_dir}" || error_exit "Failed to navigate to $end_to_end_src_
 # Build the sample
 if ! conan build . --output-folder=build "${conan_options_array[@]}"; then
     error_exit "Conan build failed for the end to end tests."
+fi
+
+# Clean the Conan cache
+if ! conan cache clean "*" --build --source; then
+    error_exit "Conan cache cleaning failed for the end to end tests."
 fi
 
 echo "Build complete the end to end tests. Executable should be in: $build_dir/"
