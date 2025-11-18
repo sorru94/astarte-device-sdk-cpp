@@ -274,61 +274,54 @@ class TestActionCheckDeviceStatus : public TestAction {
 class TestActionTransmitMQTTData : public TestAction {
  public:
   static std::shared_ptr<TestActionTransmitMQTTData> Create(const AstarteMessage& message,
-                                                            bool fails = false) {
+                                                            bool should_fail = false) {
     return std::shared_ptr<TestActionTransmitMQTTData>(
-        new TestActionTransmitMQTTData(message, fails));
+        new TestActionTransmitMQTTData(message, should_fail));
   }
 
   static std::shared_ptr<TestActionTransmitMQTTData> Create(
       const AstarteMessage& message, const std::chrono::system_clock::time_point timestamp,
-      bool fails = false) {
+      bool should_fail = false) {
     return std::shared_ptr<TestActionTransmitMQTTData>(
-        new TestActionTransmitMQTTData(message, timestamp, fails));
+        new TestActionTransmitMQTTData(message, timestamp, should_fail));
   }
 
   void execute_unchecked(const std::string& case_name) const override {
     spdlog::info("[{}] Transmitting MQTT data...", case_name);
-    try {
-      if (message_.is_datastream()) {
-        if (message_.is_individual()) {
-          const auto& data(message_.into<AstarteDatastreamIndividual>());
-          device_->send_individual(message_.get_interface(), message_.get_path(), data.get_value(),
-                                   timestamp_.get());
-        } else {
-          const auto& data(message_.into<AstarteDatastreamObject>());
-          device_->send_object(message_.get_interface(), message_.get_path(), data,
-                               timestamp_.get());
-        }
-      } else {  // handle properties
-        const auto& data(message_.into<AstartePropertyIndividual>());
-
-        if (data.get_value().has_value()) {
-          device_->set_property(message_.get_interface(), message_.get_path(),
-                                data.get_value().value());
-        } else {  // Unsetting property
-          device_->unset_property(message_.get_interface(), message_.get_path());
-        }
+    if (message_.is_datastream()) {
+      if (message_.is_individual()) {
+        const auto& data(message_.into<AstarteDatastreamIndividual>());
+        device_->send_individual(message_.get_interface(), message_.get_path(), data.get_value(),
+                                 timestamp_.get());
+      } else {
+        const auto& data(message_.into<AstarteDatastreamObject>());
+        device_->send_object(message_.get_interface(), message_.get_path(), data, timestamp_.get());
       }
-    } catch (const AstarteException& e) {
-      if (!fails_) {
-        throw e;
+    } else {  // handle properties
+      const auto& data(message_.into<AstartePropertyIndividual>());
+
+      if (data.get_value().has_value()) {
+        device_->set_property(message_.get_interface(), message_.get_path(),
+                              data.get_value().value());
+      } else {  // Unsetting property
+        device_->unset_property(message_.get_interface(), message_.get_path());
       }
     }
   }
 
  private:
-  TestActionTransmitMQTTData(const AstarteMessage& message, bool fails)
-      : message_(message), timestamp_(nullptr), fails_(fails) {}
+  TestActionTransmitMQTTData(const AstarteMessage& message, bool should_fail)
+      : TestAction(should_fail), message_(message), timestamp_(nullptr) {}
 
   TestActionTransmitMQTTData(const AstarteMessage& message,
-                             const std::chrono::system_clock::time_point timestamp, bool fails)
-      : message_(message),
-        timestamp_(std::make_unique<std::chrono::system_clock::time_point>(timestamp)),
-        fails_(fails) {}
+                             const std::chrono::system_clock::time_point timestamp,
+                             bool should_fail)
+      : TestAction(should_fail),
+        message_(message),
+        timestamp_(std::make_unique<std::chrono::system_clock::time_point>(timestamp)) {}
 
   AstarteMessage message_;
   std::unique_ptr<std::chrono::system_clock::time_point> timestamp_;
-  bool fails_;
 };
 
 class TestActionReadReceivedMQTTData : public TestAction {
