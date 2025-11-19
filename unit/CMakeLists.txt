@@ -17,7 +17,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(unit_test data_test.cpp msg_test.cpp)
+add_executable(unit_test data_test.cpp msg_test.cpp errors_test.cpp exponential_backoff_test.cpp)
 
 if(ASTARTE_TRANSPORT_GRPC)
     target_sources(unit_test PRIVATE conversion_test.cpp)

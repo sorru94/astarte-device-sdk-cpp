@@ -87,25 +87,26 @@ function(
     list(
         APPEND
         ${ASTARTE_MQTT_PUBLIC_HEADERS}
-        "include/astarte_device_sdk/mqtt/device_mqtt.hpp"
-        "include/astarte_device_sdk/mqtt/pairing.hpp"
-        "include/astarte_device_sdk/mqtt/exceptions.hpp"
         "include/astarte_device_sdk/mqtt/config.hpp"
+        "include/astarte_device_sdk/mqtt/device_mqtt.hpp"
+        "include/astarte_device_sdk/mqtt/errors.hpp"
+        "include/astarte_device_sdk/mqtt/pairing.hpp"
     )
     list(
         APPEND
         ${ASTARTE_MQTT_SOURCES}
-        "src/mqtt/device_mqtt.cpp"
-        "src/mqtt/device_mqtt_impl.cpp"
-        "src/mqtt/pairing.cpp"
         "src/mqtt/config.cpp"
         "src/mqtt/crypto.cpp"
+        "src/mqtt/device_mqtt_impl.cpp"
+        "src/mqtt/device_mqtt.cpp"
+        "src/mqtt/errors.cpp"
+        "src/mqtt/pairing.cpp"
     )
     list(
         APPEND
         ${ASTARTE_MQTT_PRIVATE_HEADERS}
-        "private/mqtt/device_mqtt_impl.hpp"
         "private/mqtt/crypto.hpp"
+        "private/mqtt/device_mqtt_impl.hpp"
     )
     set(${ASTARTE_MQTT_PUBLIC_HEADERS} ${${ASTARTE_MQTT_PUBLIC_HEADERS}} PARENT_SCOPE)
     set(${ASTARTE_MQTT_SOURCES} ${${ASTARTE_MQTT_SOURCES}} PARENT_SCOPE)

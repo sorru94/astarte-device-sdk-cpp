@@ -19,6 +19,8 @@
 #include "mbedtls/x509_csr.h"
 #include "psa/crypto.h"
 
+#include "astarte_device_sdk/mqtt/errors.hpp"
+
 namespace AstarteDeviceSdk {
 
 /**
@@ -29,7 +31,7 @@ class PsaKey {
   /**
    @brief Constructs an empty PsaKey, holding no key.
    */
-  PsaKey();
+  static auto create() -> astarte_tl::expected<PsaKey, AstarteError>;
   /**
    * @brief Destroys the PsaKey, releasing the managed PSA key (if any).
    */
@@ -48,12 +50,9 @@ class PsaKey {
    */
   PsaKey(PsaKey&& other) noexcept;
   /**
-   * @brief Move-assigns a PsaKey.
-   * @param other The PsaKey to move from.
-   * @return A reference to this object.
-   * @throws CryptoException if destroying the *current* key fails.
+   * @brief PsaKey is not move-assignable.
    */
-  auto operator=(PsaKey&& other) -> PsaKey&;
+  PsaKey& operator=(PsaKey&&) = delete;
   /**
    * @brief Get a reference to the underlying key ID
    * @return The managed mbedtls_svc_key_id_t. Returns PSA_KEY_ID_NULL if this object is empty.
@@ -62,112 +61,19 @@ class PsaKey {
 
   /**
    * @brief Creates a new ECDSA (secp256r1) private key.
-   * @throws CryptoException on failure.
+   * @return An error on failure.
    */
-  void generate();
+  auto generate() -> astarte_tl::expected<void, AstarteError>;
 
  private:
+  /**
+   @brief Constructs an empty PsaKey, holding no key.
+   */
+  PsaKey();
   /**
    * @brief The managed PSA key identifier.
    */
   mbedtls_svc_key_id_t key_id_;
-};
-
-/**
- * @brief A C++ RAII wrapper for an mbedtls_pk_context.
- */
-class MbedPk {
- public:
-  /**
-   * @brief Constructs an MbedPk wrapper from a PsaKey.
-   * @param psa_key The PsaKey containing the key to be wrapped.
-   * @throws CryptoException if mbedtls_pk_setup_from_psa fails.
-   */
-  explicit MbedPk(const PsaKey& psa_key);
-  /**
-   * @brief Destroys the MbedPk, freeing the mbedtls_pk_context.
-   */
-  ~MbedPk();
-  /**
-   * @brief MbedPk is not copy-constructible.
-   */
-  MbedPk(const MbedPk&) = delete;
-  /**
-   * @brief MbedPk is not copy-assignable.
-   */
-  MbedPk& operator=(const MbedPk&) = delete;
-  /**
-   * @brief Move-constructs a MbedPk.
-   * @param other The MbedPk to move from.
-   */
-  MbedPk(MbedPk&& other) noexcept;
-  /**
-   * @brief Move-assigns a MbedPk.
-   * @param other The MbedPk to move from.
-   * @return A reference to this object.
-   */
- auto operator=(MbedPk&& other) noexcept -> MbedPk&;
-
-  /**
-   * @brief Gets a mutable reference to the underlying mbedtls_pk_context.
-   * @return A reference to the managed context.
-   */
-  auto ctx() -> mbedtls_pk_context&;
-
- private:
-  /**
-   * @brief The managed mbedtls PK context.
-   */
-  mbedtls_pk_context ctx_;
-};
-
-/**
- * @brief A C++ RAII wrapper for an mbedtls_x509write_csr context.
- */
-class MbedX509WriteCsr {
- public:
-  /**
-   * @brief Constructs and initializes the mbedtls_x509write_csr context.
-   */
-  MbedX509WriteCsr();
-  /**
-   * @brief Destroys the MbedX509WriteCsr, freeing the mbedtls_x509write_csr context.
-   */
-  ~MbedX509WriteCsr();
-  /**
-   * @brief MbedX509WriteCsr is not copy-constructible.
-   */
-  MbedX509WriteCsr(const MbedX509WriteCsr&) = delete;
-  /**
-   * @brief MbedX509WriteCsr is not copy-assignable.
-   */
-  MbedX509WriteCsr& operator=(const MbedX509WriteCsr&) = delete;
-  /**
-   * @brief MbedX509WriteCsr is not move-constructible.
-   */
-  MbedX509WriteCsr(MbedX509WriteCsr&& other) = delete;
-  /**
-   * @brief MbedX509WriteCsr is not move-assignable.
-   */
-  auto operator=(MbedPk&& other) -> MbedPk& = delete;
-  /**
-   * @brief Gets a mutable reference to the underlying mbedtls_x509write_csr context.
-   * @return A reference to the managed context.
-   */
-  auto ctx() -> mbedtls_x509write_csr&;
-  /**
-   * @brief Generates the CSR in PEM format using the provided key.
-   * @param key The private key (wrapped in MbedPk) to sign the CSR.
-   * @return A std::vector<unsigned char> containing the CSR in PEM format.
-   * @throws CryptoException if the CSR generation fails.
-   */
-  auto generate(MbedPk& key) -> std::vector<unsigned char>;
-
- private:
-  /**
-   * @brief The managed mbedtls CSR writer context.
-   */
-  mbedtls_x509write_csr ctx_;
 };
 
 /**
@@ -179,10 +85,9 @@ class Crypto {
    * @brief Creates a Certificate Signing Request (CSR) from a private key.
    *
    * @param priv_key A reference to the PsaKey holding the private key.
-   * @return A string containing the CSR in PEM format.
-   * @throws CryptoException on failure.
+   * @return A string containing the CSR in PEM format on success, an error otherwise.
    */
-  static auto create_csr(const PsaKey& priv_key) -> std::string;
+  static auto create_csr(const PsaKey& priv_key) ->  astarte_tl::expected<std::string, AstarteError>;
 };
 
 }  // namespace AstarteDeviceSdk

@@ -11,7 +11,7 @@
 #include <string_view>
 
 #include "ada.h"
-#include "exceptions.hpp"
+#include "astarte_device_sdk/mqtt/errors.hpp"
 
 namespace AstarteDeviceSdk {
 
@@ -22,63 +22,69 @@ using namespace std::chrono_literals;
 class PairingApi {
  public:
   /**
-   * @brief Constructor for the PairingApi class.
+   * @brief Create an instance of the PairingApi class.
    * @param realm The Astarte realm name.
    * @param device_id The Astarte device id.
    * @param astarte_base_url string containing the Astarte pairing API URL.
+   * @return The generate class instance, or an error on failure.
    */
-  PairingApi(std::string_view realm, std::string_view device_id, std::string_view astarte_base_url)
-      : realm(realm), device_id(device_id), pairing_url(create_pairing_url(astarte_base_url)) {}
+  static auto create(std::string_view realm, std::string_view device_id,
+                     std::string_view astarte_base_url)
+      -> astarte_tl::expected<PairingApi, AstarteError>;
 
   /**
    * @brief Register a device.
    * @param pairing_token The Astarte pairing token.
    * @param timeout_ms A timeout value to perform the HTTP request.
-   * @return The credentials secret if successful, otherwise std::nullopt.
+   * @return The credentials secret if successful, otherwise an error.
    */
   auto register_device(std::string_view pairing_token,
-                       std::chrono::milliseconds timeout_ms = 0ms) const -> std::string;
+                       std::chrono::milliseconds timeout_ms = 0ms) const
+      -> astarte_tl::expected<std::string, AstarteError>;
 
  private:
+  /**
+   * @brief Constructor for the PairingApi class.
+   * @param realm The Astarte realm name.
+   * @param device_id The Astarte device id.
+   * @param pairing_url string containing the Astarte pairing API URL.
+   */
+  PairingApi(std::string_view realm, std::string_view device_id, ada::url_aggregator pairing_url);
   /**
    * @brief Retrieve the URL of the Astarte MQTT broker.
    * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
    * @param timeout_ms A timeout value to perform the HTTP request.
-   * @return The broker URL.
+   * @return The broker URL on success, an error otherwise.
    */
-  auto get_broker_url(std::string_view credential_secret, int timeout_ms = 0) const -> std::string;
+  auto get_broker_url(std::string_view credential_secret, int timeout_ms = 0) const
+      -> astarte_tl::expected<std::string, AstarteError>;
 
   /**
    * @brief Retrieve the Astarte device certificate.
    * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
    * @param timeout_ms A timeout value to perform the HTTP request.
-   * @return The device certificate.
+   * @return The device certificate on success, an error otherwise.
    */
-  auto get_device_cert(std::string_view credential_secret, int timeout_ms = 0) const -> std::string;
+  auto get_device_cert(std::string_view credential_secret, int timeout_ms = 0) const
+      -> astarte_tl::expected<std::string, AstarteError>;
 
   /**
    * @brief Check if the Astarte device certificate is valid.
    * @param certificate The Astarte device certificate.
    * @param credential_secret The Astarte device credential necessary to authenticate to the broker.
    * @param timeout_ms A timeout value to perform the HTTP request.
-   * @return true if the cerficate is valid, false otherwise.
+   * @return true if the cerficate is valid, false if the certificate is not valid, an error when
+   * the validation failed.
    */
   auto device_cert_valid(std::string_view certificate, std::string_view credential_secret,
-                         int timeout_ms = 0) const -> bool;
-
-  /**
-   * @brief Helper function to parse astarte base URL and create the pairing URL.
-   * @param astarte_base_url The Astarte base URL.
-   * @return The Astarte Pairing API broker URL.
-   */
-  static auto create_pairing_url(std::string_view astarte_base_url) -> ada::url_aggregator;
+                         int timeout_ms = 0) const -> astarte_tl::expected<bool, AstarteError>;
 
   /** @brief The Astarte realm name. */
-  const std::string realm;
+  const std::string realm_;
   /** @brief The Astarte device id. */
-  const std::string device_id;
+  const std::string device_id_;
   /** @brief The Astarte pairing URL as a string. */
-  const ada::url_aggregator pairing_url;
+  const ada::url_aggregator pairing_url_;
 };
 
 }  // namespace AstarteDeviceSdk

@@ -81,7 +81,10 @@ class TestOrchestrator {
           std::make_shared<AstarteDeviceGRPC>(config_grpc.server_addr, config_grpc.node_id);
 
       for (const std::filesystem::path& interface_path : config_grpc.interfaces) {
-        device_grpc->add_interface_from_file(interface_path);
+        auto res = device_grpc->add_interface_from_file(interface_path);
+        if (!res) {
+          throw EndToEndAstarteDeviceException(astarte_fmt::format("{}", res.error()));
+        }
       }
       test_case.attach_device(device_grpc);
 #else

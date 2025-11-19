@@ -22,6 +22,12 @@ class EndToEndConfigException : public EndToEndException {
       : EndToEndException(err_message) {}
 };
 
+class EndToEndAstarteDeviceException : public EndToEndException {
+ public:
+  explicit EndToEndAstarteDeviceException(const std::string& err_message)
+      : EndToEndException(err_message) {}
+};
+
 class EndToEndHTTPException : public EndToEndException {
  public:
   explicit EndToEndHTTPException(const std::string& err_message) : EndToEndException(err_message) {}

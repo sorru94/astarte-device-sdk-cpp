@@ -7,6 +7,7 @@
 #include "action.hpp"
 #include "astarte_device_sdk/mqtt/pairing.hpp"
 
+using AstarteDeviceSdk::AstarteError;
 using AstarteDeviceSdk::PairingApi;
 
 constexpr size_t CREDENTIAL_SECRET_LEN = 44;
@@ -18,13 +19,25 @@ class TestActionPairingApiRegistration : public TestAction {
         new TestActionPairingApiRegistration(pairing_token));
   }
 
-  void execute_unchecked(const std::string& case_name) const override {
+  auto execute_unchecked(const std::string& case_name) const
+      -> AstarteDeviceSdk::astarte_tl::expected<void, AstarteError> override {
     spdlog::info("[{}] Pairing device...", case_name);
-    auto pairing_api = PairingApi(realm_, device_id_, astarte_base_url_);
-    auto credential_secret = pairing_api.register_device(pairing_token_);
+    auto res =
+        PairingApi::create(realm_, device_id_, astarte_base_url_)
+            .and_then([&](const PairingApi& pairing_api)
+                          -> AstarteDeviceSdk::astarte_tl::expected<std::string, AstarteError> {
+              return pairing_api.register_device(pairing_token_);
+            });
+    if (!res) {
+      return AstarteDeviceSdk::astarte_tl::unexpected(res.error());
+    }
 
-    // check that the credential secret has the correct lenght
-    assert(credential_secret.length() == CREDENTIAL_SECRET_LEN);
+    if (res.value().length() != CREDENTIAL_SECRET_LEN) {
+      spdlog::error("Expected: {}", CREDENTIAL_SECRET_LEN);
+      spdlog::error("Actual: {}", res.value().length());
+      throw EndToEndMismatchException("Incorrect length for the credential secret.");
+    }
+    return {};
   }
 
  private:

@@ -28,45 +28,56 @@ AstarteDeviceMQTT::AstarteDeviceMQTT(const MqttConfig cfg)
 
 AstarteDeviceMQTT::~AstarteDeviceMQTT() = default;
 
-void AstarteDeviceMQTT::add_interface_from_file(const std::filesystem::path& json_file) {
-  astarte_device_impl_->add_interface_from_file(json_file);
+auto AstarteDeviceMQTT::add_interface_from_file(const std::filesystem::path& json_file)
+    -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->add_interface_from_file(json_file);
 }
 
-void AstarteDeviceMQTT::add_interface_from_str(std::string_view json) {
-  astarte_device_impl_->add_interface_from_str(json);
+auto AstarteDeviceMQTT::add_interface_from_str(std::string_view json)
+    -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->add_interface_from_str(json);
 }
 
-void AstarteDeviceMQTT::remove_interface(const std::string& interface_name) {
-  astarte_device_impl_->remove_interface(interface_name);
+auto AstarteDeviceMQTT::remove_interface(const std::string& interface_name)
+    -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->remove_interface(interface_name);
 }
 
-void AstarteDeviceMQTT::connect() { astarte_device_impl_->connect(); }
+auto AstarteDeviceMQTT::connect() -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->connect();
+}
 
 auto AstarteDeviceMQTT::is_connected() const -> bool {
   return astarte_device_impl_->is_connected();
 }
 
-void AstarteDeviceMQTT::disconnect() { astarte_device_impl_->disconnect(); }
+auto AstarteDeviceMQTT::disconnect() -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->disconnect();
+}
 
-void AstarteDeviceMQTT::send_individual(std::string_view interface_name, std::string_view path,
+auto AstarteDeviceMQTT::send_individual(std::string_view interface_name, std::string_view path,
                                         const AstarteData& data,
-                                        const std::chrono::system_clock::time_point* timestamp) {
-  astarte_device_impl_->send_individual(interface_name, path, data, timestamp);
+                                        const std::chrono::system_clock::time_point* timestamp)
+    -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->send_individual(interface_name, path, data, timestamp);
 }
 
-void AstarteDeviceMQTT::send_object(std::string_view interface_name, std::string_view path,
+auto AstarteDeviceMQTT::send_object(std::string_view interface_name, std::string_view path,
                                     const AstarteDatastreamObject& object,
-                                    const std::chrono::system_clock::time_point* timestamp) {
-  astarte_device_impl_->send_object(interface_name, path, object, timestamp);
+                                    const std::chrono::system_clock::time_point* timestamp)
+    -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->send_object(interface_name, path, object, timestamp);
 }
 
-void AstarteDeviceMQTT::set_property(std::string_view interface_name, std::string_view path,
-                                     const AstarteData& data) {
-  astarte_device_impl_->set_property(interface_name, path, data);
+auto AstarteDeviceMQTT::set_property(std::string_view interface_name, std::string_view path,
+                                     const AstarteData& data)
+    -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->set_property(interface_name, path, data);
 }
 
-void AstarteDeviceMQTT::unset_property(std::string_view interface_name, std::string_view path) {
-  astarte_device_impl_->unset_property(interface_name, path);
+auto AstarteDeviceMQTT::unset_property(std::string_view interface_name, std::string_view path)
+    -> astarte_tl::expected<void, AstarteError> {
+  return astarte_device_impl_->unset_property(interface_name, path);
 }
 
 auto AstarteDeviceMQTT::poll_incoming(const std::chrono::milliseconds& timeout)
@@ -75,17 +86,17 @@ auto AstarteDeviceMQTT::poll_incoming(const std::chrono::milliseconds& timeout)
 }
 
 auto AstarteDeviceMQTT::get_all_properties(const std::optional<AstarteOwnership>& ownership)
-    -> std::list<AstarteStoredProperty> {
+    -> astarte_tl::expected<std::list<AstarteStoredProperty>, AstarteError> {
   return astarte_device_impl_->get_all_properties(ownership);
 }
 
 auto AstarteDeviceMQTT::get_properties(std::string_view interface_name)
-    -> std::list<AstarteStoredProperty> {
+    -> astarte_tl::expected<std::list<AstarteStoredProperty>, AstarteError> {
   return astarte_device_impl_->get_properties(interface_name);
 }
 
 auto AstarteDeviceMQTT::get_property(std::string_view interface_name, std::string_view path)
-    -> AstartePropertyIndividual {
+    -> astarte_tl::expected<AstartePropertyIndividual, AstarteError> {
   return astarte_device_impl_->get_property(interface_name, path);
 }
 

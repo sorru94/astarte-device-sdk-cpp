@@ -29,7 +29,10 @@ class AstarteWorker : public QObject {
 
     addInterfaces();
     qInfo() << "Connecting the device";
-    device->connect();
+    auto res = device->connect();
+    if (!res) {
+      qCritical() << "Device connection failed";
+    }
 
     QTimer::singleShot(3000, this, &AstarteWorker::sendInitialData);
 
@@ -43,7 +46,7 @@ class AstarteWorker : public QObject {
     auto incoming = device->poll_incoming(std::chrono::milliseconds(0));
     if (incoming.has_value()) {
       AstarteMessage msg(incoming.value());
-      qInfo() << "Received:" << QString::fromStdString(ASTARTE_NS_FORMAT::format("{}", msg));
+      qInfo() << "Received:" << QString::fromStdString(astarte_fmt::format("{}", msg));
     }
   }
 
@@ -54,54 +57,98 @@ class AstarteWorker : public QObject {
       auto now = std::chrono::system_clock::now();
 
       // Basic type
-      device->send_individual(interface.toStdString(), "/integer_endpoint", AstarteData(43), &now);
-      device->send_individual(interface.toStdString(), "/double_endpoint", AstarteData(43.5), &now);
-      device->send_individual(interface.toStdString(), "/longinteger_endpoint",
-                              AstarteData(int64_t(8589934592)), &now);
-      device->send_individual(interface.toStdString(), "/boolean_endpoint", AstarteData(true),
-                              &now);
-      device->send_individual(interface.toStdString(), "/string_endpoint",
-                              AstarteData(std::string("Hello from Qt!")), &now);
+      auto res = device->send_individual(interface.toStdString(), "/integer_endpoint",
+                                         AstarteData(43), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
+      res = device->send_individual(interface.toStdString(), "/double_endpoint", AstarteData(43.5),
+                                    &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
+      res = device->send_individual(interface.toStdString(), "/longinteger_endpoint",
+                                    AstarteData(int64_t(8589934592)), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
+      res = device->send_individual(interface.toStdString(), "/boolean_endpoint", AstarteData(true),
+                                    &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
+      res = device->send_individual(interface.toStdString(), "/string_endpoint",
+                                    AstarteData(std::string("Hello from Qt!")), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       // Binary blob
       std::vector<uint8_t> binaryblob = {10, 20, 30, 40, 50};
-      device->send_individual(interface.toStdString(), "/binaryblob_endpoint",
-                              AstarteData(binaryblob), &now);
+      res = device->send_individual(interface.toStdString(), "/binaryblob_endpoint",
+                                    AstarteData(binaryblob), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       // Datetime
-      device->send_individual(interface.toStdString(), "/datetime_endpoint", AstarteData(now),
-                              &now);
+      res = device->send_individual(interface.toStdString(), "/datetime_endpoint", AstarteData(now),
+                                    &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       // Arrays
       std::vector<int32_t> integerarray = {10, 20, 30, 40, 50};
-      device->send_individual(interface.toStdString(), "/integerarray_endpoint",
-                              AstarteData(integerarray), &now);
+      res = device->send_individual(interface.toStdString(), "/integerarray_endpoint",
+                                    AstarteData(integerarray), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       std::vector<int64_t> longintegerarray = {8589934592, 8589934593, 8589939592};
-      device->send_individual(interface.toStdString(), "/longintegerarray_endpoint",
-                              AstarteData(longintegerarray), &now);
+      res = device->send_individual(interface.toStdString(), "/longintegerarray_endpoint",
+                                    AstarteData(longintegerarray), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       std::vector<double> doublearray = {0.0, 1.1, 2.2};
-      device->send_individual(interface.toStdString(), "/doublearray_endpoint",
-                              AstarteData(doublearray), &now);
+      res = device->send_individual(interface.toStdString(), "/doublearray_endpoint",
+                                    AstarteData(doublearray), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       std::vector<bool> booleanarray = {true, false, true};
-      device->send_individual(interface.toStdString(), "/booleanarray_endpoint",
-                              AstarteData(booleanarray), &now);
+      res = device->send_individual(interface.toStdString(), "/booleanarray_endpoint",
+                                    AstarteData(booleanarray), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       std::vector<std::string> stringarray = {"Hello", "from", "Qt!"};
-      device->send_individual(interface.toStdString(), "/stringarray_endpoint",
-                              AstarteData(stringarray), &now);
+      res = device->send_individual(interface.toStdString(), "/stringarray_endpoint",
+                                    AstarteData(stringarray), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       std::vector<std::vector<uint8_t>> binaryblobarray = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-      device->send_individual(interface.toStdString(), "/binaryblobarray_endpoint",
-                              AstarteData(binaryblobarray), &now);
+      res = device->send_individual(interface.toStdString(), "/binaryblobarray_endpoint",
+                                    AstarteData(binaryblobarray), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
 
       std::vector<std::chrono::system_clock::time_point> datetimearray = {
           std::chrono::system_clock::now(),
           std::chrono::system_clock::now() + std::chrono::seconds(5)};
-      device->send_individual(interface.toStdString(), "/datetimearray_endpoint",
-                              AstarteData(datetimearray), &now);
+      res = device->send_individual(interface.toStdString(), "/datetimearray_endpoint",
+                                    AstarteData(datetimearray), &now);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
     }
 
     {
@@ -133,7 +180,10 @@ class AstarteWorker : public QObject {
            AstarteData(std::vector<std::chrono::system_clock::time_point>{now, now})}};
 
       // Send aggregate object
-      device->send_object(interface_name, common_path, data, nullptr);
+      auto res = device->send_object(interface_name, common_path, data, nullptr);
+      if (!res) {
+        qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+      }
     }
   }
 
@@ -160,12 +210,30 @@ class AstarteWorker : public QObject {
     std::filesystem::path server_property_interface_file_path =
         interfaces_dir / "org.astarte-platform.cpp.examples.ServerProperty.json";
 
-    device->add_interface_from_file(device_individual_interface_file_path);
-    device->add_interface_from_file(server_individual_interface_file_path);
-    device->add_interface_from_file(device_property_interface_file_path);
-    device->add_interface_from_file(device_aggregated_interface_file_path);
-    device->add_interface_from_file(server_aggregated_interface_file_path);
-    device->add_interface_from_file(server_property_interface_file_path);
+    auto res = device->add_interface_from_file(device_individual_interface_file_path);
+    if (!res) {
+      qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+    }
+    res = device->add_interface_from_file(server_individual_interface_file_path);
+    if (!res) {
+      qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+    }
+    res = device->add_interface_from_file(device_property_interface_file_path);
+    if (!res) {
+      qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+    }
+    res = device->add_interface_from_file(device_aggregated_interface_file_path);
+    if (!res) {
+      qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+    }
+    res = device->add_interface_from_file(server_aggregated_interface_file_path);
+    if (!res) {
+      qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+    }
+    res = device->add_interface_from_file(server_property_interface_file_path);
+    if (!res) {
+      qCritical() << QString::fromStdString(astarte_fmt::format("{}", res.error()));
+    }
   }
 };
 
