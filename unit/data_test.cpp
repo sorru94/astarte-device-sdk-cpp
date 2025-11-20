@@ -18,7 +18,7 @@ using AstarteDeviceSdk::AstarteType;
 using testing::ContainerEq;
 
 bool CompareAstarteData(AstarteData data, const char* value) {
-  return ASTARTE_NS_FORMAT::format("{}", data) == value;
+  return astarte_fmt::format("{}", data) == value;
 }
 
 TEST(AstarteTestData, InstantiationInteger) {

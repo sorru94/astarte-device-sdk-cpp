@@ -11,6 +11,8 @@ system_transport=false
 jobs=$(nproc --all)
 project_root=$(pwd) # Assuming this script is always run from the root of this project
 venv_dir=".venv"
+jsonschema_package_name="jsonschema"
+jsonschema_package_version="4.25.1"
 clang_tidy_package_name="clang-tidy"
 clang_tidy_package_version="19.1.0"
 
@@ -97,6 +99,18 @@ if [ "$installed_version" != "$clang_tidy_package_version" ]; then
     fi
 else
     echo "$clang_tidy_package_name version $clang_tidy_package_version is already installed."
+fi
+
+# Install or verify jsonschema version
+echo "Checking/installing $jsonschema_package_name version $jsonschema_package_version..."
+installed_version=$(pip show "$jsonschema_package_name" | grep Version | awk '{print $2}' || true)
+if [ "$installed_version" != "$jsonschema_package_version" ]; then
+    echo "Installing $jsonschema_package_name==$jsonschema_package_version..."
+    if ! pip install "$jsonschema_package_name==$jsonschema_package_version"; then
+        error_exit "Failed to install $jsonschema_package_name version $jsonschema_package_version."
+    fi
+else
+    echo "$jsonschema_package_name version $jsonschema_package_version is already installed."
 fi
 
 # --- Build Logic ---

@@ -19,6 +19,8 @@ using AstarteDeviceSdk::AstarteDatastreamIndividual;
 using AstarteDeviceSdk::AstarteDatastreamObject;
 using AstarteDeviceSdk::AstarteDevice;
 using AstarteDeviceSdk::AstarteDeviceGRPC;
+using AstarteDeviceSdk::AstarteFileOpenError;
+using AstarteDeviceSdk::AstarteInvalidInputError;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstartePropertyIndividual;
 
@@ -59,26 +61,33 @@ int main(int argc, char** argv) {
       std::make_shared<AstarteDeviceGRPC>(server_addr, node_id);
 
   // Those paths assume the user is calling the Astarte executable from the root of this project.
-  std::filesystem::path device_individual_interface_file_path =
-      "samples/grpc/native/interfaces/org.astarte-platform.cpp.examples.DeviceDatastream.json";
-  device->add_interface_from_file(device_individual_interface_file_path);
-  std::filesystem::path server_individual_interface_file_path =
-      "samples/grpc/native/interfaces/org.astarte-platform.cpp.examples.ServerDatastream.json";
-  device->add_interface_from_file(server_individual_interface_file_path);
-  std::filesystem::path device_property_interface_file_path =
-      "samples/grpc/native/interfaces/org.astarte-platform.cpp.examples.DeviceProperty.json";
-  device->add_interface_from_file(device_property_interface_file_path);
-  std::filesystem::path device_aggregated_interface_file_path =
-      "samples/grpc/native/interfaces/org.astarte-platform.cpp.examples.DeviceAggregate.json";
-  device->add_interface_from_file(device_aggregated_interface_file_path);
-  std::filesystem::path server_aggregated_interface_file_path =
-      "samples/grpc/native/interfaces/org.astarte-platform.cpp.examples.ServerAggregate.json";
-  device->add_interface_from_file(server_aggregated_interface_file_path);
-  std::filesystem::path server_property_interface_file_path =
-      "samples/grpc/native/interfaces/org.astarte-platform.cpp.examples.ServerProperty.json";
-  device->add_interface_from_file(server_property_interface_file_path);
+  const std::filesystem::path base_path = "samples/grpc/native/interfaces";
+  const std::vector<std::string> interface_files = {
+      "org.astarte-platform.cpp.examples.DeviceDatastream.json",
+      "org.astarte-platform.cpp.examples.ServerDatastream.json",
+      "org.astarte-platform.cpp.examples.DeviceProperty.json",
+      "org.astarte-platform.cpp.examples.DeviceAggregate.json",
+      "org.astarte-platform.cpp.examples.ServerAggregate.json",
+      "org.astarte-platform.cpp.examples.ServerProperty.json"};
 
-  device->connect();
+  spdlog::info("Loading interfaces from {}...", base_path.string());
+  for (const auto& file_name : interface_files) {
+    std::filesystem::path full_path = base_path / file_name;
+    auto res = device->add_interface_from_file(full_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteFileOpenError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
+    spdlog::debug("Successfully added interface: {}", full_path.string());
+  }
+  spdlog::info("All interfaces loaded successfully.");
+
+  auto res = device->connect();
+  if (!res) {
+    spdlog::critical("Device connection failed");
+    spdlog::critical(res.error());
+    return EXIT_FAILURE;
+  }
 
   do {
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -93,69 +102,127 @@ int main(int argc, char** argv) {
 
     std::string integer_path("/integer_endpoint");
     AstarteData integer_value = AstarteData(43);
-    device->send_individual(interface_name, integer_path, integer_value, &now);
+    auto res = device->send_individual(interface_name, integer_path, integer_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longinteger_path("/longinteger_endpoint");
     AstarteData longinteger_value = AstarteData(8589934592);
-    device->send_individual(interface_name, longinteger_path, longinteger_value, &now);
+    res = device->send_individual(interface_name, longinteger_path, longinteger_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string double_path("/double_endpoint");
     AstarteData double_value = AstarteData(43.5);
-    device->send_individual(interface_name, double_path, double_value, &now);
+    res = device->send_individual(interface_name, double_path, double_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string boolean_path("/boolean_endpoint");
     AstarteData boolean_value = AstarteData(true);
-    device->send_individual(interface_name, boolean_path, boolean_value, &now);
+    res = device->send_individual(interface_name, boolean_path, boolean_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string string_path("/string_endpoint");
     std::string hello_string("Hello from cpp!");
     AstarteData string_value = AstarteData(hello_string);
-    device->send_individual(interface_name, string_path, string_value, &now);
+    res = device->send_individual(interface_name, string_path, string_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblob_path("/binaryblob_endpoint");
     std::vector<uint8_t> binaryblob = {10, 20, 30, 40, 50};
     AstarteData binaryblob_value = AstarteData(binaryblob);
-    device->send_individual(interface_name, binaryblob_path, binaryblob_value, &now);
+    res = device->send_individual(interface_name, binaryblob_path, binaryblob_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetime_path("/datetime_endpoint");
     AstarteData datetime_value = AstarteData(std::chrono::system_clock::now());
-    device->send_individual(interface_name, datetime_path, datetime_value, &now);
+    res = device->send_individual(interface_name, datetime_path, datetime_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string integerarray_path("/integerarray_endpoint");
     std::vector<int32_t> integerarray = {10, 20, 30, 40, 50};
     AstarteData integerarray_value = AstarteData(integerarray);
-    device->send_individual(interface_name, integerarray_path, integerarray_value, &now);
+    res = device->send_individual(interface_name, integerarray_path, integerarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longintegerarray_path("/longintegerarray_endpoint");
     std::vector<int64_t> longintegerarray = {8589934592, 8589934593, 8589939592};
     AstarteData longintegerarray_value = AstarteData(longintegerarray);
-    device->send_individual(interface_name, longintegerarray_path, longintegerarray_value, &now);
+    res = device->send_individual(interface_name, longintegerarray_path, longintegerarray_value,
+                                  &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string doubleararray_path("/doublearray_endpoint");
     std::vector<double> doublearray = {0.0};
     AstarteData doublearray_value = AstarteData(doublearray);
-    device->send_individual(interface_name, doubleararray_path, doublearray_value, &now);
+    res = device->send_individual(interface_name, doubleararray_path, doublearray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string booleanarray_path("/booleanarray_endpoint");
     std::vector<bool> booleanarray = {true, false, true};
     AstarteData booleanarray_value = AstarteData(booleanarray);
-    device->send_individual(interface_name, booleanarray_path, booleanarray_value, &now);
+    res = device->send_individual(interface_name, booleanarray_path, booleanarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string stringarray_path("/stringarray_endpoint");
     std::vector<std::string> stringarray = {"Hello ", "world ", "from ", "C++"};
     AstarteData stringarray_value = AstarteData(stringarray);
-    device->send_individual(interface_name, stringarray_path, stringarray_value, &now);
+    res = device->send_individual(interface_name, stringarray_path, stringarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblobarray_path("/binaryblobarray_endpoint");
     std::vector<std::vector<uint8_t>> binaryblobarray = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     AstarteData binaryblobarray_value = AstarteData(binaryblobarray);
-    device->send_individual(interface_name, binaryblobarray_path, binaryblobarray_value, &now);
+    res =
+        device->send_individual(interface_name, binaryblobarray_path, binaryblobarray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetimearray_path("/datetimearray_endpoint");
     std::vector<std::chrono::system_clock::time_point> datetimearray = {
         std::chrono::system_clock::now(), std::chrono::system_clock::now()};
     AstarteData datetimearray_value = AstarteData(datetimearray);
-    device->send_individual(interface_name, datetimearray_path, datetimearray_value, &now);
+    res = device->send_individual(interface_name, datetimearray_path, datetimearray_value, &now);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
@@ -184,7 +251,11 @@ int main(int argc, char** argv) {
         {"datetimearray_endpoint",
          AstarteData(std::vector<std::chrono::system_clock::time_point>{
              std::chrono::system_clock::now(), std::chrono::system_clock::now()})}};
-    device->send_object(interface_name, common_path, data, NULL);
+    auto res = device->send_object(interface_name, common_path, data, NULL);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
@@ -194,68 +265,124 @@ int main(int argc, char** argv) {
 
     std::string integer_path("/integer_endpoint");
     AstarteData integer_value = AstarteData(43);
-    device->set_property(interface_name, integer_path, integer_value);
+    auto res = device->set_property(interface_name, integer_path, integer_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longinteger_path("/longinteger_endpoint");
     AstarteData longinteger_value = AstarteData(8589934592);
-    device->set_property(interface_name, longinteger_path, longinteger_value);
+    res = device->set_property(interface_name, longinteger_path, longinteger_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string double_path("/double_endpoint");
     AstarteData double_value = AstarteData(43.5);
-    device->set_property(interface_name, double_path, double_value);
+    res = device->set_property(interface_name, double_path, double_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string boolean_path("/boolean_endpoint");
     AstarteData boolean_value = AstarteData(true);
-    device->set_property(interface_name, boolean_path, boolean_value);
+    res = device->set_property(interface_name, boolean_path, boolean_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string string_path("/string_endpoint");
     AstarteData string_value = AstarteData(std::string("Hello from cpp!"));
-    device->set_property(interface_name, string_path, string_value);
+    res = device->set_property(interface_name, string_path, string_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblob_path("/binaryblob_endpoint");
     std::vector<uint8_t> binaryblob = {10, 20, 30, 40, 50};
     AstarteData binaryblob_value = AstarteData(binaryblob);
-    device->set_property(interface_name, binaryblob_path, binaryblob_value);
+    res = device->set_property(interface_name, binaryblob_path, binaryblob_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetime_path("/datetime_endpoint");
     AstarteData datetime_value = AstarteData(std::chrono::system_clock::now());
-    device->set_property(interface_name, datetime_path, datetime_value);
+    res = device->set_property(interface_name, datetime_path, datetime_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string integerarray_path("/integerarray_endpoint");
     std::vector<int32_t> integerarray = {10, 20, 30, 40, 50};
     AstarteData integerarray_value = AstarteData(integerarray);
-    device->set_property(interface_name, integerarray_path, integerarray_value);
+    res = device->set_property(interface_name, integerarray_path, integerarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longintegerarray_path("/longintegerarray_endpoint");
     std::vector<int64_t> longintegerarray = {8589934592, 8589934593, 8589939592};
     AstarteData longintegerarray_value = AstarteData(longintegerarray);
-    device->set_property(interface_name, longintegerarray_path, longintegerarray_value);
+    res = device->set_property(interface_name, longintegerarray_path, longintegerarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string doubleararray_path("/doublearray_endpoint");
     std::vector<double> doublearray = {0.0};
     AstarteData doublearray_value = AstarteData(doublearray);
-    device->set_property(interface_name, doubleararray_path, doublearray_value);
+    res = device->set_property(interface_name, doubleararray_path, doublearray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string booleanarray_path("/booleanarray_endpoint");
     std::vector<bool> booleanarray = {true, false, true};
     AstarteData booleanarray_value = AstarteData(booleanarray);
-    device->set_property(interface_name, booleanarray_path, booleanarray_value);
+    res = device->set_property(interface_name, booleanarray_path, booleanarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string stringarray_path("/stringarray_endpoint");
     std::vector<std::string> stringarray = {"Hello ", "world ", "from ", "C++"};
     AstarteData stringarray_value = AstarteData(stringarray);
-    device->set_property(interface_name, stringarray_path, stringarray_value);
+    res = device->set_property(interface_name, stringarray_path, stringarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblobarray_path("/binaryblobarray_endpoint");
     std::vector<std::vector<uint8_t>> binaryblobarray = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
     AstarteData binaryblobarray_value = AstarteData(binaryblobarray);
-    device->set_property(interface_name, binaryblobarray_path, binaryblobarray_value);
+    res = device->set_property(interface_name, binaryblobarray_path, binaryblobarray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetimearray_path("/datetimearray_endpoint");
     std::vector<std::chrono::system_clock::time_point> datetimearray = {
         std::chrono::system_clock::now(), std::chrono::system_clock::now()};
     AstarteData datetimearray_value = AstarteData(datetimearray);
-    device->set_property(interface_name, datetimearray_path, datetimearray_value);
+    res = device->set_property(interface_name, datetimearray_path, datetimearray_value);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
@@ -264,46 +391,102 @@ int main(int argc, char** argv) {
     std::string interface_name("org.astarte-platform.cpp.examples.DeviceProperty");
 
     std::string integer_path("/integer_endpoint");
-    device->unset_property(interface_name, integer_path);
+    auto res = device->unset_property(interface_name, integer_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longinteger_path("/longinteger_endpoint");
-    device->unset_property(interface_name, longinteger_path);
+    res = device->unset_property(interface_name, longinteger_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string double_path("/double_endpoint");
-    device->unset_property(interface_name, double_path);
+    res = device->unset_property(interface_name, double_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string boolean_path("/boolean_endpoint");
-    device->unset_property(interface_name, boolean_path);
+    res = res = device->unset_property(interface_name, boolean_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string string_path("/string_endpoint");
-    device->unset_property(interface_name, string_path);
+    res = device->unset_property(interface_name, string_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblob_path("/binaryblob_endpoint");
-    device->unset_property(interface_name, binaryblob_path);
+    res = device->unset_property(interface_name, binaryblob_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetime_path("/datetime_endpoint");
-    device->unset_property(interface_name, datetime_path);
+    res = device->unset_property(interface_name, datetime_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string integerarray_path("/integerarray_endpoint");
-    device->unset_property(interface_name, integerarray_path);
+    res = device->unset_property(interface_name, integerarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string longintegerarray_path("/longintegerarray_endpoint");
-    device->unset_property(interface_name, longintegerarray_path);
+    res = device->unset_property(interface_name, longintegerarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string doubleararray_path("/doublearray_endpoint");
-    device->unset_property(interface_name, doubleararray_path);
+    res = device->unset_property(interface_name, doubleararray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string booleanarray_path("/booleanarray_endpoint");
-    device->unset_property(interface_name, booleanarray_path);
+    res = device->unset_property(interface_name, booleanarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string stringarray_path("/stringarray_endpoint");
-    device->unset_property(interface_name, stringarray_path);
+    res = device->unset_property(interface_name, stringarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string binaryblobarray_path("/binaryblobarray_endpoint");
-    device->unset_property(interface_name, binaryblobarray_path);
+    res = device->unset_property(interface_name, binaryblobarray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::string datetimearray_path("/datetimearray_endpoint");
-    device->unset_property(interface_name, datetimearray_path);
+    res = device->unset_property(interface_name, datetimearray_path);
+    if (!res) {
+      spdlog::critical(std::get<AstarteInvalidInputError>(res.error()).message());
+      return EXIT_FAILURE;
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
   }
@@ -311,7 +494,12 @@ int main(int argc, char** argv) {
   // Wait to receive some messages
   std::this_thread::sleep_for(std::chrono::seconds(20));
 
-  device->disconnect();
+  res = device->disconnect();
+  if (!res) {
+    spdlog::critical("Device disconnection failed");
+    spdlog::critical(res.error());
+    return EXIT_FAILURE;
+  }
 
   std::this_thread::sleep_for(std::chrono::seconds(3));
   std::exit(EXIT_SUCCESS);
