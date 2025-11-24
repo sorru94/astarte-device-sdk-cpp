@@ -20,7 +20,7 @@ jobs:
       group: build-simple-sample-conan-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Conan
         uses: conan-io/setup-conan@v1
         with:
@@ -34,7 +34,7 @@ jobs:
       group: build-simple-sample-fetch-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Build library for C++ 20
         run: ./build_sample.sh simple --fresh --deps-mgmt fetch
   build-simple-sample-install:
@@ -43,7 +43,7 @@ jobs:
       group: build-simple-sample-install-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           path: astarte-device-sdk-cpp
       - name: Setup gRPC build cache
@@ -71,7 +71,7 @@ jobs:
       matrix:
         qt_version: [5.15.2, 6.5.3]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup gRPC build cache
         id: cache-grpc-cpp
         uses: actions/cache@v4
