@@ -20,7 +20,7 @@ jobs:
       group: clang-format-check-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
@@ -32,7 +32,7 @@ jobs:
       group: clang-tidy-check-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           path: astarte-device-sdk-cpp
       - uses: actions/setup-python@v6
