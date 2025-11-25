@@ -27,7 +27,7 @@ using json = nlohmann::json;
 using AstarteDeviceSdk::AstarteData;
 using AstarteDeviceSdk::AstarteDatastreamIndividual;
 using AstarteDeviceSdk::AstarteDatastreamObject;
-using AstarteDeviceSdk::AstarteDeviceGRPC;
+using AstarteDeviceSdk::AstarteDeviceGrpc;
 using AstarteDeviceSdk::AstarteError;
 using AstarteDeviceSdk::AstarteMessage;
 using AstarteDeviceSdk::AstarteOwnership;
@@ -81,7 +81,7 @@ class TestAction {
       }
     }
   }
-  void attach_device(const std::shared_ptr<AstarteDeviceGRPC>& device,
+  void attach_device(const std::shared_ptr<AstarteDeviceGrpc>& device,
                      const std::shared_ptr<SharedQueue<AstarteMessage>>& rx_queue) {
     device_ = device;
     rx_queue_ = rx_queue;
@@ -96,7 +96,7 @@ class TestAction {
   }
 
  protected:
-  std::shared_ptr<AstarteDeviceGRPC> device_;
+  std::shared_ptr<AstarteDeviceGrpc> device_;
   std::shared_ptr<SharedQueue<AstarteMessage>> rx_queue_;
   std::string appengine_url_;
   std::string appengine_token_;
@@ -276,19 +276,19 @@ class TestActionCheckDeviceStatus : public TestAction {
   std::vector<std::string> introspection_;
 };
 
-class TestActionTransmitMQTTData : public TestAction {
+class TestActionTransmitMqttData : public TestAction {
  public:
-  static std::shared_ptr<TestActionTransmitMQTTData> Create(const AstarteMessage& message,
+  static std::shared_ptr<TestActionTransmitMqttData> Create(const AstarteMessage& message,
                                                             bool should_fail = false) {
-    return std::shared_ptr<TestActionTransmitMQTTData>(
-        new TestActionTransmitMQTTData(message, should_fail));
+    return std::shared_ptr<TestActionTransmitMqttData>(
+        new TestActionTransmitMqttData(message, should_fail));
   }
 
-  static std::shared_ptr<TestActionTransmitMQTTData> Create(
+  static std::shared_ptr<TestActionTransmitMqttData> Create(
       const AstarteMessage& message, const std::chrono::system_clock::time_point timestamp,
       bool should_fail = false) {
-    return std::shared_ptr<TestActionTransmitMQTTData>(
-        new TestActionTransmitMQTTData(message, timestamp, should_fail));
+    return std::shared_ptr<TestActionTransmitMqttData>(
+        new TestActionTransmitMqttData(message, timestamp, should_fail));
   }
 
   auto execute_unchecked(const std::string& case_name) const
@@ -313,10 +313,10 @@ class TestActionTransmitMQTTData : public TestAction {
   }
 
  private:
-  TestActionTransmitMQTTData(const AstarteMessage& message, bool should_fail)
+  TestActionTransmitMqttData(const AstarteMessage& message, bool should_fail)
       : TestAction(should_fail), message_(message), timestamp_(nullptr) {}
 
-  TestActionTransmitMQTTData(const AstarteMessage& message,
+  TestActionTransmitMqttData(const AstarteMessage& message,
                              const std::chrono::system_clock::time_point timestamp,
                              bool should_fail)
       : TestAction(should_fail),
@@ -327,11 +327,11 @@ class TestActionTransmitMQTTData : public TestAction {
   std::unique_ptr<std::chrono::system_clock::time_point> timestamp_;
 };
 
-class TestActionReadReceivedMQTTData : public TestAction {
+class TestActionReadReceivedMqttData : public TestAction {
  public:
-  static std::shared_ptr<TestActionReadReceivedMQTTData> Create(const AstarteMessage& message) {
-    return std::shared_ptr<TestActionReadReceivedMQTTData>(
-        new TestActionReadReceivedMQTTData(message));
+  static std::shared_ptr<TestActionReadReceivedMqttData> Create(const AstarteMessage& message) {
+    return std::shared_ptr<TestActionReadReceivedMqttData>(
+        new TestActionReadReceivedMqttData(message));
   }
 
   auto execute_unchecked(const std::string& case_name) const
@@ -357,7 +357,7 @@ class TestActionReadReceivedMQTTData : public TestAction {
   }
 
  private:
-  TestActionReadReceivedMQTTData(const AstarteMessage& message) : message_(message) {}
+  TestActionReadReceivedMqttData(const AstarteMessage& message) : message_(message) {}
 
   AstarteMessage message_;
 };

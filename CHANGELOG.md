@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `get_starded.md`, a step by step guide useful to try the SDK functionalities guide.
 
 ### Changed
-- The `AstarteDevice` is now an abstract class transport independent. Users should instantiate the `AstarteDeviceGRPC` class which is the gRPC specific Astarte device class.
+- The `AstarteDevice` is now an abstract class transport independent. Users should instantiate the `AstarteDeviceGrpc` class which is the gRPC specific Astarte device class.
 - Astarte device poll requires a timeout parameter.
 - Reference version of the Astarte message hub is v0.8.0
 - Bump the Astarte message hub proto definitions to v0.8.4.
