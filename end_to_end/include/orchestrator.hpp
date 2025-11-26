@@ -47,8 +47,8 @@ class TestOrchestrator {
       TestCase test_case = std::move(test_cases_.front());
 
       // create a new device and attach it
-      std::shared_ptr<AstarteDeviceGRPC> device =
-          std::make_shared<AstarteDeviceGRPC>(grpc_config_.server_addr, grpc_config_.node_id);
+      std::shared_ptr<AstarteDeviceGrpc> device =
+          std::make_shared<AstarteDeviceGrpc>(grpc_config_.server_addr, grpc_config_.node_id);
       for (const std::filesystem::path& interface_path : grpc_config_.interfaces) {
         auto res = device->add_interface_from_file(interface_path);
         if (!res) {
