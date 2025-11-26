@@ -170,19 +170,21 @@ target_sources(
         FILE_SET private_headers TYPE HEADERS BASE_DIRS "private" FILES ${_ASTARTE_PRIVATE_HEADERS}
 )
 
+# Set a temporary variable for the visibility flag
+set(_ASTARTE_PROTO_VISIBILITY_FLAG "")
+if(NOT ASTARTE_PUBLIC_PROTO_DEP)
+    set(_ASTARTE_PROTO_VISIBILITY_FLAG PRIVATE_VISIBILITY)
+endif()
+
+# Generate the proto files and attach them to the target
 astarte_proto_attach_to_target(astarte_device_sdk
+    ${_ASTARTE_PROTO_VISIBILITY_FLAG}
     PROTOBUF_LIBPROTOBUF           "${VAR_PROTOBUF_LIB}"
     REFLECTION                     "${VAR_REFLECTION_LIB}"
     GRPC_CPP                       "${VAR_GRPC_LIB}"
     PROTOBUF_PROTOC                "${VAR_PROTOC_PATH}"
     GRPC_CPP_PLUGIN_EXECUTABLE     "${VAR_GRPC_PLUGIN_PATH}"
     PROTOBUF_STANDARD_INCLUDE_DIR  "${VAR_PROTO_STD_INC}"
-)
-
-# Link with the msghub grpc
-target_link_libraries(
-    astarte_device_sdk
-    PRIVATE ${_GRPC_CPP} ${_REFLECTION} ${_PROTOBUF_LIBPROTOBUF}
 )
 
 if(ASTARTE_PUBLIC_SPDLOG_DEP)
