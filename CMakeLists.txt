@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.23)
 project(AstarteDeviceSdk VERSION 0.8.1 LANGUAGES CXX)
 
 # Setup library options
-option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 include(FetchContent)
 
