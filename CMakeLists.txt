@@ -245,8 +245,16 @@ install(
 set(PC_NAME "astarte_device_sdk")
 set(PC_DESCRIPTION "Astarte Device SDK Cpp")
 set(PC_VERSION ${PROJECT_VERSION})
-set(PC_REQUIRES "spdlog grpc++ protobuf")
-set(PC_REQUIRES_PRIVATE "")
+
+# Configure PkgConfig dependencies based on visibility
+if(ASTARTE_PUBLIC_PROTO_DEP)
+    set(PC_REQUIRES "spdlog grpc++ protobuf")
+    set(PC_REQUIRES_PRIVATE "")
+else()
+    set(PC_REQUIRES "spdlog")
+    set(PC_REQUIRES_PRIVATE "grpc++ protobuf")
+endif()
+
 set(PC_LIB "-lastarte_device_sdk -lgrpc++_reflection -laddress_sorting -lre2 -lupb --as-needed")
 set(PC_LIBS_PRIVATE "")
 configure_file(cmake/pkg-config-template.pc.in astarte_device_sdk.pc @ONLY)
