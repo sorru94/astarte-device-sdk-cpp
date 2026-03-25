@@ -94,6 +94,8 @@ class DeviceGrpc : public Device {
    */
   auto connect() -> astarte_tl::expected<void, Error> override;
 
+  void log_me();
+
   /**
    * @brief Checks connectivity status.
    * @return True if the device is fully connected to Astarte, false otherwise.

@@ -53,6 +53,10 @@ auto DeviceGrpc::connect() -> astarte_tl::expected<void, Error> {
   return astarte_device_impl_->connect();
 }
 
+void DeviceGrpc::log_me() {
+  astarte_device_impl_->log_me();
+}
+
 auto DeviceGrpc::is_connected() const -> bool { return astarte_device_impl_->is_connected(); }
 
 auto DeviceGrpc::disconnect() -> astarte_tl::expected<void, Error> {

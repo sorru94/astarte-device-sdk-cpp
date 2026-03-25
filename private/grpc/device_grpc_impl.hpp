@@ -116,6 +116,8 @@ struct DeviceGrpc::DeviceGrpcImpl {
    */
   auto connect() -> astarte_tl::expected<void, Error>;
 
+  void log_me();
+
   /**
    * @brief Checks if the device is connected.
    * @return True if the device is connected to the message hub, false otherwise.

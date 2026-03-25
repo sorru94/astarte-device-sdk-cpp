@@ -195,6 +195,10 @@ auto DeviceGrpc::DeviceGrpcImpl::connect() -> astarte_tl::expected<void, Error> 
   return {};
 }
 
+void DeviceGrpc::DeviceGrpcImpl::log_me() {
+  spdlog::warn("Hellooo, thank you for having logged me!");
+}
+
 auto DeviceGrpc::DeviceGrpcImpl::is_connected() const -> bool { return connected_.load(); }
 
 auto DeviceGrpc::DeviceGrpcImpl::disconnect() -> astarte_tl::expected<void, Error> {
