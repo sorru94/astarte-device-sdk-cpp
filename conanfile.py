@@ -55,6 +55,8 @@ class Pkg(ConanFile):
         self.cpp_info.libs = ["astarte_device_sdk"]
         if self.options.transport == "grpc":
             self.cpp_info.defines.append("ASTARTE_TRANSPORT_GRPC")
+        if not valid_min_cppstd(self, "20"):
+            self.cpp_info.defines.append("ASTARTE_USE_SPDLOG_FORMAT")
         if not valid_min_cppstd(self, "23"):
             self.cpp_info.defines.append("ASTARTE_USE_TL_EXPECTED")
         self.cpp_info.set_property("cmake_file_name", "astarte_device_sdk")
