@@ -22,16 +22,6 @@ option(ASTARTE_PUBLIC_SPDLOG_DEP "Make spdlog dependency public" OFF)
 include(CheckCXXSourceCompiles)
 check_cxx_source_compiles(
     "
-  #include <format>
-  int main() {
-    auto s = std::format(\"Hello {}\", 42);
-    return 0;
-  }
-  "
-    HAS_STD_FORMAT
-)
-check_cxx_source_compiles(
-    "
   #include <expected>
   #include <string>
   int main() {
@@ -44,11 +34,6 @@ check_cxx_source_compiles(
 
 if(NOT HAS_STD_EXPECTED)
     option(ASTARTE_USE_SYSTEM_TL_EXPECTED "Use system installed tl-expected" OFF)
-endif()
-
-if(HAS_STD_FORMAT)
-    # C++20 with <format> available to compiler requires to enable the following spdlog feature
-    set(SPDLOG_USE_STD_FORMAT true)
 endif()
 
 message(STATUS "--------------------------------------------------")
