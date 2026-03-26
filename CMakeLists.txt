@@ -106,7 +106,7 @@ endif()
 
 # --- Core Library Target Definition ---
 add_library(astarte_device_sdk)
-target_compile_features(astarte_device_sdk PUBLIC cxx_std_20)
+target_compile_features(astarte_device_sdk PUBLIC cxx_std_17)
 set(_ASTARTE_PUBLIC_HEADERS
     "include/astarte_device_sdk/data.hpp"
     "include/astarte_device_sdk/device.hpp"

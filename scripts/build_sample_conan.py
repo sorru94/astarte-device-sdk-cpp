@@ -85,8 +85,8 @@ def build_sample_with_conan(lib_src_dir, sample_to_build, transport, qt_version=
         "--build=missing",
         f"--options=&:transport={transport}",
         "--settings=build_type=Debug",
-        "--settings=compiler.cppstd=20",
-        "--settings:build=compiler.cppstd=20",
+        "--settings=compiler.cppstd=17",
+        "--settings:build=compiler.cppstd=17",
     ]
 
     run_command(conan_create_cmd, error_message="Conan package creation failed for the library.")
@@ -109,7 +109,7 @@ def build_sample_with_conan(lib_src_dir, sample_to_build, transport, qt_version=
         f"--options=astarte-device-sdk/*:transport={transport}",
         "--build=missing",
         "--settings=build_type=Debug",
-        "--settings=compiler.cppstd=20",
+        "--settings=compiler.cppstd=17",
     ]
 
     # Handle Qt specific options
