@@ -41,7 +41,7 @@ class Pkg(ConanFile):
             self.requires("mbedtls/3.6.5")
             self.requires("boost/1.89.0", options={"header_only": "True"})
         self.requires("tl-expected/1.2.0", transitive_headers=True)
-        self.requires("spdlog/1.15.3", options={"use_std_fmt": "True"}, transitive_headers=True, transitive_libs=True)
+        self.requires("spdlog/1.15.3", options={"use_std_fmt": "False"}, transitive_headers=True, transitive_libs=True)
 
     def build_requirements(self):
         if self.options.transport == "grpc":
