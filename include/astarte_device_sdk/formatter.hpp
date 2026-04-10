@@ -23,22 +23,11 @@
 #include <type_traits>
 #include <vector>
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 202002L) ||    \
-     (!defined(_MSVC_LANG) && __cplusplus >= 202002L)) && \
-    (__has_include(<format>))
-
-#include <format>
-namespace astarte_fmt = ::std;
-
-#else
-
 #include <spdlog/fmt/fmt.h>
 
 #include <iomanip>
 #include <sstream>
 namespace astarte_fmt = ::fmt;
-
-#endif
 
 #ifdef DOXYGEN
 /// @brief Namespace alias for the formatting library (std or fmt).
@@ -117,18 +106,11 @@ void format_base64(OutputIt& out, const std::vector<uint8_t>& data) {
 template <typename OutputIt>
 void format_timestamp(OutputIt& out, const std::chrono::system_clock::time_point& data) {
   out = astarte_fmt::format_to(out, "\"");
-#if (__cplusplus >= 202002L) && (__has_include(<format>))
-  out = astarte_fmt::format_to(
-      out, "{}",
-      astarte_fmt::format("{0:%F}T{0:%T}Z",
-                          std::chrono::time_point_cast<std::chrono::milliseconds>(data)));
-#else   // (__cplusplus >= 202002L) && (__has_include(<format>))
   const std::time_t time = std::chrono::system_clock::to_time_t(data);
   const std::tm utc_tm = *std::gmtime(&time);
   std::stringstream stream;
   stream << std::put_time(&utc_tm, "%FT%T.000Z");
   out = astarte_fmt::format_to(out, "{}", stream.str());
-#endif  // (__cplusplus >= 202002L) && (__has_include(<format>))
   out = astarte_fmt::format_to(out, "\"");
 }
 
